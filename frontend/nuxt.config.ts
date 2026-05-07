@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   modules: ["@unocss/nuxt"],
   css: ["element-plus/dist/index.css", "@/assets/css/main.css"],
   devtools: { enabled: false },
+  experimental: { viteEnvironmentApi: true },
   runtimeConfig: {
     public: {
       apiBase: "http://localhost:8001",

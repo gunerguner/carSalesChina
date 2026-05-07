@@ -4,7 +4,7 @@ from typing import Any
 import akshare as ak
 import pandas as pd
 
-from backend.sources.base import BaseDataSource
+from backend.src.sources.base import BaseDataSource
 
 logger = logging.getLogger(__name__)
 
