@@ -4,10 +4,10 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from backend.core.database import get_db
-from backend.models.log import CollectionLog
-from backend.services.import_service import import_monthly_data, import_history
-from backend.schemas.response import success, error
+from backend.src.core.database import get_db
+from backend.src.models.log import CollectionLog
+from backend.src.services.import_service import import_monthly_data, import_history
+from backend.src.schemas.response import success, error
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
 

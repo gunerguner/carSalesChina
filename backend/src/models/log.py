@@ -1,7 +1,7 @@
 from sqlalchemy import Column, BigInteger, Integer, String, Enum, Text, DateTime
 from sqlalchemy.sql import func
 
-from backend.core.database import Base
+from backend.src.core.database import Base
 
 
 class CollectionLog(Base):

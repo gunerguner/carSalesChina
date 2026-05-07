@@ -1,7 +1,7 @@
 from sqlalchemy import Column, BigInteger, Integer, Numeric, String, SmallInteger, DateTime
 from sqlalchemy.sql import func
 
-from backend.core.database import Base
+from backend.src.core.database import Base
 
 
 class MonthlyBrand(Base):

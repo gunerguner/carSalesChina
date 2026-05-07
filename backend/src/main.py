@@ -3,10 +3,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.config import FASTAPI_PORT
-from backend.core.redis_client import close_redis
-from backend.routers import market, brand, analysis, model, admin
-from backend.services.scheduler import start_scheduler, stop_scheduler
+from backend.src.config import FASTAPI_PORT
+from backend.src.core.redis_client import close_redis
+from backend.src.routers import market, brand, analysis, model, admin
+from backend.src.services.scheduler import start_scheduler, stop_scheduler
 
 
 @asynccontextmanager
@@ -41,4 +41,4 @@ def health():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.main:app", host="0.0.0.0", port=FASTAPI_PORT, reload=True)
+    uvicorn.run("backend.src.main:app", host="0.0.0.0", port=FASTAPI_PORT, reload=True)
