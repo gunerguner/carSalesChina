@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from backend.core.database import get_db
 from backend.models.log import CollectionLog
-from backend.services.import_service import import_monthly_data, import_history
+from backend.services.import_service import import_cpca_range, import_history, import_monthly_data
 from backend.schemas.response import success, error
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
@@ -38,6 +38,22 @@ def trigger_import(
     else:
         results = import_history(db)
         return success(results)
+
+
+@router.post("/data/import/cpca-history")
+def trigger_cpca_history_import(
+    start_year: int = Query(2024),
+    start_month: int = Query(1),
+    end_year: int = Query(2026),
+    end_month: int = Query(12),
+    db: Session = Depends(get_db),
+):
+    """批量导入乘联会 2024-2026 月度总体、品牌零售/批发和总体产量数据。"""
+    try:
+        result = import_cpca_range(db, start_year, start_month, end_year, end_month)
+        return success(result)
+    except Exception as e:
+        return error(str(e))
 
 
 @router.get("/collection/logs")
