@@ -12,10 +12,8 @@ defineOptions({
   name: 'PreferenceInterfaceControl',
 });
 
-const widgetGlobalSearch = defineModel<boolean>('widgetGlobalSearch');
 const widgetFullscreen = defineModel<boolean>('widgetFullscreen');
 const widgetLanguageToggle = defineModel<boolean>('widgetLanguageToggle');
-const widgetNotification = defineModel<boolean>('widgetNotification');
 const widgetThemeToggle = defineModel<boolean>('widgetThemeToggle');
 const widgetSidebarToggle = defineModel<boolean>('widgetSidebarToggle');
 const widgetLockScreen = defineModel<boolean>('widgetLockScreen');
@@ -42,9 +40,6 @@ const positionItems = computed((): SelectOption[] => [
 </script>
 
 <template>
-  <SwitchItem v-model="widgetGlobalSearch">
-    {{ $t('preferences.widget.globalSearch') }}
-  </SwitchItem>
   <SwitchItem v-model="widgetThemeToggle">
     {{ $t('preferences.widget.themeToggle') }}
   </SwitchItem>
@@ -53,9 +48,6 @@ const positionItems = computed((): SelectOption[] => [
   </SwitchItem>
   <SwitchItem v-model="widgetFullscreen">
     {{ $t('preferences.widget.fullscreen') }}
-  </SwitchItem>
-  <SwitchItem v-model="widgetNotification">
-    {{ $t('preferences.widget.notification') }}
   </SwitchItem>
   <SwitchItem v-model="widgetLockScreen">
     {{ $t('preferences.widget.lockScreen') }}

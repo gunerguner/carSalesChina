@@ -4,12 +4,10 @@ import { computed, useSlots } from 'vue';
 import { useRefresh } from '@vben/hooks';
 import { RotateCw } from '@vben/icons';
 import { preferences, usePreferences } from '@vben/preferences';
-import { useAccessStore } from '@vben/stores';
 
 import { VbenFullScreen, VbenIconButton } from '@vben-core/shadcn-ui';
 
 import {
-  GlobalSearch,
   LanguageToggle,
   PreferencesButton,
   ThemeToggle,
@@ -17,9 +15,6 @@ import {
 } from '../../widgets';
 
 interface Props {
-  /**
-   * Logo 主题
-   */
   theme?: string;
 }
 
@@ -35,19 +30,12 @@ const emit = defineEmits<{ clearPreferencesAndLogout: [] }>();
 
 const REFERENCE_VALUE = 50;
 
-const accessStore = useAccessStore();
-const { globalSearchShortcutKey, preferencesButtonPosition } = usePreferences();
+const { preferencesButtonPosition } = usePreferences();
 const slots = useSlots();
 const { refresh } = useRefresh();
 
 const rightSlots = computed(() => {
   const list = [{ index: REFERENCE_VALUE + 100, name: 'user-dropdown' }];
-  if (preferences.widget.globalSearch) {
-    list.push({
-      index: REFERENCE_VALUE,
-      name: 'global-search',
-    });
-  }
 
   if (preferencesButtonPosition.value.header) {
     list.push({
@@ -77,12 +65,6 @@ const rightSlots = computed(() => {
     list.push({
       index: REFERENCE_VALUE + 50,
       name: 'fullscreen',
-    });
-  }
-  if (preferences.widget.notification) {
-    list.push({
-      index: REFERENCE_VALUE + 60,
-      name: 'notification',
     });
   }
 
@@ -150,15 +132,7 @@ function clearPreferencesAndLogout() {
   <div class="flex h-full min-w-0 shrink-0 items-center">
     <template v-for="slot in rightSlots" :key="slot.name">
       <slot :name="slot.name">
-        <template v-if="slot.name === 'global-search'">
-          <GlobalSearch
-            :enable-shortcut-key="globalSearchShortcutKey"
-            :menus="accessStore.accessMenus"
-            class="mr-1 sm:mr-4"
-          />
-        </template>
-
-        <template v-else-if="slot.name === 'preferences'">
+        <template v-if="slot.name === 'preferences'">
           <PreferencesButton
             class="mr-1"
             @clear-preferences-and-logout="clearPreferencesAndLogout"

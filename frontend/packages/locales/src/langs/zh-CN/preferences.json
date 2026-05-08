@@ -183,17 +183,14 @@
   "shortcutKeys": {
     "title": "快捷键",
     "global": "全局",
-    "search": "全局搜索",
     "logout": "退出登录",
     "preferences": "偏好设置"
   },
   "widget": {
     "title": "小部件",
-    "globalSearch": "启用全局搜索",
     "fullscreen": "启用全屏",
     "themeToggle": "启用主题切换",
     "languageToggle": "启用语言切换",
-    "notification": "启用通知",
     "sidebarToggle": "启用侧边栏切换",
     "lockScreen": "启用锁屏",
     "refresh": "启用刷新",

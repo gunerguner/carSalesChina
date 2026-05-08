@@ -183,17 +183,14 @@
   "shortcutKeys": {
     "title": "Shortcut Keys",
     "global": "Global",
-    "search": "Global Search",
     "logout": "Logout",
     "preferences": "Preferences"
   },
   "widget": {
     "title": "Widget",
-    "globalSearch": "Enable Global Search",
     "fullscreen": "Enable Fullscreen",
     "themeToggle": "Enable Theme Toggle",
     "languageToggle": "Enable Language Toggle",
-    "notification": "Enable Notification",
     "sidebarToggle": "Enable Sidebar Toggle",
     "lockScreen": "Enable Lock Screen",
     "refresh": "Enable Refresh",

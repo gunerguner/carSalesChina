@@ -170,14 +170,6 @@ function usePreferences() {
   });
 
   /**
-   * @zh_CN 是否启用全局搜索快捷键
-   */
-  const globalSearchShortcutKey = computed(() => {
-    const { enable, globalSearch } = shortcutKeysPreferences.value;
-    return enable && globalSearch;
-  });
-
-  /**
    * @zh_CN 是否启用全局注销快捷键
    */
   const globalLogoutShortcutKey = computed(() => {
@@ -243,7 +235,6 @@ function usePreferences() {
     diffCustomPreference,
     globalLockScreenShortcutKey,
     globalLogoutShortcutKey,
-    globalSearchShortcutKey,
     isDark,
     isFullContent,
     isHeaderMixedNav,
