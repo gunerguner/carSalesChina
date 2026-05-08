@@ -1,0 +1,107 @@
+{
+  "market": {
+    "title": "Market Sales",
+    "filter": {
+      "energyType": "Energy Type",
+      "energyAll": "All",
+      "energyFuel": "ICE",
+      "energyBev": "BEV",
+      "energyPhev": "PHEV",
+      "energyHev": "HEV",
+      "dataType": "Data Type",
+      "dataTypeRetail": "Retail",
+      "dataTypeWholesale": "Wholesale",
+      "dataTypeProduction": "Production"
+    },
+    "overview": {
+      "totalSales": "Total Sales",
+      "nevSales": "NEV Sales",
+      "nevPenetration": "NEV Penetration",
+      "momGrowth": "MoM Growth",
+      "yoyGrowth": "YoY Growth",
+      "unit": "units"
+    },
+    "monthly": {
+      "title": "Monthly Sales",
+      "chartTitle": "Monthly Sales Trend",
+      "month": "Month",
+      "sales": "Sales",
+      "momGrowth": "MoM Growth(%)",
+      "yoyGrowth": "YoY Growth(%)",
+      "totalSales": "Total Sales",
+      "nevSales": "NEV Sales"
+    },
+    "yearly": {
+      "title": "Yearly Sales",
+      "chartTitle": "Yearly Sales Trend",
+      "year": "Year",
+      "sales": "Sales",
+      "yoyGrowth": "YoY Growth(%)"
+    }
+  },
+  "brand": {
+    "title": "Brand Sales",
+    "filter": {
+      "compareBrands": "Brand Compare",
+      "comparePlaceholder": "Select brands (max 2)",
+      "granularity": "Granularity",
+      "granularityMonthly": "Monthly",
+      "granularityYearly": "Yearly",
+      "dataType": "Data Type",
+      "dataTypeRetail": "Retail",
+      "dataTypeWholesale": "Wholesale",
+      "dataTypeProduction": "Production"
+    },
+    "ranking": {
+      "title": "Brand Ranking",
+      "chartTitle": "Brand Sales Top Ranking",
+      "rank": "Rank",
+      "brand": "Brand",
+      "sales": "Sales",
+      "origin": "Origin",
+      "momGrowth": "MoM Growth(%)",
+      "yoyGrowth": "YoY Growth(%)"
+    },
+    "compare": {
+      "title": "Brand Compare",
+      "chartTitle": "Brand Sales Comparison Trend",
+      "time": "Time",
+      "diff": "Difference",
+      "selectHint": "Please select 2 brands to compare"
+    }
+  },
+  "analysis": {
+    "title": "Data Analysis",
+    "nevTab": "NEV Coverage",
+    "originTab": "Origin Share",
+    "nev": {
+      "penetrationTitle": "NEV Penetration Trend",
+      "penetrationChartTitle": "NEV Penetration Trend Chart",
+      "breakdownChartTitle": "NEV Breakdown Share",
+      "time": "Time",
+      "totalSales": "Total Sales",
+      "nevSales": "NEV Sales",
+      "penetrationRate": "NEV Penetration(%)",
+      "bevShare": "BEV Share(%)",
+      "phevShare": "PHEV Share(%)",
+      "hevShare": "HEV Share(%)"
+    },
+    "origin": {
+      "chartTitle": "Origin Share Trend",
+      "time": "Time",
+      "domestic": "Domestic(%)",
+      "german": "German(%)",
+      "japanese": "Japanese(%)",
+      "american": "American(%)",
+      "european": "European(%)",
+      "korean": "Korean(%)",
+      "other": "Other(%)"
+    }
+  },
+  "common": {
+    "noData": "No Data",
+    "loading": "Loading...",
+    "year": "Year",
+    "month": "Month"
+  }
+}

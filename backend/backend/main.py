@@ -30,7 +30,6 @@ app.add_middleware(
 app.include_router(market.router)
 app.include_router(brand.router)
 app.include_router(analysis.router)
-app.include_router(model.router)
 app.include_router(admin.router)
 
 

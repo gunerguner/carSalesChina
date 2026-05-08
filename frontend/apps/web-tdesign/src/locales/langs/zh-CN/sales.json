@@ -1,0 +1,107 @@
+{
+    "market": {
+        "title": "市场销量",
+        "filter": {
+            "energyType": "能源类型",
+            "energyAll": "全部",
+            "energyFuel": "燃油",
+            "energyBev": "纯电动(BEV)",
+            "energyPhev": "插电混动(PHEV)",
+            "energyHev": "其他混动(HEV)",
+            "dataType": "数据类型",
+            "dataTypeRetail": "零售量",
+            "dataTypeWholesale": "批发量",
+            "dataTypeProduction": "产量"
+        },
+        "overview": {
+            "totalSales": "当月总销量",
+            "nevSales": "NEV销量",
+            "nevPenetration": "NEV渗透率",
+            "momGrowth": "环比增长",
+            "yoyGrowth": "同比增长",
+            "unit": "辆"
+        },
+        "monthly": {
+            "title": "月度销量",
+            "chartTitle": "月度销量趋势",
+            "month": "月份",
+            "sales": "销量",
+            "momGrowth": "环比增长(%)",
+            "yoyGrowth": "同比增长(%)",
+            "totalSales": "总销量",
+            "nevSales": "NEV销量"
+        },
+        "yearly": {
+            "title": "年度销量",
+            "chartTitle": "年度销量趋势",
+            "year": "年份",
+            "sales": "销量",
+            "yoyGrowth": "同比增长(%)"
+        }
+    },
+    "brand": {
+        "title": "品牌销量",
+        "filter": {
+            "compareBrands": "品牌对比",
+            "comparePlaceholder": "请选择品牌（最多2个）",
+            "granularity": "统计周期",
+            "granularityMonthly": "月度",
+            "granularityYearly": "年度",
+            "dataType": "数据类型",
+            "dataTypeRetail": "零售量",
+            "dataTypeWholesale": "批发量",
+            "dataTypeProduction": "产量"
+        },
+        "ranking": {
+            "title": "品牌排名",
+            "chartTitle": "品牌销量Top排行",
+            "rank": "排名",
+            "brand": "品牌",
+            "sales": "销量",
+            "origin": "车系",
+            "momGrowth": "环比增长(%)",
+            "yoyGrowth": "同比增长(%)"
+        },
+        "compare": {
+            "title": "品牌对比",
+            "chartTitle": "品牌销量对比趋势",
+            "time": "时间",
+            "diff": "差值",
+            "selectHint": "请选择2个品牌进行对比"
+        }
+    },
+    "analysis": {
+        "title": "数据分析",
+        "nevTab": "NEV覆盖率",
+        "originTab": "车系占比",
+        "nev": {
+            "penetrationTitle": "NEV渗透率趋势",
+            "penetrationChartTitle": "NEV渗透率趋势图",
+            "breakdownChartTitle": "NEV细分占比",
+            "time": "时间",
+            "totalSales": "总销量",
+            "nevSales": "NEV销量",
+            "penetrationRate": "NEV渗透率(%)",
+            "bevShare": "BEV占比(%)",
+            "phevShare": "PHEV占比(%)",
+            "hevShare": "HEV占比(%)"
+        },
+        "origin": {
+            "chartTitle": "车系占比趋势",
+            "time": "时间",
+            "domestic": "自主(%)",
+            "german": "德系(%)",
+            "japanese": "日系(%)",
+            "american": "美系(%)",
+            "european": "欧系(%)",
+            "korean": "韩系(%)",
+            "other": "其他(%)"
+        }
+    },
+    "common": {
+        "noData": "暂无数据",
+        "loading": "加载中...",
+        "year": "年",
+        "month": "月"
+    }
+}
