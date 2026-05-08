@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, case
 
 from backend.core.database import get_db
-from backend.models.overall import MonthlyOverall
-from backend.models.brand import MonthlyBrand
+from backend.models.overall import SalesData
+from backend.models.brand import BrandSales, BrandMeta
 from backend.schemas.response import success
 
 router = APIRouter(prefix="/api/v1/analysis", tags=["analysis"])
@@ -71,13 +71,13 @@ def nev_share_trend(
 
     if granularity == "yearly":
         yearly_rows = db.query(
-            MonthlyOverall.year,
-            func.sum(MonthlyOverall.total_sales).label("total_sales"),
-            func.sum(MonthlyOverall.nev_sales).label("nev_sales"),
+            SalesData.year,
+            func.sum(SalesData.total_sales).label("total_sales"),
+            func.sum(SalesData.nev_sales).label("nev_sales"),
         ).filter(
-            MonthlyOverall.year >= start_year,
-            MonthlyOverall.data_type == "retail",
-        ).group_by(MonthlyOverall.year).order_by(MonthlyOverall.year).all()
+            SalesData.year >= start_year,
+            SalesData.data_type == "retail",
+        ).group_by(SalesData.year).order_by(SalesData.year).all()
 
         data = []
         for r in yearly_rows:
@@ -86,10 +86,10 @@ def nev_share_trend(
             rate = (nev / total * 100) if total else 0
             data.append({"year": r.year, "nev_penetration_rate": round(rate, 2), "total_sales": total, "nev_sales": nev})
     else:
-        rows = db.query(MonthlyOverall).filter(
-            MonthlyOverall.year >= start_year,
-            MonthlyOverall.data_type == "retail",
-        ).order_by(MonthlyOverall.year, MonthlyOverall.month).all()
+        rows = db.query(SalesData).filter(
+            SalesData.year >= start_year,
+            SalesData.data_type == "retail",
+        ).order_by(SalesData.year, SalesData.month).all()
 
         data = []
         for r in rows:
@@ -111,21 +111,24 @@ def nev_share_overview(
     month: int = Query(...),
     db: Session = Depends(get_db),
 ):
-    row = db.query(MonthlyOverall).filter(
-        MonthlyOverall.year == year,
-        MonthlyOverall.month == month,
-        MonthlyOverall.data_type == "retail",
+    row = db.query(SalesData).filter(
+        SalesData.year == year,
+        SalesData.month == month,
+        SalesData.data_type == "retail",
     ).first()
     if not row:
         return success(None)
 
     total = float(row.total_sales) if row.total_sales else 0
+    nev = float(row.nev_sales) if row.nev_sales else 0
+    nev_penetration_rate = (nev / total * 100) if total else 0
+
     data = {
         "year": year,
         "month": month,
         "total_sales": total,
-        "nev_sales": float(row.nev_sales) if row.nev_sales else 0,
-        "nev_penetration_rate": float(row.nev_penetration_rate) if row.nev_penetration_rate else 0,
+        "nev_sales": nev,
+        "nev_penetration_rate": round(nev_penetration_rate, 2),
         "breakdown": [
             {"name": "纯电动", "value": float(row.bev_sales) if row.bev_sales else 0},
             {"name": "插电混动", "value": float(row.phev_sales) if row.phev_sales else 0},
@@ -148,15 +151,15 @@ def nev_breakdown(
 
     if granularity == "yearly":
         yearly_rows = db.query(
-            MonthlyOverall.year,
-            func.sum(MonthlyOverall.nev_sales).label("nev_sales"),
-            func.sum(MonthlyOverall.bev_sales).label("bev_sales"),
-            func.sum(MonthlyOverall.phev_sales).label("phev_sales"),
-            func.sum(MonthlyOverall.hybrid_sales).label("hybrid_sales"),
+            SalesData.year,
+            func.sum(SalesData.nev_sales).label("nev_sales"),
+            func.sum(SalesData.bev_sales).label("bev_sales"),
+            func.sum(SalesData.phev_sales).label("phev_sales"),
+            func.sum(SalesData.hybrid_sales).label("hybrid_sales"),
         ).filter(
-            MonthlyOverall.year >= start_year,
-            MonthlyOverall.data_type == "retail",
-        ).group_by(MonthlyOverall.year).order_by(MonthlyOverall.year).all()
+            SalesData.year >= start_year,
+            SalesData.data_type == "retail",
+        ).group_by(SalesData.year).order_by(SalesData.year).all()
 
         data = []
         for r in yearly_rows:
@@ -172,10 +175,10 @@ def nev_breakdown(
                 "hybrid_sales": hybrid, "hybrid_ratio": round(hybrid / nev * 100, 2) if nev else 0,
             })
     else:
-        rows = db.query(MonthlyOverall).filter(
-            MonthlyOverall.year >= start_year,
-            MonthlyOverall.data_type == "retail",
-        ).order_by(MonthlyOverall.year, MonthlyOverall.month).all()
+        rows = db.query(SalesData).filter(
+            SalesData.year >= start_year,
+            SalesData.data_type == "retail",
+        ).order_by(SalesData.year, SalesData.month).all()
 
         data = []
         for r in rows:
@@ -200,10 +203,10 @@ def nev_breakdown_detail(
     month: int = Query(...),
     db: Session = Depends(get_db),
 ):
-    row = db.query(MonthlyOverall).filter(
-        MonthlyOverall.year == year,
-        MonthlyOverall.month == month,
-        MonthlyOverall.data_type == "retail",
+    row = db.query(SalesData).filter(
+        SalesData.year == year,
+        SalesData.month == month,
+        SalesData.data_type == "retail",
     ).first()
     if not row:
         return success(None)
@@ -234,15 +237,16 @@ def origin_share_trend(
 
     if granularity == "yearly":
         rows = db.query(
-            MonthlyBrand.year,
-            MonthlyBrand.brand_name,
-            MonthlyBrand.origin,
-            func.sum(MonthlyBrand.sales_volume).label("sales_volume"),
+            BrandSales.year,
+            BrandSales.brand_name,
+            BrandMeta.origin,
+            func.sum(BrandSales.sales_volume).label("sales_volume"),
+        ).outerjoin(
+            BrandMeta, BrandMeta.brand_name == BrandSales.brand_name
         ).filter(
-            MonthlyBrand.year >= start_year,
-            MonthlyBrand.source == "cpca",
-            MonthlyBrand.data_type == "retail",
-        ).group_by(MonthlyBrand.year, MonthlyBrand.brand_name, MonthlyBrand.origin).all()
+            BrandSales.year >= start_year,
+            BrandSales.data_type == "retail",
+        ).group_by(BrandSales.year, BrandSales.brand_name, BrandMeta.origin).all()
 
         year_groups = {}
         for r in rows:
@@ -256,17 +260,21 @@ def origin_share_trend(
             shares["year"] = year
             data.append(shares)
     else:
-        rows = db.query(MonthlyBrand).filter(
-            MonthlyBrand.year >= start_year,
-            MonthlyBrand.source == "cpca",
-            MonthlyBrand.data_type == "retail",
-        ).order_by(MonthlyBrand.year, MonthlyBrand.month).all()
+        rows = db.query(BrandSales).filter(
+            BrandSales.year >= start_year,
+            BrandSales.data_type == "retail",
+        ).order_by(BrandSales.year, BrandSales.month).all()
+
+        brand_names = [r.brand_name for r in rows]
+        metas = db.query(BrandMeta).filter(BrandMeta.brand_name.in_(brand_names)).all()
+        meta_map = {m.brand_name: m for m in metas}
 
         month_groups = {}
         for r in rows:
             key = (r.year, r.month)
             if key not in month_groups:
                 month_groups[key] = []
+            r.origin = meta_map.get(r.brand_name).origin if meta_map.get(r.brand_name) else None
             month_groups[key].append(r)
 
         data = []
@@ -285,15 +293,21 @@ def origin_share_overview(
     month: int = Query(...),
     db: Session = Depends(get_db),
 ):
-    rows = db.query(MonthlyBrand).filter(
-        MonthlyBrand.year == year,
-        MonthlyBrand.month == month,
-        MonthlyBrand.source == "cpca",
-        MonthlyBrand.data_type == "retail",
+    rows = db.query(BrandSales).filter(
+        BrandSales.year == year,
+        BrandSales.month == month,
+        BrandSales.data_type == "retail",
     ).all()
 
     if not rows:
         return success(None)
+
+    brand_names = [r.brand_name for r in rows]
+    metas = db.query(BrandMeta).filter(BrandMeta.brand_name.in_(brand_names)).all()
+    meta_map = {m.brand_name: m for m in metas}
+
+    for r in rows:
+        r.origin = meta_map.get(r.brand_name).origin if meta_map.get(r.brand_name) else None
 
     shares = _compute_origin_shares(rows)
     shares["year"] = year

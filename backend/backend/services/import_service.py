@@ -4,9 +4,8 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.mysql import insert
 
-from backend.models.overall import MonthlyOverall
-from backend.models.brand import MonthlyBrand
-from backend.models.model import MonthlyModel
+from backend.models.overall import SalesData
+from backend.models.brand import BrandSales
 from backend.models.log import CollectionLog
 from backend.sources.cpca_client import CpcaClient
 
@@ -18,7 +17,7 @@ client = CpcaClient()
 def _upsert_overall(db: Session, records: list[dict], year: int, month: int) -> int:
     count = 0
     for rec in records:
-        stmt = insert(MonthlyOverall).values(
+        stmt = insert(SalesData).values(
             year=year,
             month=month,
             total_sales=rec.get("总销量", 0),
@@ -27,9 +26,7 @@ def _upsert_overall(db: Session, records: list[dict], year: int, month: int) -> 
             bev_sales=rec.get("纯电销量", 0),
             phev_sales=rec.get("插混销量", 0),
             hybrid_sales=rec.get("混动销量", 0),
-            nev_penetration_rate=rec.get("渗透率", 0),
             data_type="retail",
-            source="cpca",
         )
         stmt = stmt.on_duplicate_key_update(
             total_sales=stmt.inserted.total_sales,
@@ -38,7 +35,6 @@ def _upsert_overall(db: Session, records: list[dict], year: int, month: int) -> 
             bev_sales=stmt.inserted.bev_sales,
             phev_sales=stmt.inserted.phev_sales,
             hybrid_sales=stmt.inserted.hybrid_sales,
-            nev_penetration_rate=stmt.inserted.nev_penetration_rate,
         )
         db.execute(stmt)
         count += 1
@@ -52,23 +48,19 @@ def _upsert_brand(db: Session, records: list[dict], year: int, month: int) -> in
         brand_name = rec.get("品牌名称", "")
         if not brand_name:
             continue
-        stmt = insert(MonthlyBrand).values(
+        stmt = insert(BrandSales).values(
             year=year,
             month=month,
             brand_name=brand_name,
             sales_volume=rec.get("销量", 0),
-            rank=rec.get("排名", 0),
             yoy_growth=rec.get("同比", 0),
             mom_growth=rec.get("环比", 0),
-            is_nev=1 if rec.get("是否新能源", False) else 0,
-            source="cpca",
+            data_type="retail",
         )
         stmt = stmt.on_duplicate_key_update(
             sales_volume=stmt.inserted.sales_volume,
-            rank=stmt.inserted.rank,
             yoy_growth=stmt.inserted.yoy_growth,
             mom_growth=stmt.inserted.mom_growth,
-            is_nev=stmt.inserted.is_nev,
         )
         db.execute(stmt)
         count += 1

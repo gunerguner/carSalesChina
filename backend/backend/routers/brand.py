@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from backend.core.database import get_db
-from backend.models.brand import MonthlyBrand
-from backend.models.overall import MonthlyOverall
+from backend.models.brand import BrandSales, BrandMeta
+from backend.models.overall import SalesData
 from backend.schemas.response import success
 
 router = APIRouter(prefix="/api/v1/brands", tags=["brands"])
@@ -18,34 +18,40 @@ def ranking(
     month: int = Query(...),
     page: int = Query(1),
     pageSize: int = Query(20),
-    is_nev: int = Query(None),
+    origin: str = Query(None),
     data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
-    query = db.query(MonthlyBrand).filter(
-        MonthlyBrand.year == year,
-        MonthlyBrand.month == month,
-        MonthlyBrand.source == "cpca",
-        MonthlyBrand.data_type == data_type,
+    subq = db.query(
+        BrandSales.brand_name,
+        func.sum(BrandSales.sales_volume).label("total_sales"),
+    ).filter(
+        BrandSales.year == year,
+        BrandSales.month == month,
+        BrandSales.data_type == data_type,
+    ).group_by(BrandSales.brand_name).subquery()
+
+    query = db.query(
+        subq.c.brand_name,
+        subq.c.total_sales,
+        BrandMeta.origin,
+    ).outerjoin(
+        BrandMeta, BrandMeta.brand_name == subq.c.brand_name
     )
-    if is_nev is not None:
-        query = query.filter(MonthlyBrand.is_nev == is_nev)
+
+    if origin:
+        query = query.filter(BrandMeta.origin == origin)
 
     total = query.count()
-    rows = query.order_by(MonthlyBrand.rank).offset((page - 1) * pageSize).limit(pageSize).all()
+    rows = query.order_by(subq.c.total_sales.desc()).offset((page - 1) * pageSize).limit(pageSize).all()
 
     data = []
-    for r in rows:
+    for idx, r in enumerate(rows, start=(page - 1) * pageSize + 1):
         data.append({
-            "id": r.id,
+            "rank": idx,
             "brand_name": r.brand_name,
-            "brand_name_en": r.brand_name_en,
-            "sales_volume": float(r.sales_volume) if r.sales_volume else 0,
-            "rank": r.rank,
-            "prev_month_rank": r.prev_month_rank,
-            "yoy_growth": float(r.yoy_growth) if r.yoy_growth else None,
-            "mom_growth": float(r.mom_growth) if r.mom_growth else None,
-            "is_nev": r.is_nev,
+            "sales_volume": float(r.total_sales) if r.total_sales else 0,
+            "origin": r.origin,
         })
 
     return success({"total": total, "page": page, "pageSize": pageSize, "data": data})
@@ -56,29 +62,39 @@ def yearly_ranking(
     year: int = Query(...),
     page: int = Query(1),
     pageSize: int = Query(20),
+    origin: str = Query(None),
     data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
-    rows = db.query(
-        MonthlyBrand.brand_name,
-        func.max(MonthlyBrand.is_nev).label("is_nev"),
-        func.sum(MonthlyBrand.sales_volume).label("total_sales"),
+    subq = db.query(
+        BrandSales.brand_name,
+        func.sum(BrandSales.sales_volume).label("total_sales"),
     ).filter(
-        MonthlyBrand.year == year,
-        MonthlyBrand.source == "cpca",
-        MonthlyBrand.data_type == data_type,
-    ).group_by(MonthlyBrand.brand_name).order_by(func.sum(MonthlyBrand.sales_volume).desc()).all()
+        BrandSales.year == year,
+        BrandSales.data_type == data_type,
+    ).group_by(BrandSales.brand_name).subquery()
 
-    total = len(rows)
-    paginated = rows[(page - 1) * pageSize: page * pageSize]
+    query = db.query(
+        subq.c.brand_name,
+        subq.c.total_sales,
+        BrandMeta.origin,
+    ).outerjoin(
+        BrandMeta, BrandMeta.brand_name == subq.c.brand_name
+    )
+
+    if origin:
+        query = query.filter(BrandMeta.origin == origin)
+
+    total = query.count()
+    rows = query.order_by(subq.c.total_sales.desc()).offset((page - 1) * pageSize).limit(pageSize).all()
 
     data = []
-    for idx, r in enumerate(paginated, start=(page - 1) * pageSize + 1):
+    for idx, r in enumerate(rows, start=(page - 1) * pageSize + 1):
         data.append({
             "rank": idx,
             "brand_name": r.brand_name,
             "total_sales": float(r.total_sales or 0),
-            "is_nev": r.is_nev,
+            "origin": r.origin,
         })
 
     return success({"total": total, "page": page, "pageSize": pageSize, "data": data})
@@ -86,37 +102,39 @@ def yearly_ranking(
 
 @router.get("/compare")
 def compare(
-    brand_ids: str = Query(...),
+    brand_names: str = Query(...),
     year: int = Query(...),
     month: int = Query(...),
     data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
-    ids = [int(x) for x in brand_ids.split(",")[:5]]
-    rows = db.query(MonthlyBrand).filter(
-        MonthlyBrand.id.in_(ids),
-        MonthlyBrand.year == year,
-        MonthlyBrand.month == month,
-        MonthlyBrand.data_type == data_type,
+    names = [x.strip() for x in brand_names.split(",")[:5]]
+    rows = db.query(BrandSales).filter(
+        BrandSales.brand_name.in_(names),
+        BrandSales.year == year,
+        BrandSales.month == month,
+        BrandSales.data_type == data_type,
     ).all()
 
+    name_to_row = {r.brand_name: r for r in rows}
+
     data = []
-    for r in rows:
-        data.append({
-            "brand_id": r.id,
-            "brand_name": r.brand_name,
-            "sales_volume": float(r.sales_volume) if r.sales_volume else 0,
-            "rank": r.rank,
-            "yoy_growth": float(r.yoy_growth) if r.yoy_growth else None,
-            "mom_growth": float(r.mom_growth) if r.mom_growth else None,
-        })
+    for name in names:
+        r = name_to_row.get(name)
+        if r:
+            data.append({
+                "brand_name": r.brand_name,
+                "sales_volume": float(r.sales_volume) if r.sales_volume else 0,
+                "yoy_growth": float(r.yoy_growth) if r.yoy_growth else None,
+                "mom_growth": float(r.mom_growth) if r.mom_growth else None,
+            })
 
     return success(data)
 
 
 @router.get("/compare/trend")
 def compare_trend(
-    brand_ids: str = Query(...),
+    brand_names: str = Query(...),
     years: int = Query(3),
     granularity: str = Query("monthly"),
     data_type: str = DATA_TYPE_ENUM,
@@ -125,36 +143,35 @@ def compare_trend(
     from datetime import datetime
     now = datetime.now()
     start_year = now.year - years + 1
-    ids = [int(x) for x in brand_ids.split(",")[:5]]
-
-    rows = db.query(MonthlyBrand).filter(
-        MonthlyBrand.id.in_(ids),
-        MonthlyBrand.year >= start_year,
-        MonthlyBrand.data_type == data_type,
-    ).order_by(MonthlyBrand.year, MonthlyBrand.month).all()
+    names = [x.strip() for x in brand_names.split(",")[:5]]
 
     if granularity == "yearly":
         result = db.query(
-            MonthlyBrand.id,
-            MonthlyBrand.brand_name,
-            MonthlyBrand.year,
-            func.sum(MonthlyBrand.sales_volume).label("total_sales"),
+            BrandSales.brand_name,
+            BrandSales.year,
+            func.sum(BrandSales.sales_volume).label("total_sales"),
         ).filter(
-            MonthlyBrand.id.in_(ids),
-            MonthlyBrand.year >= start_year,
-            MonthlyBrand.data_type == data_type,
-        ).group_by(MonthlyBrand.id, MonthlyBrand.brand_name, MonthlyBrand.year).all()
+            BrandSales.brand_name.in_(names),
+            BrandSales.year >= start_year,
+            BrandSales.data_type == data_type,
+        ).group_by(BrandSales.brand_name, BrandSales.year).order_by(BrandSales.year).all()
 
         data = {}
         for r in result:
             if r.brand_name not in data:
-                data[r.brand_name] = {"brand_id": r.id, "brand_name": r.brand_name, "trend": []}
+                data[r.brand_name] = {"brand_name": r.brand_name, "trend": []}
             data[r.brand_name]["trend"].append({"year": r.year, "sales": float(r.total_sales or 0)})
     else:
+        rows = db.query(BrandSales).filter(
+            BrandSales.brand_name.in_(names),
+            BrandSales.year >= start_year,
+            BrandSales.data_type == data_type,
+        ).order_by(BrandSales.year, BrandSales.month).all()
+
         data = {}
         for r in rows:
             if r.brand_name not in data:
-                data[r.brand_name] = {"brand_id": r.id, "brand_name": r.brand_name, "trend": []}
+                data[r.brand_name] = {"brand_name": r.brand_name, "trend": []}
             data[r.brand_name]["trend"].append({
                 "year": r.year, "month": r.month, "sales": float(r.sales_volume or 0),
             })
@@ -162,39 +179,38 @@ def compare_trend(
     return success(list(data.values()))
 
 
-@router.get("/{brand_id}/detail")
+@router.get("/{brand_name}/detail")
 def brand_detail(
-    brand_id: int,
+    brand_name: str,
     year: int = Query(...),
     month: int = Query(...),
     data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
-    row = db.query(MonthlyBrand).filter(
-        MonthlyBrand.id == brand_id,
-        MonthlyBrand.year == year,
-        MonthlyBrand.month == month,
-        MonthlyBrand.data_type == data_type,
+    row = db.query(BrandSales).filter(
+        BrandSales.brand_name == brand_name,
+        BrandSales.year == year,
+        BrandSales.month == month,
+        BrandSales.data_type == data_type,
     ).first()
+
+    meta = db.query(BrandMeta).filter(BrandMeta.brand_name == brand_name).first()
+
     if not row:
         return success(None)
 
     return success({
-        "brand_id": row.id,
         "brand_name": row.brand_name,
-        "brand_name_en": row.brand_name_en,
         "sales_volume": float(row.sales_volume) if row.sales_volume else 0,
-        "rank": row.rank,
-        "prev_month_rank": row.prev_month_rank,
         "yoy_growth": float(row.yoy_growth) if row.yoy_growth else None,
         "mom_growth": float(row.mom_growth) if row.mom_growth else None,
-        "is_nev": row.is_nev,
+        "origin": meta.origin if meta else None,
     })
 
 
-@router.get("/{brand_id}/trend")
+@router.get("/{brand_name}/trend")
 def brand_trend(
-    brand_id: int,
+    brand_name: str,
     years: int = Query(3),
     granularity: str = Query("monthly"),
     data_type: str = DATA_TYPE_ENUM,
@@ -206,21 +222,21 @@ def brand_trend(
 
     if granularity == "yearly":
         rows = db.query(
-            MonthlyBrand.year,
-            func.sum(MonthlyBrand.sales_volume).label("total_sales"),
+            BrandSales.year,
+            func.sum(BrandSales.sales_volume).label("total_sales"),
         ).filter(
-            MonthlyBrand.id == brand_id,
-            MonthlyBrand.year >= start_year,
-            MonthlyBrand.data_type == data_type,
-        ).group_by(MonthlyBrand.year).order_by(MonthlyBrand.year).all()
+            BrandSales.brand_name == brand_name,
+            BrandSales.year >= start_year,
+            BrandSales.data_type == data_type,
+        ).group_by(BrandSales.year).order_by(BrandSales.year).all()
 
         data = [{"year": r.year, "sales": float(r.total_sales or 0)} for r in rows]
     else:
-        rows = db.query(MonthlyBrand).filter(
-            MonthlyBrand.id == brand_id,
-            MonthlyBrand.year >= start_year,
-            MonthlyBrand.data_type == data_type,
-        ).order_by(MonthlyBrand.year, MonthlyBrand.month).all()
+        rows = db.query(BrandSales).filter(
+            BrandSales.brand_name == brand_name,
+            BrandSales.year >= start_year,
+            BrandSales.data_type == data_type,
+        ).order_by(BrandSales.year, BrandSales.month).all()
 
         data = [{"year": r.year, "month": r.month, "sales": float(r.sales_volume or 0)} for r in rows]
 

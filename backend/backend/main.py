@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.config import FASTAPI_PORT
 from backend.core.redis_client import close_redis
-from backend.routers import market, brand, analysis, model, admin
+from backend.routers import market, brand, analysis, admin
 from backend.services.scheduler import start_scheduler, stop_scheduler
 
 
