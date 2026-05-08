@@ -1,7 +1,7 @@
-from sqlalchemy import Column, BigInteger, Integer, Numeric, String, SmallInteger, DateTime
+from sqlalchemy import Column, BigInteger, Integer, Numeric, String, SmallInteger, Enum, DateTime
 from sqlalchemy.sql import func
 
-from backend.src.core.database import Base
+from backend.core.database import Base
 
 
 class MonthlyBrand(Base):
@@ -18,5 +18,7 @@ class MonthlyBrand(Base):
     yoy_growth = Column(Numeric(8, 2))
     mom_growth = Column(Numeric(8, 2))
     is_nev = Column(SmallInteger, default=0)
+    data_type = Column(Enum("retail", "wholesale", "production"), default="retail")
+    origin = Column(String(20), default=None)
     source = Column(String(50), default="cpca")
     created_at = Column(DateTime, server_default=func.now())

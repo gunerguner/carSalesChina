@@ -1,7 +1,7 @@
 from sqlalchemy import Column, BigInteger, Integer, Numeric, String, Enum, DateTime
 from sqlalchemy.sql import func
 
-from backend.src.core.database import Base
+from backend.core.database import Base
 
 
 class MonthlyOverall(Base):
@@ -17,6 +17,6 @@ class MonthlyOverall(Base):
     phev_sales = Column(Numeric(15, 2))
     hybrid_sales = Column(Numeric(15, 2))
     nev_penetration_rate = Column(Numeric(5, 2))
-    data_type = Column(Enum("retail", "wholesale"), default="retail")
+    data_type = Column(Enum("retail", "wholesale", "production"), default="retail")
     source = Column(String(50), default="cpca")
     created_at = Column(DateTime, server_default=func.now())

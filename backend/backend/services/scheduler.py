@@ -4,8 +4,8 @@ from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from backend.src.core.database import SessionLocal
-from backend.src.services.import_service import import_history
+from backend.core.database import SessionLocal
+from backend.services.import_service import import_history
 
 logger = logging.getLogger(__name__)
 

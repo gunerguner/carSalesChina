@@ -4,11 +4,11 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.mysql import insert
 
-from backend.src.models.overall import MonthlyOverall
-from backend.src.models.brand import MonthlyBrand
-from backend.src.models.model import MonthlyModel
-from backend.src.models.log import CollectionLog
-from backend.src.sources.cpca_client import CpcaClient
+from backend.models.overall import MonthlyOverall
+from backend.models.brand import MonthlyBrand
+from backend.models.model import MonthlyModel
+from backend.models.log import CollectionLog
+from backend.sources.cpca_client import CpcaClient
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from backend.src.core.database import get_db
-from backend.src.models.model import MonthlyModel
-from backend.src.schemas.response import success
+from backend.core.database import get_db
+from backend.models.model import MonthlyModel
+from backend.schemas.response import success
 
 router = APIRouter(prefix="/api/v1/models", tags=["models"])
 

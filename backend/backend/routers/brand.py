@@ -2,12 +2,14 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from backend.src.core.database import get_db
-from backend.src.models.brand import MonthlyBrand
-from backend.src.models.overall import MonthlyOverall
-from backend.src.schemas.response import success
+from backend.core.database import get_db
+from backend.models.brand import MonthlyBrand
+from backend.models.overall import MonthlyOverall
+from backend.schemas.response import success
 
 router = APIRouter(prefix="/api/v1/brands", tags=["brands"])
+
+DATA_TYPE_ENUM = Query("retail", pattern="^(retail|wholesale|production)$")
 
 
 @router.get("/ranking")
@@ -17,12 +19,14 @@ def ranking(
     page: int = Query(1),
     pageSize: int = Query(20),
     is_nev: int = Query(None),
+    data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
     query = db.query(MonthlyBrand).filter(
         MonthlyBrand.year == year,
         MonthlyBrand.month == month,
         MonthlyBrand.source == "cpca",
+        MonthlyBrand.data_type == data_type,
     )
     if is_nev is not None:
         query = query.filter(MonthlyBrand.is_nev == is_nev)
@@ -52,15 +56,17 @@ def yearly_ranking(
     year: int = Query(...),
     page: int = Query(1),
     pageSize: int = Query(20),
+    data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
     rows = db.query(
         MonthlyBrand.brand_name,
-        MonthlyBrand.is_nev,
+        func.max(MonthlyBrand.is_nev).label("is_nev"),
         func.sum(MonthlyBrand.sales_volume).label("total_sales"),
     ).filter(
         MonthlyBrand.year == year,
         MonthlyBrand.source == "cpca",
+        MonthlyBrand.data_type == data_type,
     ).group_by(MonthlyBrand.brand_name).order_by(func.sum(MonthlyBrand.sales_volume).desc()).all()
 
     total = len(rows)
@@ -83,6 +89,7 @@ def compare(
     brand_ids: str = Query(...),
     year: int = Query(...),
     month: int = Query(...),
+    data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
     ids = [int(x) for x in brand_ids.split(",")[:5]]
@@ -90,6 +97,7 @@ def compare(
         MonthlyBrand.id.in_(ids),
         MonthlyBrand.year == year,
         MonthlyBrand.month == month,
+        MonthlyBrand.data_type == data_type,
     ).all()
 
     data = []
@@ -111,6 +119,7 @@ def compare_trend(
     brand_ids: str = Query(...),
     years: int = Query(3),
     granularity: str = Query("monthly"),
+    data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
     from datetime import datetime
@@ -121,6 +130,7 @@ def compare_trend(
     rows = db.query(MonthlyBrand).filter(
         MonthlyBrand.id.in_(ids),
         MonthlyBrand.year >= start_year,
+        MonthlyBrand.data_type == data_type,
     ).order_by(MonthlyBrand.year, MonthlyBrand.month).all()
 
     if granularity == "yearly":
@@ -132,6 +142,7 @@ def compare_trend(
         ).filter(
             MonthlyBrand.id.in_(ids),
             MonthlyBrand.year >= start_year,
+            MonthlyBrand.data_type == data_type,
         ).group_by(MonthlyBrand.id, MonthlyBrand.brand_name, MonthlyBrand.year).all()
 
         data = {}
@@ -156,12 +167,14 @@ def brand_detail(
     brand_id: int,
     year: int = Query(...),
     month: int = Query(...),
+    data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
     row = db.query(MonthlyBrand).filter(
         MonthlyBrand.id == brand_id,
         MonthlyBrand.year == year,
         MonthlyBrand.month == month,
+        MonthlyBrand.data_type == data_type,
     ).first()
     if not row:
         return success(None)
@@ -184,6 +197,7 @@ def brand_trend(
     brand_id: int,
     years: int = Query(3),
     granularity: str = Query("monthly"),
+    data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
     from datetime import datetime
@@ -197,6 +211,7 @@ def brand_trend(
         ).filter(
             MonthlyBrand.id == brand_id,
             MonthlyBrand.year >= start_year,
+            MonthlyBrand.data_type == data_type,
         ).group_by(MonthlyBrand.year).order_by(MonthlyBrand.year).all()
 
         data = [{"year": r.year, "sales": float(r.total_sales or 0)} for r in rows]
@@ -204,6 +219,7 @@ def brand_trend(
         rows = db.query(MonthlyBrand).filter(
             MonthlyBrand.id == brand_id,
             MonthlyBrand.year >= start_year,
+            MonthlyBrand.data_type == data_type,
         ).order_by(MonthlyBrand.year, MonthlyBrand.month).all()
 
         data = [{"year": r.year, "month": r.month, "sales": float(r.sales_volume or 0)} for r in rows]

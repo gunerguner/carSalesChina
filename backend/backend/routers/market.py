@@ -5,9 +5,10 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from backend.src.core.database import get_db
-from backend.src.models.overall import MonthlyOverall
-from backend.src.schemas.response import success
+from backend.core.database import get_db
+from backend.models.overall import MonthlyOverall
+from backend.models.model import MonthlyModel
+from backend.schemas.response import success
 
 router = APIRouter(prefix="/api/v1/market", tags=["market"])
 
@@ -19,18 +20,21 @@ ENERGY_FIELD_MAP = {
     "hybrid": "hybrid_sales",
 }
 
+DATA_TYPE_ENUM = Query("retail", pattern="^(retail|wholesale|production)$")
+
 
 @router.get("/overview")
 def overview(
     year: int = Query(...),
     month: int = Query(...),
     energy_type: str = Query("all"),
+    data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
     row = db.query(MonthlyOverall).filter(
         MonthlyOverall.year == year,
         MonthlyOverall.month == month,
-        MonthlyOverall.data_type == "retail",
+        MonthlyOverall.data_type == data_type,
     ).first()
     if not row:
         return success(None)
@@ -38,13 +42,13 @@ def overview(
     prev_month_row = db.query(MonthlyOverall).filter(
         MonthlyOverall.year == (year if month > 1 else year - 1),
         MonthlyOverall.month == (month - 1 if month > 1 else 12),
-        MonthlyOverall.data_type == "retail",
+        MonthlyOverall.data_type == data_type,
     ).first()
 
     prev_year_row = db.query(MonthlyOverall).filter(
         MonthlyOverall.year == year - 1,
         MonthlyOverall.month == month,
-        MonthlyOverall.data_type == "retail",
+        MonthlyOverall.data_type == data_type,
     ).first()
 
     field = ENERGY_FIELD_MAP.get(energy_type, "total_sales")
@@ -59,6 +63,7 @@ def overview(
         "year": year,
         "month": month,
         "energy_type": energy_type,
+        "data_type": data_type,
         "sales": float(current_val),
         "mom_growth": round(mom_growth, 2) if mom_growth else None,
         "yoy_growth": round(yoy_growth, 2) if yoy_growth else None,
@@ -77,6 +82,7 @@ def trend(
     energy_type: str = Query("all"),
     years: int = Query(3),
     granularity: str = Query("monthly"),
+    data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
     now = datetime.now()
@@ -90,14 +96,14 @@ def trend(
             func.sum(getattr(MonthlyOverall, field)).label("sales"),
         ).filter(
             MonthlyOverall.year >= start_year,
-            MonthlyOverall.data_type == "retail",
+            MonthlyOverall.data_type == data_type,
         ).group_by(MonthlyOverall.year).order_by(MonthlyOverall.year).all()
 
         data = [{"year": r.year, "sales": float(r.sales or 0)} for r in rows]
     else:
         rows = db.query(MonthlyOverall).filter(
             MonthlyOverall.year >= start_year,
-            MonthlyOverall.data_type == "retail",
+            MonthlyOverall.data_type == data_type,
         ).order_by(MonthlyOverall.year, MonthlyOverall.month).all()
 
         data = []
@@ -118,12 +124,13 @@ def compare(
     start_month: int = Query(...),
     end_year: int = Query(...),
     end_month: int = Query(...),
+    data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
     field = ENERGY_FIELD_MAP.get(energy_type, "total_sales")
 
     rows = db.query(MonthlyOverall).filter(
-        MonthlyOverall.data_type == "retail",
+        MonthlyOverall.data_type == data_type,
     ).order_by(MonthlyOverall.year, MonthlyOverall.month).all()
 
     period1 = []
@@ -167,19 +174,47 @@ def compare(
 def yearly(
     year: int = Query(...),
     energy_type: str = Query("all"),
+    data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
     field = ENERGY_FIELD_MAP.get(energy_type, "total_sales")
     rows = db.query(MonthlyOverall).filter(
         MonthlyOverall.year == year,
-        MonthlyOverall.data_type == "retail",
+        MonthlyOverall.data_type == data_type,
     ).order_by(MonthlyOverall.month).all()
+
+    prev_year_rows = db.query(MonthlyOverall).filter(
+        MonthlyOverall.year == year - 1,
+        MonthlyOverall.data_type == data_type,
+    ).all()
+    prev_year_map = {r.month: r for r in prev_year_rows}
 
     data = []
     for r in rows:
+        prev_month_row = None
+        if r.month > 1:
+            prev_month_row = next((x for x in rows if x.month == r.month - 1), None)
+        else:
+            prev_month_row = db.query(MonthlyOverall).filter(
+                MonthlyOverall.year == year - 1,
+                MonthlyOverall.month == 12,
+                MonthlyOverall.data_type == data_type,
+            ).first()
+
+        prev_year_row = prev_year_map.get(r.month)
+
+        current_val = float(getattr(r, field) or 0)
+        prev_month_val = float(getattr(prev_month_row, field) or 0) if prev_month_row else 0
+        prev_year_val = float(getattr(prev_year_row, field) or 0) if prev_year_row else 0
+
+        mom_growth = ((current_val - prev_month_val) / prev_month_val * 100) if prev_month_val else None
+        yoy_growth = ((current_val - prev_year_val) / prev_year_val * 100) if prev_year_val else None
+
         data.append({
             "month": r.month,
-            "sales": float(getattr(r, field) or 0),
+            "sales": current_val,
+            "yoy_growth": round(yoy_growth, 2) if yoy_growth else None,
+            "mom_growth": round(mom_growth, 2) if mom_growth else None,
             "total_sales": float(r.total_sales) if r.total_sales else 0,
             "nev_sales": float(r.nev_sales) if r.nev_sales else 0,
             "ice_sales": float(r.ice_sales) if r.ice_sales else 0,
@@ -192,12 +227,13 @@ def yearly(
 def by_energy_type(
     year: int = Query(...),
     month: int = Query(...),
+    data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
     row = db.query(MonthlyOverall).filter(
         MonthlyOverall.year == year,
         MonthlyOverall.month == month,
-        MonthlyOverall.data_type == "retail",
+        MonthlyOverall.data_type == data_type,
     ).first()
     if not row:
         return success([])

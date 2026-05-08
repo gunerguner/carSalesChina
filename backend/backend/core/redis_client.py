@@ -1,6 +1,6 @@
 import redis.asyncio as aioredis
 
-from backend.src.config import REDIS_URL
+from backend.config import REDIS_URL
 
 redis_client: aioredis.Redis | None = None
 

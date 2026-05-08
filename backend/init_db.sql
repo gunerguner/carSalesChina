@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS monthly_overall (
     phev_sales DECIMAL(15,2) COMMENT '插电混动销量',
     hybrid_sales DECIMAL(15,2) COMMENT '其他混动销量',
     nev_penetration_rate DECIMAL(5,2) COMMENT '新能源渗透率(%)',
-    data_type ENUM('retail','wholesale') DEFAULT 'retail' COMMENT '零售/批发口径',
+    data_type ENUM('retail','wholesale','production') DEFAULT 'retail' COMMENT '零售/批发/产量口径',
     source VARCHAR(50) DEFAULT 'cpca' COMMENT '数据来源标识',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uk_year_month_type (year, month, data_type)
@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS monthly_brand (
     yoy_growth DECIMAL(8,2) COMMENT '同比增速(%)',
     mom_growth DECIMAL(8,2) COMMENT '环比增速(%)',
     is_nev TINYINT(1) DEFAULT 0 COMMENT '是否新能源品牌',
+    data_type ENUM('retail','wholesale','production') DEFAULT 'retail' COMMENT '零售/批发/产量口径',
+    origin VARCHAR(20) DEFAULT NULL COMMENT '车系(自主/德系/日系/美系/欧系/韩系/其他)',
     source VARCHAR(50) DEFAULT 'cpca' COMMENT '数据来源',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uk_year_month_brand_source (year, month, brand_name, source)

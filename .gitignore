@@ -4,7 +4,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
-venv/
+.venv/
 .env
 
 # Node
@@ -12,6 +12,59 @@ node_modules/
 .nuxt/
 .output/
 dist/
+dist-ssr/
+dist.zip
+dist.tar
+dist.war
+*-dist.zip
+*-dist.tar
+*-dist.war
+.nitro
+dev-dist
+.cache
+.turbo
+.temp
+.stylelintcache
+*.local
+**/.vitepress/cache
+
+# Vben Admin 特定
+apps/*/stats.html
+apps/**/.cache
+packages/**/.cache
+internal/**/.cache
+apps/*/dist
+apps/*/dist-ssr
+apps/*/*.zip
+apps/*/*.tar
+apps/*/*.war
+
+# 测试覆盖率
+coverage
+apps/*/coverage
+packages/*/coverage
+
+# TypeScript 构建缓存
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# 锁文件（Vben 使用 pnpm，忽略其他）
+yarn.lock
+package-lock.json
+
+# 本地环境文件
+.env.local
+.env.*.local
+.env.development.local
+.env.production.local
+.env.test.local
+.eslintcache
+
+# Vite 配置缓存
+vite.config.mts.*
+vite.config.mjs.*
+vite.config.js.*
+vite.config.ts.*
 
 # IDE
 .vscode/
