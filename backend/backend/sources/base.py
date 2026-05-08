@@ -4,11 +4,11 @@ from typing import Any
 
 class BaseDataSource(ABC):
     @abstractmethod
-    def get_monthly_overall(self, date: str = None) -> list[dict[str, Any]]:
+    def get_monthly_overall(self, date: str = None, data_type: str = "retail") -> list[dict[str, Any]]:
         pass
 
     @abstractmethod
-    def get_brand_ranking(self, date: str = None) -> list[dict[str, Any]]:
+    def get_brand_ranking(self, date: str = None, data_type: str = "retail") -> list[dict[str, Any]]:
         pass
 
     @abstractmethod
