@@ -1,13 +1,16 @@
 <script lang="ts" setup>
-import { RadioGroup, RadioButton, Select } from 'tdesign-vue-next';
 import { ref, watch } from 'vue';
 
-import { $t } from '#/locales';
+import { RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
 
 import { getBrandRankingApi } from '#/api/sales/brand';
+import { $t } from '#/locales';
 
+const emit = defineEmits<{
+  change: [payload: { brands: string[]; dataType: 'production' | 'retail' | 'wholesale'; granularity: 'monthly' | 'yearly'; }];
+}>();
 const granularity = ref<'monthly' | 'yearly'>('monthly');
-const dataType = ref<'retail' | 'wholesale' | 'production'>('retail');
+const dataType = ref<'production' | 'retail' | 'wholesale'>('retail');
 const selectedBrands = ref<string[]>([]);
 
 const brandOptions = ref<{ label: string; value: string }[]>([]);
@@ -15,10 +18,6 @@ const brandLoading = ref(false);
 
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth() + 1;
-
-const emit = defineEmits<{
-  change: [payload: { granularity: 'monthly' | 'yearly'; dataType: 'retail' | 'wholesale' | 'production'; brands: string[] }];
-}>();
 
 async function fetchBrandOptions() {
   brandLoading.value = true;
@@ -44,11 +43,7 @@ async function fetchBrandOptions() {
 
 function handleBrandsChange(val: any) {
   const arr = Array.isArray(val) ? val : [val];
-  if (arr.length > 2) {
-    selectedBrands.value = arr.slice(-2);
-  } else {
-    selectedBrands.value = arr;
-  }
+  selectedBrands.value = arr.length > 2 ? arr.slice(-2) : arr;
 }
 
 watch([granularity, dataType, selectedBrands], () => {

@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { Table } from 'tdesign-vue-next';
 import { onMounted, ref } from 'vue';
 
-import { $t } from '#/locales';
+import { Table } from 'tdesign-vue-next';
 
 import { getNevShareTrendApi } from '#/api/sales/analysis';
+import { $t } from '#/locales';
 
 const loading = ref(false);
 const tableData = ref<any[]>([]);
@@ -13,9 +13,9 @@ const columns = [
   { colKey: 'time', title: $t('sales.analysis.nev.time'), width: 120 },
   { colKey: 'totalSales', title: $t('sales.analysis.nev.totalSales'), width: 130, cell: (_h: any, { row }: any) => row.totalSales?.toLocaleString() ?? '-' },
   { colKey: 'nevSales', title: $t('sales.analysis.nev.nevSales'), width: 130, cell: (_h: any, { row }: any) => row.nevSales?.toLocaleString() ?? '-' },
-  { colKey: 'penetrationRate', title: $t('sales.analysis.nev.penetrationRate'), width: 140, cell: (_h: any, { row }: any) => row.penetrationRate != null ? `${row.penetrationRate.toFixed(2)}%` : '-' },
-  { colKey: 'bevShare', title: $t('sales.analysis.nev.bevShare'), width: 120, cell: (_h: any, { row }: any) => row.bevShare != null ? `${row.bevShare.toFixed(2)}%` : '-' },
-  { colKey: 'phevShare', title: $t('sales.analysis.nev.phevShare'), width: 120, cell: (_h: any, { row }: any) => row.phevShare != null ? `${row.phevShare.toFixed(2)}%` : '-' },
+  { colKey: 'penetrationRate', title: $t('sales.analysis.nev.penetrationRate'), width: 140, cell: (_h: any, { row }: any) => row.penetrationRate == null ? '-' : `${row.penetrationRate.toFixed(2)}%` },
+  { colKey: 'bevShare', title: $t('sales.analysis.nev.bevShare'), width: 120, cell: (_h: any, { row }: any) => row.bevShare == null ? '-' : `${row.bevShare.toFixed(2)}%` },
+  { colKey: 'phevShare', title: $t('sales.analysis.nev.phevShare'), width: 120, cell: (_h: any, { row }: any) => row.phevShare == null ? '-' : `${row.phevShare.toFixed(2)}%` },
 ];
 
 async function fetchData() {

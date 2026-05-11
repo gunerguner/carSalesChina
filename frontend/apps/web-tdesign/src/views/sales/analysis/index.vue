@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import { Card, TabPanel, Tabs } from 'tdesign-vue-next';
 import { ref } from 'vue';
+
+import { Card, TabPanel, Tabs } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
 

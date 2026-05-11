@@ -9,8 +9,8 @@ import { getBrandCompareTrendApi } from '#/api/sales/brand';
 
 const props = defineProps<{
   brands: string[];
+  dataType: 'production' | 'retail' | 'wholesale';
   granularity: 'monthly' | 'yearly';
-  dataType: 'retail' | 'wholesale' | 'production';
 }>();
 
 const chartRef = ref<EchartsUIType>();
@@ -28,6 +28,7 @@ function makeTimeKey(item: any): string {
 async function fetchAndRender() {
   if (props.brands.length < 2) {
     renderEcharts({
+      animation: false,
       title: { text: '请选择2个品牌进行对比', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 } },
       xAxis: { type: 'category', data: [] },
       yAxis: { type: 'value' },
@@ -46,6 +47,7 @@ async function fetchAndRender() {
 
     if (!Array.isArray(data) || data.length === 0) {
       renderEcharts({
+        animation: false,
         title: { text: '暂无数据', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 } },
         xAxis: { type: 'category', data: [] },
         yAxis: { type: 'value' },
@@ -55,7 +57,7 @@ async function fetchAndRender() {
     }
 
     const allTimeKeys = new Set<string>();
-    const seriesData: { name: string; data: number[] }[] = [];
+    const seriesData: { data: number[]; name: string; }[] = [];
 
     const brandMap = new Map<string, Map<string, number>>();
     for (const brand of data) {
@@ -68,7 +70,7 @@ async function fetchAndRender() {
       brandMap.set(brand.brand_name, map);
     }
 
-    const timeLabels = [...allTimeKeys].sort();
+    const timeLabels = [...allTimeKeys].toSorted();
 
     const brand1 = props.brands[0];
     const brand2 = props.brands[1];
@@ -83,11 +85,12 @@ async function fetchAndRender() {
     }
 
     renderEcharts({
+      animation: false,
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
       legend: { data: [props.brands[0]!, props.brands[1]!], bottom: 0 },
       grid: { left: '3%', right: '4%', bottom: '12%', top: '8%', containLabel: true },
       xAxis: { type: 'category', data: timeLabels, boundaryGap: false },
-      yAxis: { type: 'value', axisLabel: { formatter: (val: number) => val >= 10000 ? `${(val / 10000).toFixed(0)}万` : String(val) } },
+      yAxis: { type: 'value', axisLabel: { formatter: (val: number) => val >= 10_000 ? `${(val / 10_000).toFixed(0)}万` : String(val) } },
       series: seriesData.map((s, i) => ({
         name: s.name,
         type: 'line' as const,

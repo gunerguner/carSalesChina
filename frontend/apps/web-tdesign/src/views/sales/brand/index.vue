@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import { Card } from 'tdesign-vue-next';
 import { ref } from 'vue';
+
+import { Card } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
 
@@ -15,11 +16,11 @@ const currentMonth = new Date().getMonth() + 1;
 
 const filterState = ref({
   granularity: 'monthly' as 'monthly' | 'yearly',
-  dataType: 'retail' as 'retail' | 'wholesale' | 'production',
+  dataType: 'retail' as 'production' | 'retail' | 'wholesale',
   brands: [] as string[],
 });
 
-function onFilterChange(payload: { granularity: 'monthly' | 'yearly'; dataType: 'retail' | 'wholesale' | 'production'; brands: string[] }) {
+function onFilterChange(payload: { brands: string[]; dataType: 'production' | 'retail' | 'wholesale'; granularity: 'monthly' | 'yearly'; }) {
   filterState.value = payload;
 }
 </script>

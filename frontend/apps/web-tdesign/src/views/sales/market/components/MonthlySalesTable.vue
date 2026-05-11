@@ -1,15 +1,15 @@
-<script lang="ts" setup>
-import { Table } from 'tdesign-vue-next';
-import { onMounted, ref, watch } from 'vue';
+<script setup lang="ts">
+import { h, onMounted, ref, watch } from 'vue';
 
-import { $t } from '#/locales';
+import { Table } from 'tdesign-vue-next';
 
 import { getMarketYearlyApi } from '#/api/sales/market';
+import { $t } from '#/locales';
 
 const props = defineProps<{
-  year: number;
+  dataType: 'production' | 'retail' | 'wholesale';
   energyType: string;
-  dataType: 'retail' | 'wholesale' | 'production';
+  year: number;
 }>();
 
 const loading = ref(false);
@@ -17,26 +17,52 @@ const tableData = ref<any[]>([]);
 
 const salesFieldMap: Record<string, string> = {
   all: 'total_sales',
-  fuel: 'ice_sales',
   bev: 'bev_sales',
-  phev: 'phev_sales',
+  fuel: 'ice_sales',
   hybrid: 'hybrid_sales',
+  phev: 'phev_sales',
 };
 
 const columns = [
+  { colKey: 'year', title: $t('sales.market.yearly.year'), width: 100 },
   { colKey: 'month', title: $t('sales.market.monthly.month'), width: 80 },
-  { colKey: 'sales', title: $t('sales.market.monthly.sales'), width: 120, cell: (_h: any, { row }: any) => row.sales?.toLocaleString() ?? '-' },
-  { colKey: 'momGrowth', title: $t('sales.market.monthly.momGrowth'), width: 130, cell: (_h: any, { row }: any) => formatGrowth(row.momGrowth) },
-  { colKey: 'yoyGrowth', title: $t('sales.market.monthly.yoyGrowth'), width: 130, cell: (_h: any, { row }: any) => formatGrowth(row.yoyGrowth) },
-  { colKey: 'totalSales', title: $t('sales.market.monthly.totalSales'), width: 120, cell: (_h: any, { row }: any) => row.totalSales?.toLocaleString() ?? '-' },
-  { colKey: 'nevSales', title: $t('sales.market.monthly.nevSales'), width: 120, cell: (_h: any, { row }: any) => row.nevSales?.toLocaleString() ?? '-' },
+  {
+    colKey: 'sales',
+    title: $t('sales.market.monthly.sales'),
+    width: 140,
+    cell: (_h: any, { row }: any) => row.sales?.toLocaleString() ?? '-',
+  },
+  {
+    colKey: 'momGrowth',
+    title: $t('sales.market.monthly.momGrowth'),
+    width: 130,
+    cell: (_h: any, { row }: any) => formatGrowth(row.momGrowth),
+  },
+  {
+    colKey: 'yoyGrowth',
+    title: $t('sales.market.monthly.yoyGrowth'),
+    width: 130,
+    cell: (_h: any, { row }: any) => formatGrowth(row.yoyGrowth),
+  },
+  {
+    colKey: 'totalSales',
+    title: $t('sales.market.monthly.totalSales'),
+    width: 140,
+    cell: (_h: any, { row }: any) => row.totalSales?.toLocaleString() ?? '-',
+  },
+  {
+    colKey: 'nevSales',
+    title: $t('sales.market.monthly.nevSales'),
+    width: 140,
+    cell: (_h: any, { row }: any) => row.nevSales?.toLocaleString() ?? '-',
+  },
 ];
 
-function formatGrowth(val: number | null | undefined) {
-  if (val == null) return '-';
+function formatGrowth(val: null | number | undefined) {
+  if (val == null) return h('span', { style: { color: '#999' } }, '-');
   const formatted = val.toFixed(2) + '%';
-  const color = val > 0 ? 'text-red-500' : val < 0 ? 'text-green-500' : '';
-  return { class: color, content: formatted };
+  const textColor = val > 0 ? '#ef4444' : (val < 0 ? '#22c55e' : '#666');
+  return h('span', { style: { color: textColor, fontWeight: 500 } }, formatted);
 }
 
 async function fetchData() {
@@ -56,6 +82,7 @@ async function fetchData() {
     const field = salesFieldMap[props.energyType] || 'total_sales';
     tableData.value = data.map((item: any, index: number) => ({
       key: index,
+      year: item.year,
       month: `${item.month}月`,
       sales: item[field] ?? null,
       momGrowth: item.mom_growth ?? null,
@@ -81,6 +108,5 @@ watch([() => props.year, () => props.energyType, () => props.dataType], () => fe
     row-key="key"
     size="small"
     bordered
-    :pagination="{ pageSize: 12, showPageSize: false }"
   />
 </template>

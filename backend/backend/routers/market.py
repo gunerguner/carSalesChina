@@ -180,31 +180,26 @@ def yearly(
     data_type: str = DATA_TYPE_ENUM,
     db: Session = Depends(get_db),
 ):
+    min_year = db.query(func.min(SalesData.year)).filter(
+        SalesData.data_type == data_type,
+    ).scalar() or year - 2
+
     field = ENERGY_FIELD_MAP.get(energy_type, "total_sales")
     rows = db.query(SalesData).filter(
-        SalesData.year == year,
+        SalesData.year >= min_year,
         SalesData.data_type == data_type,
-    ).order_by(SalesData.month).all()
+    ).order_by(SalesData.year, SalesData.month).all()
 
-    prev_year_rows = db.query(SalesData).filter(
-        SalesData.year == year - 1,
-        SalesData.data_type == data_type,
-    ).all()
-    prev_year_map = {r.month: r for r in prev_year_rows}
+    all_rows_map = {(r.year, r.month): r for r in rows}
+    years_in_data = sorted(set(r.year for r in rows))
 
     data = []
     for r in rows:
-        prev_month_row = None
-        if r.month > 1:
-            prev_month_row = next((x for x in rows if x.month == r.month - 1), None)
-        else:
-            prev_month_row = db.query(SalesData).filter(
-                SalesData.year == year - 1,
-                SalesData.month == 12,
-                SalesData.data_type == data_type,
-            ).first()
+        prev_month_key = (r.year - 1, 12) if r.month == 1 else (r.year, r.month - 1)
+        prev_year_key = (r.year - 1, r.month)
 
-        prev_year_row = prev_year_map.get(r.month)
+        prev_month_row = all_rows_map.get(prev_month_key)
+        prev_year_row = all_rows_map.get(prev_year_key)
 
         current_val = float(getattr(r, field) or 0)
         prev_month_val = float(getattr(prev_month_row, field) or 0) if prev_month_row else 0
@@ -214,6 +209,7 @@ def yearly(
         yoy_growth = ((current_val - prev_year_val) / prev_year_val * 100) if prev_year_val else None
 
         data.append({
+            "year": r.year,
             "month": r.month,
             "sales": current_val,
             "yoy_growth": round(yoy_growth, 2) if yoy_growth else None,

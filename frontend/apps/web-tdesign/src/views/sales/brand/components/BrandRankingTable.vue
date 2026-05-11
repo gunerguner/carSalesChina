@@ -1,16 +1,16 @@
 <script lang="ts" setup>
-import { Table } from 'tdesign-vue-next';
 import { onMounted, ref, watch } from 'vue';
 
-import { $t } from '#/locales';
+import { Table } from 'tdesign-vue-next';
 
 import { getBrandRankingApi, getBrandRankingYearlyApi } from '#/api/sales/brand';
+import { $t } from '#/locales';
 
 const props = defineProps<{
-  year: number;
-  month: number;
+  dataType: 'production' | 'retail' | 'wholesale';
   granularity: 'monthly' | 'yearly';
-  dataType: 'retail' | 'wholesale' | 'production';
+  month: number;
+  year: number;
 }>();
 
 const loading = ref(false);
@@ -25,10 +25,10 @@ const columns = [
   { colKey: 'yoyGrowth', title: $t('sales.brand.ranking.yoyGrowth'), width: 130, cell: (_h: any, { row }: any) => formatGrowth(row.yoyGrowth) },
 ];
 
-function formatGrowth(val: number | null | undefined) {
+function formatGrowth(val: null | number | undefined) {
   if (val == null) return '-';
   const formatted = val.toFixed(2) + '%';
-  const color = val > 0 ? 'text-red-500' : val < 0 ? 'text-green-500' : '';
+  const color = val > 0 ? 'text-red-500' : (val < 0 ? 'text-green-500' : '');
   return { class: color, content: formatted };
 }
 
@@ -42,18 +42,14 @@ async function fetchData() {
   loading.value = true;
   try {
     let res: any;
-    if (props.granularity === 'yearly') {
-      res = await getBrandRankingYearlyApi({
+    res = await (props.granularity === 'yearly' ? getBrandRankingYearlyApi({
         year: props.year,
         data_type: props.dataType,
-      });
-    } else {
-      res = await getBrandRankingApi({
+      }) : getBrandRankingApi({
         year: props.year,
         month: props.month,
         data_type: props.dataType,
-      });
-    }
+      }));
 
     const list = extractList(res);
 

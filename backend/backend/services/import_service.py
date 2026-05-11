@@ -1,7 +1,9 @@
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import Iterable
 
+import yaml
 from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.orm import Session
 
@@ -16,14 +18,12 @@ client = CpcaClient()
 DEFAULT_IMPORT_DATA_TYPES = ("retail", "wholesale", "production")
 BRAND_DATA_TYPES = ("retail", "wholesale")
 
-ORIGIN_MAP = {
-    "自主": ["比亚迪", "吉利", "长安", "长城", "奇瑞", "蔚来", "小鹏", "理想", "零跑", "哪吒", "问界", "埃安", "红旗", "五菱", "荣威", "名爵", "传祺", "奔腾", "江淮", "北汽", "极氪", "深蓝", "智己", "岚图", "阿维塔", "领克", "魏牌", "坦克", "星途", "捷途", "宝骏", "东风", "海马", "东南", "大通", "北京", "极狐", "小米"],
-    "德系": ["大众", "奥迪", "奔驰", "宝马", "保时捷", "斯柯达", "迈巴赫"],
-    "日系": ["丰田", "本田", "日产", "马自达", "雷克萨斯", "英菲尼迪", "讴歌", "斯巴鲁", "三菱", "铃木"],
-    "美系": ["别克", "雪佛兰", "凯迪拉克", "福特", "林肯", "Jeep", "特斯拉"],
-    "欧系": ["沃尔沃", "标致", "雪铁龙", "DS", "捷豹", "路虎", "MINI", "Smart", "极星", "法拉利", "玛莎拉蒂", "兰博基尼", "宾利", "劳斯莱斯", "阿尔法"],
-    "韩系": ["现代", "起亚", "捷尼赛思"],
-}
+# 加载品牌国别配置
+_META_DATA_PATH = Path(__file__).parent.parent / "meta_data.yaml"
+with open(_META_DATA_PATH, "r", encoding="utf-8") as f:
+    _META_DATA = yaml.safe_load(f)
+
+ORIGIN_MAP: dict[str, list[str]] = _META_DATA.get("brand_origins", {})
 
 
 def _get_origin(brand_name: str) -> str:
@@ -80,7 +80,8 @@ def _add_brand_growth(records: list[dict]) -> list[dict]:
     return records
 
 
-def _upsert_brand_meta(db: Session, brand_names: Iterable[str]) -> int:
+def upsert_brand_meta(db: Session, brand_names: Iterable[str]) -> int:
+    """批量插入/更新品牌元数据（独立方法，可被单独调用）。"""
     count = 0
     for brand_name in sorted(set(brand_names)):
         stmt = insert(BrandMeta).values(
@@ -91,6 +92,7 @@ def _upsert_brand_meta(db: Session, brand_names: Iterable[str]) -> int:
         db.execute(stmt)
         count += 1
     db.commit()
+    logger.info("品牌元数据更新完成: %s 条", count)
     return count
 
 
@@ -124,12 +126,10 @@ def _upsert_overall(db: Session, records: list[dict]) -> int:
 
 def _upsert_brand(db: Session, records: list[dict]) -> int:
     count = 0
-    brand_names = []
     for rec in records:
         brand_name = rec.get("品牌名称", "")
         if not brand_name:
             continue
-        brand_names.append(brand_name)
         stmt = insert(BrandSales).values(
             year=rec["year"],
             month=rec["month"],
@@ -147,7 +147,6 @@ def _upsert_brand(db: Session, records: list[dict]) -> int:
         db.execute(stmt)
         count += 1
     db.commit()
-    _upsert_brand_meta(db, brand_names)
     return count
 
 

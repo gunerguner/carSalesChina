@@ -1,22 +1,23 @@
 <script lang="ts" setup>
-import { RadioGroup, RadioButton, Select } from 'tdesign-vue-next';
 import { computed } from 'vue';
+
+import { RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
 
 export interface FilterState {
   energyType: string;
-  dataType: 'retail' | 'wholesale' | 'production';
+  dataType: 'production' | 'retail' | 'wholesale';
 }
 
 const props = defineProps<{
+  dataType: 'production' | 'retail' | 'wholesale';
   energyType: string;
-  dataType: 'retail' | 'wholesale' | 'production';
 }>();
 
 const emit = defineEmits<{
+  'update:dataType': [value: 'production' | 'retail' | 'wholesale'];
   'update:energyType': [value: string];
-  'update:dataType': [value: 'retail' | 'wholesale' | 'production'];
 }>();
 
 const energyOptions = computed(() => [

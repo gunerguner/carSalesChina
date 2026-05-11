@@ -131,13 +131,13 @@ const defaultPreferences: Preferences = {
     progress: true,
   },
   widget: {
-    fullscreen: true,
+    fullscreen: false,
     languageToggle: true,
     lockScreen: true,
     refresh: true,
     sidebarToggle: true,
     themeToggle: true,
-    timezone: true,
+    timezone: false,
   },
 };
 

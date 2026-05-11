@@ -8,8 +8,8 @@ import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 import { getMarketTrendApi } from '#/api/sales/market';
 
 const props = defineProps<{
+  dataType: 'production' | 'retail' | 'wholesale';
   energyType: string;
-  dataType: 'retail' | 'wholesale' | 'production';
 }>();
 
 const chartRef = ref<EchartsUIType>();
@@ -30,6 +30,7 @@ async function fetchAndRender() {
 
     if (!data || !Array.isArray(data) || data.length === 0) {
       renderEcharts({
+        animation: false,
         title: { text: '暂无数据', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 } },
         xAxis: { type: 'category', data: [] },
         yAxis: { type: 'value' },
@@ -43,13 +44,13 @@ async function fetchAndRender() {
       const year = item.year;
       const month = item.month;
       if (!yearDataMap.has(year)) {
-        yearDataMap.set(year, new Array(12).fill(0));
+        yearDataMap.set(year, Array.from<number>({length: 12}).fill(0));
       }
       const arr = yearDataMap.get(year)!;
       arr[month - 1] = item.sales ?? 0;
     }
 
-    const years = [...yearDataMap.keys()].sort((a, b) => a - b);
+    const years = [...yearDataMap.keys()].toSorted((a, b) => a - b);
     const months = Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
 
     const series = years.map((year, index) => ({
@@ -61,11 +62,12 @@ async function fetchAndRender() {
     }));
 
     renderEcharts({
+      animation: false,
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
       legend: { data: years.map(String), bottom: 0 },
       grid: { left: '3%', right: '4%', bottom: '12%', top: '8%', containLabel: true },
       xAxis: { type: 'category', data: months, boundaryGap: false },
-      yAxis: { type: 'value', axisLabel: { formatter: (val: number) => val >= 10000 ? `${(val / 10000).toFixed(0)}万` : String(val) } },
+      yAxis: { type: 'value', axisLabel: { formatter: (val: number) => val >= 10_000 ? `${(val / 10_000).toFixed(0)}万` : String(val) } },
       series,
     });
   } finally {

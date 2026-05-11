@@ -38,6 +38,7 @@ async function fetchAndRender() {
 
     if (!data || !Array.isArray(data) || data.length === 0) {
       renderEcharts({
+        animation: false,
         title: { text: '暂无数据', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 } },
         xAxis: { type: 'category', data: [] },
         yAxis: { type: 'value' },
@@ -55,12 +56,13 @@ async function fetchAndRender() {
       name: ORIGIN_LABELS[key],
       type: 'bar' as const,
       stack: 'total',
-      data: data.map((item: any) => item[key] != null ? +(item[key]).toFixed(2) : 0),
+      data: data.map((item: any) => item[key] == null ? 0 : +(item[key]).toFixed(2)),
       itemStyle: { color: ORIGIN_COLORS[key] },
       emphasis: { focus: 'series' as const },
     }));
 
     renderEcharts({
+      animation: false,
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
       legend: { data: Object.values(ORIGIN_LABELS), bottom: 0, type: 'scroll' },
       grid: { left: '3%', right: '4%', bottom: '15%', top: '8%', containLabel: true },

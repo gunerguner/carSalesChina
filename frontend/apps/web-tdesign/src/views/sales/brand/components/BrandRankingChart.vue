@@ -8,10 +8,10 @@ import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 import { getBrandRankingApi, getBrandRankingYearlyApi } from '#/api/sales/brand';
 
 const props = defineProps<{
-  year: number;
-  month: number;
+  dataType: 'production' | 'retail' | 'wholesale';
   granularity: 'monthly' | 'yearly';
-  dataType: 'retail' | 'wholesale' | 'production';
+  month: number;
+  year: number;
 }>();
 
 const chartRef = ref<EchartsUIType>();
@@ -28,25 +28,22 @@ async function fetchAndRender() {
   loading.value = true;
   try {
     let res: any;
-    if (props.granularity === 'yearly') {
-      res = await getBrandRankingYearlyApi({
+    res = await (props.granularity === 'yearly' ? getBrandRankingYearlyApi({
         year: props.year,
         data_type: props.dataType,
         top_n: 15,
-      });
-    } else {
-      res = await getBrandRankingApi({
+      }) : getBrandRankingApi({
         year: props.year,
         month: props.month,
         data_type: props.dataType,
         top_n: 15,
-      });
-    }
+      }));
 
     const list = extractList(res);
 
     if (list.length === 0) {
       renderEcharts({
+        animation: false,
         title: { text: '暂无数据', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 } },
         xAxis: { type: 'value' },
         yAxis: { type: 'category', data: [] },
@@ -55,13 +52,14 @@ async function fetchAndRender() {
       return;
     }
 
-    const brands = list.map((item: any) => item.brand_name).reverse();
-    const sales = list.map((item: any) => (item.sales_volume ?? item.total_sales ?? item.sales ?? 0)).reverse();
+    const brands = list.map((item: any) => item.brand_name).toReversed();
+    const sales = list.map((item: any) => (item.sales_volume ?? item.total_sales ?? item.sales ?? 0)).toReversed();
 
     renderEcharts({
+      animation: false,
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
       grid: { left: '15%', right: '4%', bottom: '3%', top: '3%', containLabel: true },
-      xAxis: { type: 'value', axisLabel: { formatter: (val: number) => val >= 10000 ? `${(val / 10000).toFixed(1)}万` : String(val) } },
+      xAxis: { type: 'value', axisLabel: { formatter: (val: number) => val >= 10_000 ? `${(val / 10_000).toFixed(1)}万` : String(val) } },
       yAxis: { type: 'category', data: brands },
       series: [
         {

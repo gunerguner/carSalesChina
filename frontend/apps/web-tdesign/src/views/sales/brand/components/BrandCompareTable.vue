@@ -1,17 +1,17 @@
 <script lang="ts" setup>
 import type { PrimaryTableCol } from 'tdesign-vue-next';
 
-import { Table } from 'tdesign-vue-next';
 import { computed, onMounted, ref, watch } from 'vue';
 
-import { $t } from '#/locales';
+import { Table } from 'tdesign-vue-next';
 
 import { getBrandCompareTrendApi } from '#/api/sales/brand';
+import { $t } from '#/locales';
 
 const props = defineProps<{
   brands: string[];
+  dataType: 'production' | 'retail' | 'wholesale';
   granularity: 'monthly' | 'yearly';
-  dataType: 'retail' | 'wholesale' | 'production';
 }>();
 
 const loading = ref(false);
@@ -34,7 +34,7 @@ const columns = computed<PrimaryTableCol[]>(() => {
       colKey: 'diff',
       title: $t('sales.brand.compare.diff'),
       width: 130,
-      cell: (_h: any, { row }: any) => row.diff != null ? row.diff.toLocaleString() : '-',
+      cell: (_h: any, { row }: any) => row.diff == null ? '-' : row.diff.toLocaleString(),
     });
   }
   return base;
@@ -77,7 +77,7 @@ async function fetchData() {
       }
     }
 
-    tableData.value = [...timeMap.values()].sort((a, b) => a.time.localeCompare(b.time)).map((row) => {
+    tableData.value = [...timeMap.values()].toSorted((a, b) => a.time.localeCompare(b.time)).map((row) => {
       if (props.brands.length === 2) {
         const a = row[`brand_${props.brands[0]}`];
         const b = row[`brand_${props.brands[1]}`];

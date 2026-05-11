@@ -1,38 +1,39 @@
-<script lang="ts" setup>
-import { Table } from 'tdesign-vue-next';
+<script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 
-import { $t } from '#/locales';
+import { Table } from 'tdesign-vue-next';
 
 import { getMarketTrendApi } from '#/api/sales/market';
+import { $t } from '#/locales';
 
 const props = defineProps<{
+  dataType: 'production' | 'retail' | 'wholesale';
   energyType: string;
-  dataType: 'retail' | 'wholesale' | 'production';
 }>();
 
 const loading = ref(false);
 const tableData = ref<any[]>([]);
 
-const salesFieldMap: Record<string, string> = {
-  all: 'total_sales',
-  fuel: 'ice_sales',
-  bev: 'bev_sales',
-  phev: 'phev_sales',
-  hybrid: 'hybrid_sales',
-};
-
 const columns = [
   { colKey: 'year', title: $t('sales.market.yearly.year'), width: 100 },
-  { colKey: 'sales', title: $t('sales.market.yearly.sales'), width: 150, cell: (h: any, { row }: any) => row.sales?.toLocaleString() ?? '-' },
-  { colKey: 'yoyGrowth', title: $t('sales.market.yearly.yoyGrowth'), width: 140, cell: (_h: any, { row }: any) => formatGrowth(row.yoyGrowth) },
+  {
+    colKey: 'sales',
+    title: $t('sales.market.yearly.sales'),
+    width: 150,
+    cell: (_h: any, { row }: any) => row.sales?.toLocaleString() ?? '-',
+  },
+  {
+    colKey: 'yoyGrowth',
+    title: $t('sales.market.yearly.yoyGrowth'),
+    width: 140,
+    cell: (_h: any, { row }: any) => formatGrowth(row.yoyGrowth),
+  },
 ];
 
-function formatGrowth(val: number | null | undefined) {
+function formatGrowth(val: null | number | undefined) {
   if (val == null) return '-';
   const formatted = val.toFixed(2) + '%';
-  const color = val > 0 ? 'text-red-500' : val < 0 ? 'text-green-500' : '';
-  return { class: color, content: formatted };
+  return formatted;
 }
 
 async function fetchData() {

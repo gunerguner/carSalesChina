@@ -18,6 +18,7 @@ async function fetchAndRender() {
 
     if (!data || !Array.isArray(data) || data.length === 0) {
       renderEcharts({
+        animation: false,
         title: { text: '暂无数据', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 } },
         xAxis: { type: 'category', data: [] },
         yAxis: { type: 'value' },
@@ -30,10 +31,11 @@ async function fetchAndRender() {
       `${item.year}-${String(item.month).padStart(2, '0')}`
     );
     const penetrationRates = data.map((item: any) =>
-      item.nev_penetration_rate != null ? +(item.nev_penetration_rate).toFixed(2) : 0
+      item.nev_penetration_rate == null ? 0 : +(item.nev_penetration_rate).toFixed(2)
     );
 
     renderEcharts({
+      animation: false,
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: (params: any) => {
         const p = Array.isArray(params) ? params[0] : params;
         return `${p.axisValue}<br/>NEV渗透率: ${p.value}%`;

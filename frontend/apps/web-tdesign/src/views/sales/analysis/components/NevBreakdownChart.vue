@@ -18,6 +18,7 @@ async function fetchAndRender() {
 
     if (!data || !Array.isArray(data) || data.length === 0) {
       renderEcharts({
+        animation: false,
         title: { text: '暂无数据', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 } },
         xAxis: { type: 'category', data: [] },
         yAxis: { type: 'value' },
@@ -30,11 +31,12 @@ async function fetchAndRender() {
       `${item.year}-${String(item.month).padStart(2, '0')}`
     );
 
-    const bevData = data.map((item: any) => item.bev_ratio != null ? +(item.bev_ratio).toFixed(2) : 0);
-    const phevData = data.map((item: any) => item.phev_ratio != null ? +(item.phev_ratio).toFixed(2) : 0);
-    const hevData = data.map((item: any) => item.hybrid_ratio != null ? +(item.hybrid_ratio).toFixed(2) : 0);
+    const bevData = data.map((item: any) => item.bev_ratio == null ? 0 : +(item.bev_ratio).toFixed(2));
+    const phevData = data.map((item: any) => item.phev_ratio == null ? 0 : +(item.phev_ratio).toFixed(2));
+    const hevData = data.map((item: any) => item.hybrid_ratio == null ? 0 : +(item.hybrid_ratio).toFixed(2));
 
     renderEcharts({
+      animation: false,
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
       legend: { data: ['BEV', 'PHEV', 'HEV'], bottom: 0 },
       grid: { left: '3%', right: '4%', bottom: '12%', top: '8%', containLabel: true },

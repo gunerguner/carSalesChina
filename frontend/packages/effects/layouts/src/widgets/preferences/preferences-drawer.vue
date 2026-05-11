@@ -167,13 +167,11 @@ const shortcutKeysGlobalLockScreen = defineModel<boolean>(
   'shortcutKeysGlobalLockScreen',
 );
 
-const widgetFullscreen = defineModel<boolean>('widgetFullscreen');
 const widgetLanguageToggle = defineModel<boolean>('widgetLanguageToggle');
 const widgetThemeToggle = defineModel<boolean>('widgetThemeToggle');
 const widgetSidebarToggle = defineModel<boolean>('widgetSidebarToggle');
 const widgetLockScreen = defineModel<boolean>('widgetLockScreen');
 const widgetRefresh = defineModel<boolean>('widgetRefresh');
-const widgetTimezone = defineModel<boolean>('widgetTimezone');
 
 const {
   customPreferences,
@@ -473,13 +471,11 @@ function handleCustomPreferencesUpdate(updates: CustomPreferencesRecord) {
                 v-model:app-preferences-button-position="
                   appPreferencesButtonPosition
                 "
-                v-model:widget-fullscreen="widgetFullscreen"
                 v-model:widget-language-toggle="widgetLanguageToggle"
                 v-model:widget-lock-screen="widgetLockScreen"
                 v-model:widget-refresh="widgetRefresh"
                 v-model:widget-sidebar-toggle="widgetSidebarToggle"
                 v-model:widget-theme-toggle="widgetThemeToggle"
-                v-model:widget-timezone="widgetTimezone"
               />
             </Block>
             <Block :title="$t('preferences.footer.title')">
