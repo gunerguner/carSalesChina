@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS brand_meta (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     brand_name VARCHAR(100) NOT NULL COMMENT '品牌名称',
     brand_name_en VARCHAR(100) COMMENT '品牌英文名',
-    origin VARCHAR(20) COMMENT '车系(自主/德系/日系/美系/欧系/韩系/其他)',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uk_brand_name (brand_name)
 ) ENGINE=InnoDB;
@@ -34,14 +33,13 @@ CREATE TABLE IF NOT EXISTS brand_sales (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     year INT NOT NULL,
     month INT NOT NULL,
-    brand_name VARCHAR(100) NOT NULL COMMENT '品牌名称',
+    brand_id BIGINT NOT NULL COMMENT '品牌ID(外键)',
     sales_volume DECIMAL(15,2) COMMENT '销量',
-    yoy_growth DECIMAL(8,2) COMMENT '同比增速(%)',
-    mom_growth DECIMAL(8,2) COMMENT '环比增速(%)',
     data_type ENUM('retail','wholesale','production') DEFAULT 'retail' COMMENT '零售/批发/产量口径',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uk_year_month_brand_source (year, month, brand_name, data_type),
-    INDEX idx_brand_name (brand_name)
+    UNIQUE KEY uk_year_month_brand_type (year, month, brand_id, data_type),
+    INDEX idx_brand_id (brand_id),
+    CONSTRAINT fk_brand_sales_brand_meta FOREIGN KEY (brand_id) REFERENCES brand_meta(id)
 ) ENGINE=InnoDB;
 
 -- 4. 数据采集日志表
@@ -56,3 +54,16 @@ CREATE TABLE IF NOT EXISTS data_collection_log (
     INDEX idx_task_type (task_type),
     INDEX idx_status (status)
 ) ENGINE=InnoDB;
+
+-- 5. 车系占比数据表（乘联会官方国别细分）
+CREATE TABLE IF NOT EXISTS origin_share_data (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    year INT NOT NULL COMMENT '年份',
+    month INT NOT NULL COMMENT '月份',
+    origin VARCHAR(20) NOT NULL COMMENT '车系(自主/德系/日系/美系/欧系/韩系/其他)',
+    sales_volume DECIMAL(15,4) COMMENT '销量(万辆)',
+    data_type ENUM('retail','wholesale') DEFAULT 'retail' COMMENT '零售/批发口径',
+    UNIQUE KEY uk_year_month_origin_type (year, month, origin, data_type),
+    INDEX idx_year_month (year, month),
+    INDEX idx_origin (origin)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='车系占比数据(乘联会官方)';

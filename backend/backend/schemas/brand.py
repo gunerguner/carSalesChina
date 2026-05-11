@@ -1,38 +1,42 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
 
 
 class RankingQuery(BaseModel):
-    year: int
-    month: int
-    page: int = 1
-    pageSize: int = 20
-    is_nev: Optional[int] = None
+    year: int = Field(..., ge=2000, le=2100)
+    month: int = Field(..., ge=1, le=12)
+    page: int = Field(1, ge=1)
+    pageSize: int = Field(20, ge=1, le=100)
+    data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")
 
 
 class YearlyRankingQuery(BaseModel):
-    year: int
-    page: int = 1
-    pageSize: int = 20
+    year: int = Field(..., ge=2000, le=2100)
+    page: int = Field(1, ge=1)
+    pageSize: int = Field(20, ge=1, le=100)
+    data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")
 
 
 class CompareQuery(BaseModel):
-    brand_ids: str
-    year: int
-    month: int
+    brand_names: str = Field(...)
+    year: int = Field(..., ge=2000, le=2100)
+    month: int = Field(..., ge=1, le=12)
+    data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")
 
 
 class CompareTrendQuery(BaseModel):
-    brand_ids: str
-    years: int = 3
-    granularity: str = "monthly"
+    brand_names: str = Field(...)
+    years: int = Field(3, ge=1, le=10)
+    granularity: str = Field("monthly", pattern="^(monthly|yearly)$")
+    data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")
 
 
 class BrandDetailQuery(BaseModel):
-    year: int
-    month: int
+    year: int = Field(..., ge=2000, le=2100)
+    month: int = Field(..., ge=1, le=12)
+    data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")
 
 
 class BrandTrendQuery(BaseModel):
-    years: int = 3
-    granularity: str = "monthly"
+    years: int = Field(3, ge=1, le=10)
+    granularity: str = Field("monthly", pattern="^(monthly|yearly)$")
+    data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")

@@ -1,16 +1,17 @@
-from sqlalchemy import Column, BigInteger, Integer, String, Enum, Text, DateTime
-from sqlalchemy.sql import func
+from datetime import datetime
+from typing import Optional
 
-from backend.core.database import Base
+from sqlmodel import SQLModel, Field
+from sqlalchemy import Column, String, Integer, Text, Enum as SAEnum
 
 
-class CollectionLog(Base):
+class CollectionLog(SQLModel, table=True):
     __tablename__ = "data_collection_log"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    task_type = Column(String(50), nullable=False)
-    status = Column(Enum("pending", "success", "failed"), default="pending")
-    records_count = Column(Integer, default=0)
-    error_message = Column(Text)
-    started_at = Column(DateTime)
-    finished_at = Column(DateTime)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    task_type: str = Field(sa_column=Column(String(50), nullable=False))
+    status: Optional[str] = Field(default="pending", sa_column=Column(SAEnum("pending", "success", "failed"), default="pending"))
+    records_count: Optional[int] = Field(default=0, sa_column=Column(Integer, default=0))
+    error_message: Optional[str] = Field(default=None, sa_column=Column(Text))
+    started_at: Optional[datetime] = Field(default=None)
+    finished_at: Optional[datetime] = Field(default=None)

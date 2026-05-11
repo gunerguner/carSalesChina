@@ -55,7 +55,7 @@ async function fetchData() {
       year: item.year,
       sales: item.sales ?? null,
       yoyGrowth: item.yoy_growth ?? null,
-    }));
+    })).toReversed();
   } finally {
     loading.value = false;
   }

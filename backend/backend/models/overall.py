@@ -1,20 +1,24 @@
-from sqlalchemy import Column, BigInteger, Integer, Numeric, Enum, DateTime
-from sqlalchemy.sql import func
+from datetime import datetime
+from typing import Optional
 
-from backend.core.database import Base
+from sqlmodel import SQLModel, Field
+from sqlalchemy import UniqueConstraint, Column, Numeric, DateTime, Enum as SAEnum, func
 
 
-class SalesData(Base):
+class SalesData(SQLModel, table=True):
     __tablename__ = "sales_data"
+    __table_args__ = (
+        UniqueConstraint("year", "month", "data_type", name="uk_year_month_type"),
+    )
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    year = Column(Integer, nullable=False)
-    month = Column(Integer, nullable=False)
-    total_sales = Column(Numeric(15, 2))
-    nev_sales = Column(Numeric(15, 2))
-    ice_sales = Column(Numeric(15, 2))
-    bev_sales = Column(Numeric(15, 2))
-    phev_sales = Column(Numeric(15, 2))
-    hybrid_sales = Column(Numeric(15, 2))
-    data_type = Column(Enum("retail", "wholesale", "production"), default="retail")
-    created_at = Column(DateTime, server_default=func.now())
+    id: Optional[int] = Field(default=None, primary_key=True)
+    year: int
+    month: int
+    total_sales: Optional[float] = Field(default=None, sa_column=Column(Numeric(15, 2)))
+    nev_sales: Optional[float] = Field(default=None, sa_column=Column(Numeric(15, 2)))
+    ice_sales: Optional[float] = Field(default=None, sa_column=Column(Numeric(15, 2)))
+    bev_sales: Optional[float] = Field(default=None, sa_column=Column(Numeric(15, 2)))
+    phev_sales: Optional[float] = Field(default=None, sa_column=Column(Numeric(15, 2)))
+    hybrid_sales: Optional[float] = Field(default=None, sa_column=Column(Numeric(15, 2)))
+    data_type: Optional[str] = Field(default="retail", sa_column=Column(SAEnum("retail", "wholesale", "production"), default="retail"))
+    created_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, server_default=func.now()))

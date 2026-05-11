@@ -15,7 +15,7 @@
         },
         "overview": {
             "totalSales": "当月总销量",
-            "nevSales": "NEV销量",
+            "nevSales": "新能源销量",
             "nevPenetration": "NEV渗透率",
             "momGrowth": "环比增长",
             "yoyGrowth": "同比增长",
@@ -29,7 +29,7 @@
             "momGrowth": "环比增长(%)",
             "yoyGrowth": "同比增长(%)",
             "totalSales": "总销量",
-            "nevSales": "NEV销量"
+            "nevSales": "新能源销量"
         },
         "yearly": {
             "title": "年度销量",
@@ -80,7 +80,7 @@
             "breakdownChartTitle": "NEV细分占比",
             "time": "时间",
             "totalSales": "总销量",
-            "nevSales": "NEV销量",
+            "nevSales": "新能源销量",
             "penetrationRate": "NEV渗透率(%)",
             "bevShare": "BEV占比(%)",
             "phevShare": "PHEV占比(%)",
@@ -95,7 +95,7 @@
             "american": "美系(%)",
             "european": "欧系(%)",
             "korean": "韩系(%)",
-            "other": "其他(%)"
+            "french": "法系(%)"
         }
     },
     "common": {

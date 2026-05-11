@@ -1,11 +1,12 @@
 import logging
-from datetime import datetime
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from backend.core.database import SessionLocal
-from backend.services.import_service import import_history
+from sqlmodel import Session
+
+from backend.core.database import engine
+from backend.services.import_service import refresh_all_sales_data
 
 logger = logging.getLogger(__name__)
 
@@ -13,14 +14,12 @@ scheduler = BackgroundScheduler()
 
 
 def _scheduled_collect():
-    db = SessionLocal()
-    try:
-        logger.info("定时采集任务启动")
-        import_history(db, months=1)
-    except Exception as e:
-        logger.error(f"定时采集任务失败: {e}")
-    finally:
-        db.close()
+    with Session(engine) as db:
+        try:
+            logger.info("定时采集任务启动")
+            refresh_all_sales_data(db)
+        except Exception as e:
+            logger.error(f"定时采集任务失败: {e}")
 
 
 def start_scheduler():

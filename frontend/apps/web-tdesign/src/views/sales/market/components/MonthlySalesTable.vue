@@ -24,8 +24,8 @@ const salesFieldMap: Record<string, string> = {
 };
 
 const columns = [
-  { colKey: 'year', title: $t('sales.market.yearly.year'), width: 100 },
-  { colKey: 'month', title: $t('sales.market.monthly.month'), width: 80 },
+  { colKey: 'year', title: $t('sales.market.yearly.year'), width: 100, sorter: (a: any, b: any) => a.year - b.year || a.monthNum - b.monthNum },
+  { colKey: 'month', title: $t('sales.market.monthly.month'), width: 80, sorter: (a: any, b: any) => a.monthNum - b.monthNum },
   {
     colKey: 'sales',
     title: $t('sales.market.monthly.sales'),
@@ -43,12 +43,6 @@ const columns = [
     title: $t('sales.market.monthly.yoyGrowth'),
     width: 130,
     cell: (_h: any, { row }: any) => formatGrowth(row.yoyGrowth),
-  },
-  {
-    colKey: 'totalSales',
-    title: $t('sales.market.monthly.totalSales'),
-    width: 140,
-    cell: (_h: any, { row }: any) => row.totalSales?.toLocaleString() ?? '-',
   },
   {
     colKey: 'nevSales',
@@ -84,12 +78,13 @@ async function fetchData() {
       key: index,
       year: item.year,
       month: `${item.month}月`,
+      monthNum: item.month,
       sales: item[field] ?? null,
       momGrowth: item.mom_growth ?? null,
       yoyGrowth: item.yoy_growth ?? null,
       totalSales: item.total_sales ?? null,
       nevSales: item.nev_sales ?? null,
-    }));
+    })).toReversed();
   } finally {
     loading.value = false;
   }
@@ -101,12 +96,14 @@ watch([() => props.year, () => props.energyType, () => props.dataType], () => fe
 </script>
 
 <template>
-  <Table
-    :columns="columns"
-    :data="tableData"
-    :loading="loading"
-    row-key="key"
-    size="small"
-    bordered
-  />
+  <div class="px-4 py-3">
+    <Table
+      :columns="columns"
+      :data="tableData"
+      :loading="loading"
+      row-key="key"
+      size="small"
+      bordered
+    />
+  </div>
 </template>

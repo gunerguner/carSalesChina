@@ -18,7 +18,7 @@ const ORIGIN_LABELS: Record<string, string> = {
   american: '美系',
   european: '欧系',
   korean: '韩系',
-  other: '其他',
+  french: '法系',
 };
 
 const ORIGIN_COLORS: Record<string, string> = {
@@ -28,7 +28,7 @@ const ORIGIN_COLORS: Record<string, string> = {
   american: '#ee6666',
   european: '#73c0de',
   korean: '#3ba272',
-  other: '#fc8452',
+  french: '#9a6bef',
 };
 
 async function fetchAndRender() {

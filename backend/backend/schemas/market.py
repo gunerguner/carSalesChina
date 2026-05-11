@@ -1,37 +1,30 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
 
 
 class OverviewQuery(BaseModel):
-    year: int
-    month: int
-    energy_type: Optional[str] = "all"
+    year: int = Field(..., ge=2000, le=2100)
+    month: int = Field(..., ge=1, le=12)
+    energy_type: str = Field("all")
+    data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")
 
 
 class TrendQuery(BaseModel):
-    energy_type: str = "all"
-    years: int = 3
-    granularity: str = "monthly"
+    energy_type: str = Field("all")
+    years: int = Field(3, ge=1, le=10)
+    granularity: str = Field("monthly", pattern="^(monthly|yearly)$")
+    data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")
 
 
 class CompareQuery(BaseModel):
-    energy_type: str = "all"
-    start_year: int
-    start_month: int
-    end_year: int
-    end_month: int
+    energy_type: str = Field("all")
+    start_year: int = Field(..., ge=2000, le=2100)
+    start_month: int = Field(..., ge=1, le=12)
+    end_year: int = Field(..., ge=2000, le=2100)
+    end_month: int = Field(..., ge=1, le=12)
+    data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")
 
 
 class YearlyQuery(BaseModel):
-    year: int
-    energy_type: str = "all"
-
-
-class ByEnergyTypeQuery(BaseModel):
-    year: int
-    month: int
-
-
-class BySegmentQuery(BaseModel):
-    year: int
-    month: int
+    year: int = Field(..., ge=2000, le=2100)
+    energy_type: str = Field("all")
+    data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")

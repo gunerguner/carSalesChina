@@ -1,10 +1,19 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlmodel import Session, select
 
 from backend.core.database import get_db
 from backend.models.brand import BrandSales, BrandMeta
-from backend.models.overall import SalesData
+from backend.schemas.brand import (
+    BrandDetailQuery,
+    BrandTrendQuery,
+    CompareQuery,
+    CompareTrendQuery,
+    RankingQuery,
+    YearlyRankingQuery,
+)
 from backend.schemas.response import success
 
 router = APIRouter(prefix="/api/v1/brands", tags=["brands"])
@@ -14,119 +23,102 @@ DATA_TYPE_ENUM = Query("retail", pattern="^(retail|wholesale|production)$")
 
 @router.get("/ranking")
 def ranking(
-    year: int = Query(...),
-    month: int = Query(...),
-    page: int = Query(1),
-    pageSize: int = Query(20),
-    origin: str = Query(None),
-    data_type: str = DATA_TYPE_ENUM,
+    query: RankingQuery = Depends(),
     db: Session = Depends(get_db),
 ):
-    subq = db.query(
-        BrandSales.brand_name,
+    subq = select(
+        BrandSales.brand_id,
         func.sum(BrandSales.sales_volume).label("total_sales"),
-    ).filter(
-        BrandSales.year == year,
-        BrandSales.month == month,
-        BrandSales.data_type == data_type,
-    ).group_by(BrandSales.brand_name).subquery()
+    ).where(
+        BrandSales.year == query.year,
+        BrandSales.month == query.month,
+        BrandSales.data_type == query.data_type,
+    ).group_by(BrandSales.brand_id).subquery()
 
-    query = db.query(
-        subq.c.brand_name,
+    query_sql = select(
+        BrandMeta.brand_name,
         subq.c.total_sales,
-        BrandMeta.origin,
-    ).outerjoin(
-        BrandMeta, BrandMeta.brand_name == subq.c.brand_name
+    ).select_from(subq).join(
+        BrandMeta, BrandMeta.id == subq.c.brand_id
     )
 
-    if origin:
-        query = query.filter(BrandMeta.origin == origin)
-
-    total = query.count()
-    rows = query.order_by(subq.c.total_sales.desc()).offset((page - 1) * pageSize).limit(pageSize).all()
+    total = db.execute(select(func.count()).select_from(subq)).scalar()
+    rows = db.exec(query_sql.order_by(subq.c.total_sales.desc()).offset((query.page - 1) * query.pageSize).limit(query.pageSize)).all()
 
     data = []
-    for idx, r in enumerate(rows, start=(page - 1) * pageSize + 1):
+    for idx, r in enumerate(rows, start=(query.page - 1) * query.pageSize + 1):
         data.append({
             "rank": idx,
             "brand_name": r.brand_name,
             "sales_volume": float(r.total_sales) if r.total_sales else 0,
-            "origin": r.origin,
         })
 
-    return success({"total": total, "page": page, "pageSize": pageSize, "data": data})
+    return success({"total": total, "page": query.page, "pageSize": query.pageSize, "data": data})
 
 
 @router.get("/ranking/yearly")
 def yearly_ranking(
-    year: int = Query(...),
-    page: int = Query(1),
-    pageSize: int = Query(20),
-    origin: str = Query(None),
-    data_type: str = DATA_TYPE_ENUM,
+    query: YearlyRankingQuery = Depends(),
     db: Session = Depends(get_db),
 ):
-    subq = db.query(
-        BrandSales.brand_name,
+    subq = select(
+        BrandSales.brand_id,
         func.sum(BrandSales.sales_volume).label("total_sales"),
-    ).filter(
-        BrandSales.year == year,
-        BrandSales.data_type == data_type,
-    ).group_by(BrandSales.brand_name).subquery()
+    ).where(
+        BrandSales.year == query.year,
+        BrandSales.data_type == query.data_type,
+    ).group_by(BrandSales.brand_id).subquery()
 
-    query = db.query(
-        subq.c.brand_name,
+    query_sql = select(
+        BrandMeta.brand_name,
         subq.c.total_sales,
-        BrandMeta.origin,
-    ).outerjoin(
-        BrandMeta, BrandMeta.brand_name == subq.c.brand_name
+    ).select_from(subq).join(
+        BrandMeta, BrandMeta.id == subq.c.brand_id
     )
 
-    if origin:
-        query = query.filter(BrandMeta.origin == origin)
-
-    total = query.count()
-    rows = query.order_by(subq.c.total_sales.desc()).offset((page - 1) * pageSize).limit(pageSize).all()
+    total = db.execute(select(func.count()).select_from(subq)).scalar()
+    rows = db.exec(query_sql.order_by(subq.c.total_sales.desc()).offset((query.page - 1) * query.pageSize).limit(query.pageSize)).all()
 
     data = []
-    for idx, r in enumerate(rows, start=(page - 1) * pageSize + 1):
+    for idx, r in enumerate(rows, start=(query.page - 1) * query.pageSize + 1):
         data.append({
             "rank": idx,
             "brand_name": r.brand_name,
             "total_sales": float(r.total_sales or 0),
-            "origin": r.origin,
         })
 
-    return success({"total": total, "page": page, "pageSize": pageSize, "data": data})
+    return success({"total": total, "page": query.page, "pageSize": query.pageSize, "data": data})
 
 
 @router.get("/compare")
 def compare(
-    brand_names: str = Query(...),
-    year: int = Query(...),
-    month: int = Query(...),
-    data_type: str = DATA_TYPE_ENUM,
+    query: CompareQuery = Depends(),
     db: Session = Depends(get_db),
 ):
-    names = [x.strip() for x in brand_names.split(",")[:5]]
-    rows = db.query(BrandSales).filter(
-        BrandSales.brand_name.in_(names),
-        BrandSales.year == year,
-        BrandSales.month == month,
-        BrandSales.data_type == data_type,
-    ).all()
+    names = [x.strip() for x in query.brand_names.split(",")[:5]]
+    metas = db.exec(select(BrandMeta).where(BrandMeta.brand_name.in_(names))).all()
+    name_to_id = {m.brand_name: m.id for m in metas}
+    ids = [name_to_id[n] for n in names if n in name_to_id]
 
-    name_to_row = {r.brand_name: r for r in rows}
+    rows = db.exec(select(BrandSales).where(
+        BrandSales.brand_id.in_(ids),
+        BrandSales.year == query.year,
+        BrandSales.month == query.month,
+        BrandSales.data_type == query.data_type,
+    )).all()
+
+    id_to_row = {r.brand_id: r for r in rows}
 
     data = []
     for name in names:
-        r = name_to_row.get(name)
+        bid = name_to_id.get(name)
+        if not bid:
+            continue
+        r = id_to_row.get(bid)
         if r:
             data.append({
-                "brand_name": r.brand_name,
+                "brand_name": name,
                 "sales_volume": float(r.sales_volume) if r.sales_volume else 0,
-                "yoy_growth": float(r.yoy_growth) if r.yoy_growth else None,
-                "mom_growth": float(r.mom_growth) if r.mom_growth else None,
             })
 
     return success(data)
@@ -134,45 +126,48 @@ def compare(
 
 @router.get("/compare/trend")
 def compare_trend(
-    brand_names: str = Query(...),
-    years: int = Query(3),
-    granularity: str = Query("monthly"),
-    data_type: str = DATA_TYPE_ENUM,
+    query: CompareTrendQuery = Depends(),
     db: Session = Depends(get_db),
 ):
-    from datetime import datetime
     now = datetime.now()
-    start_year = now.year - years + 1
-    names = [x.strip() for x in brand_names.split(",")[:5]]
+    start_year = now.year - query.years + 1
+    names = [x.strip() for x in query.brand_names.split(",")[:5]]
 
-    if granularity == "yearly":
-        result = db.query(
-            BrandSales.brand_name,
+    metas = db.exec(select(BrandMeta).where(BrandMeta.brand_name.in_(names))).all()
+    name_to_id = {m.brand_name: m.id for m in metas}
+    id_to_name = {m.id: m.brand_name for m in metas}
+    ids = list(id_to_name.keys())
+
+    if query.granularity == "yearly":
+        result = db.exec(select(
+            BrandSales.brand_id,
             BrandSales.year,
             func.sum(BrandSales.sales_volume).label("total_sales"),
-        ).filter(
-            BrandSales.brand_name.in_(names),
+        ).where(
+            BrandSales.brand_id.in_(ids),
             BrandSales.year >= start_year,
-            BrandSales.data_type == data_type,
-        ).group_by(BrandSales.brand_name, BrandSales.year).order_by(BrandSales.year).all()
+            BrandSales.data_type == query.data_type,
+        ).group_by(BrandSales.brand_id, BrandSales.year).order_by(BrandSales.year)).all()
 
         data = {}
         for r in result:
-            if r.brand_name not in data:
-                data[r.brand_name] = {"brand_name": r.brand_name, "trend": []}
-            data[r.brand_name]["trend"].append({"year": r.year, "sales": float(r.total_sales or 0)})
+            bname = id_to_name.get(r.brand_id, str(r.brand_id))
+            if bname not in data:
+                data[bname] = {"brand_name": bname, "trend": []}
+            data[bname]["trend"].append({"year": r.year, "sales": float(r.total_sales or 0)})
     else:
-        rows = db.query(BrandSales).filter(
-            BrandSales.brand_name.in_(names),
+        rows = db.exec(select(BrandSales).where(
+            BrandSales.brand_id.in_(ids),
             BrandSales.year >= start_year,
-            BrandSales.data_type == data_type,
-        ).order_by(BrandSales.year, BrandSales.month).all()
+            BrandSales.data_type == query.data_type,
+        ).order_by(BrandSales.year, BrandSales.month)).all()
 
         data = {}
         for r in rows:
-            if r.brand_name not in data:
-                data[r.brand_name] = {"brand_name": r.brand_name, "trend": []}
-            data[r.brand_name]["trend"].append({
+            bname = id_to_name.get(r.brand_id, str(r.brand_id))
+            if bname not in data:
+                data[bname] = {"brand_name": bname, "trend": []}
+            data[bname]["trend"].append({
                 "year": r.year, "month": r.month, "sales": float(r.sales_volume or 0),
             })
 
@@ -182,61 +177,59 @@ def compare_trend(
 @router.get("/{brand_name}/detail")
 def brand_detail(
     brand_name: str,
-    year: int = Query(...),
-    month: int = Query(...),
-    data_type: str = DATA_TYPE_ENUM,
+    query: BrandDetailQuery = Depends(),
     db: Session = Depends(get_db),
 ):
-    row = db.query(BrandSales).filter(
-        BrandSales.brand_name == brand_name,
-        BrandSales.year == year,
-        BrandSales.month == month,
-        BrandSales.data_type == data_type,
-    ).first()
+    meta = db.exec(select(BrandMeta).where(BrandMeta.brand_name == brand_name)).first()
+    if not meta:
+        return success(None)
 
-    meta = db.query(BrandMeta).filter(BrandMeta.brand_name == brand_name).first()
+    row = db.exec(select(BrandSales).where(
+        BrandSales.brand_id == meta.id,
+        BrandSales.year == query.year,
+        BrandSales.month == query.month,
+        BrandSales.data_type == query.data_type,
+    )).first()
 
     if not row:
         return success(None)
 
     return success({
-        "brand_name": row.brand_name,
+        "brand_name": meta.brand_name,
         "sales_volume": float(row.sales_volume) if row.sales_volume else 0,
-        "yoy_growth": float(row.yoy_growth) if row.yoy_growth else None,
-        "mom_growth": float(row.mom_growth) if row.mom_growth else None,
-        "origin": meta.origin if meta else None,
     })
 
 
 @router.get("/{brand_name}/trend")
 def brand_trend(
     brand_name: str,
-    years: int = Query(3),
-    granularity: str = Query("monthly"),
-    data_type: str = DATA_TYPE_ENUM,
+    query: BrandTrendQuery = Depends(),
     db: Session = Depends(get_db),
 ):
-    from datetime import datetime
     now = datetime.now()
-    start_year = now.year - years + 1
+    start_year = now.year - query.years + 1
 
-    if granularity == "yearly":
-        rows = db.query(
+    meta = db.exec(select(BrandMeta).where(BrandMeta.brand_name == brand_name)).first()
+    if not meta:
+        return success([])
+
+    if query.granularity == "yearly":
+        rows = db.exec(select(
             BrandSales.year,
             func.sum(BrandSales.sales_volume).label("total_sales"),
-        ).filter(
-            BrandSales.brand_name == brand_name,
+        ).where(
+            BrandSales.brand_id == meta.id,
             BrandSales.year >= start_year,
-            BrandSales.data_type == data_type,
-        ).group_by(BrandSales.year).order_by(BrandSales.year).all()
+            BrandSales.data_type == query.data_type,
+        ).group_by(BrandSales.year).order_by(BrandSales.year)).all()
 
         data = [{"year": r.year, "sales": float(r.total_sales or 0)} for r in rows]
     else:
-        rows = db.query(BrandSales).filter(
-            BrandSales.brand_name == brand_name,
+        rows = db.exec(select(BrandSales).where(
+            BrandSales.brand_id == meta.id,
             BrandSales.year >= start_year,
-            BrandSales.data_type == data_type,
-        ).order_by(BrandSales.year, BrandSales.month).all()
+            BrandSales.data_type == query.data_type,
+        ).order_by(BrandSales.year, BrandSales.month)).all()
 
         data = [{"year": r.year, "month": r.month, "sales": float(r.sales_volume or 0)} for r in rows]
 

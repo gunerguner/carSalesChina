@@ -17,7 +17,7 @@ const columns = [
   { colKey: 'american', title: $t('sales.analysis.origin.american'), width: 100, cell: (_h: any, { row }: any) => row.american == null ? '-' : `${row.american.toFixed(2)}%` },
   { colKey: 'european', title: $t('sales.analysis.origin.european'), width: 100, cell: (_h: any, { row }: any) => row.european == null ? '-' : `${row.european.toFixed(2)}%` },
   { colKey: 'korean', title: $t('sales.analysis.origin.korean'), width: 100, cell: (_h: any, { row }: any) => row.korean == null ? '-' : `${row.korean.toFixed(2)}%` },
-  { colKey: 'other', title: $t('sales.analysis.origin.other'), width: 100, cell: (_h: any, { row }: any) => row.other == null ? '-' : `${row.other.toFixed(2)}%` },
+  { colKey: 'french', title: $t('sales.analysis.origin.french'), width: 100, cell: (_h: any, { row }: any) => row.french == null ? '-' : `${row.french.toFixed(2)}%` },
 ];
 
 async function fetchData() {
@@ -39,8 +39,8 @@ async function fetchData() {
       american: item.american ?? null,
       european: item.european ?? null,
       korean: item.korean ?? null,
-      other: item.other ?? null,
-    }));
+      french: item.french ?? null,
+    })).toSorted((a: any, b: any) => b.time.localeCompare(a.time));
   } finally {
     loading.value = false;
   }
