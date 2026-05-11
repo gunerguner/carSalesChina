@@ -24,6 +24,10 @@ package-lock.json
 **/backend-mock/data
 .omx
 # local env files
+.env
+.env.development
+.env.production
+.env.analyze
 .env.local
 .env.*.local
 .eslintcache

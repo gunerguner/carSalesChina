@@ -8,11 +8,9 @@ from backend.core.database import get_db
 from backend.models.overall import SalesData
 from backend.models.origin import OriginShareData
 from backend.schemas.analysis import (
-    NevBreakdownDetailQuery,
     NevBreakdownQuery,
     NevShareOverviewQuery,
     NevShareTrendQuery,
-    OriginShareOverviewQuery,
     OriginShareTrendQuery,
 )
 from backend.schemas.response import success
@@ -165,33 +163,7 @@ def nev_breakdown(
     return success(data)
 
 
-@router.get("/nev-breakdown/detail")
-def nev_breakdown_detail(
-    query: NevBreakdownDetailQuery = Depends(),
-    db: Session = Depends(get_db),
-):
-    row = db.exec(select(SalesData).where(
-        SalesData.year == query.year,
-        SalesData.month == query.month,
-        SalesData.data_type == "retail",
-    )).first()
 
-    if not row:
-        return success(None)
-
-    nev = float(row.nev_sales) if row.nev_sales else 0
-    bev = float(row.bev_sales) if row.bev_sales else 0
-    phev = float(row.phev_sales) if row.phev_sales else 0
-    hybrid = float(row.hybrid_sales) if row.hybrid_sales else 0
-
-    return success({
-        "year": query.year, "month": query.month,
-        "nev_sales": nev,
-        "bev_sales": bev, "bev_ratio": round(bev / nev * 100, 2) if nev else 0,
-        "phev_sales": phev, "phev_ratio": round(phev / nev * 100, 2) if nev else 0,
-        "hybrid_sales": hybrid, "hybrid_ratio": round(hybrid / nev * 100, 2) if nev else 0,
-        "ice_sales": float(row.ice_sales) if row.ice_sales else 0,
-    })
 
 
 @router.get("/origin-share/trend")
@@ -259,25 +231,4 @@ def origin_share_trend(
     return success(data)
 
 
-@router.get("/origin-share/overview")
-def origin_share_overview(
-    query: OriginShareOverviewQuery = Depends(),
-    db: Session = Depends(get_db),
-):
-    rows = db.exec(select(OriginShareData).where(
-        OriginShareData.year == query.year,
-        OriginShareData.month == query.month,
-        OriginShareData.data_type == query.data_type,
-    )).all()
 
-    if not rows:
-        return success(None)
-
-    total = sum(float(r.sales_volume or 0) for r in rows)
-    result: dict = {"year": query.year, "month": query.month}
-    for r in rows:
-        field = ORIGIN_FIELD_MAP.get(r.origin, "other")
-        sv = float(r.sales_volume or 0)
-        result[field] = round(sv / total * 100, 2) if total else 0
-
-    return success(result)

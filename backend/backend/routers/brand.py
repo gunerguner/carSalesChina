@@ -7,9 +7,6 @@ from sqlmodel import Session, select
 from backend.core.database import get_db
 from backend.models.brand import BrandSales, BrandMeta
 from backend.schemas.brand import (
-    BrandDetailQuery,
-    BrandTrendQuery,
-    CompareQuery,
     CompareTrendQuery,
     RankingQuery,
     YearlyRankingQuery,
@@ -90,38 +87,7 @@ def yearly_ranking(
     return success({"total": total, "page": query.page, "pageSize": query.pageSize, "data": data})
 
 
-@router.get("/compare")
-def compare(
-    query: CompareQuery = Depends(),
-    db: Session = Depends(get_db),
-):
-    names = [x.strip() for x in query.brand_names.split(",")[:5]]
-    metas = db.exec(select(BrandMeta).where(BrandMeta.brand_name.in_(names))).all()
-    name_to_id = {m.brand_name: m.id for m in metas}
-    ids = [name_to_id[n] for n in names if n in name_to_id]
 
-    rows = db.exec(select(BrandSales).where(
-        BrandSales.brand_id.in_(ids),
-        BrandSales.year == query.year,
-        BrandSales.month == query.month,
-        BrandSales.data_type == query.data_type,
-    )).all()
-
-    id_to_row = {r.brand_id: r for r in rows}
-
-    data = []
-    for name in names:
-        bid = name_to_id.get(name)
-        if not bid:
-            continue
-        r = id_to_row.get(bid)
-        if r:
-            data.append({
-                "brand_name": name,
-                "sales_volume": float(r.sales_volume) if r.sales_volume else 0,
-            })
-
-    return success(data)
 
 
 @router.get("/compare/trend")
@@ -174,63 +140,7 @@ def compare_trend(
     return success(list(data.values()))
 
 
-@router.get("/{brand_name}/detail")
-def brand_detail(
-    brand_name: str,
-    query: BrandDetailQuery = Depends(),
-    db: Session = Depends(get_db),
-):
-    meta = db.exec(select(BrandMeta).where(BrandMeta.brand_name == brand_name)).first()
-    if not meta:
-        return success(None)
-
-    row = db.exec(select(BrandSales).where(
-        BrandSales.brand_id == meta.id,
-        BrandSales.year == query.year,
-        BrandSales.month == query.month,
-        BrandSales.data_type == query.data_type,
-    )).first()
-
-    if not row:
-        return success(None)
-
-    return success({
-        "brand_name": meta.brand_name,
-        "sales_volume": float(row.sales_volume) if row.sales_volume else 0,
-    })
 
 
-@router.get("/{brand_name}/trend")
-def brand_trend(
-    brand_name: str,
-    query: BrandTrendQuery = Depends(),
-    db: Session = Depends(get_db),
-):
-    now = datetime.now()
-    start_year = now.year - query.years + 1
 
-    meta = db.exec(select(BrandMeta).where(BrandMeta.brand_name == brand_name)).first()
-    if not meta:
-        return success([])
 
-    if query.granularity == "yearly":
-        rows = db.exec(select(
-            BrandSales.year,
-            func.sum(BrandSales.sales_volume).label("total_sales"),
-        ).where(
-            BrandSales.brand_id == meta.id,
-            BrandSales.year >= start_year,
-            BrandSales.data_type == query.data_type,
-        ).group_by(BrandSales.year).order_by(BrandSales.year)).all()
-
-        data = [{"year": r.year, "sales": float(r.total_sales or 0)} for r in rows]
-    else:
-        rows = db.exec(select(BrandSales).where(
-            BrandSales.brand_id == meta.id,
-            BrandSales.year >= start_year,
-            BrandSales.data_type == query.data_type,
-        ).order_by(BrandSales.year, BrandSales.month)).all()
-
-        data = [{"year": r.year, "month": r.month, "sales": float(r.sales_volume or 0)} for r in rows]
-
-    return success(data)

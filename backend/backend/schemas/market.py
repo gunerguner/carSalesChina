@@ -15,15 +15,6 @@ class TrendQuery(BaseModel):
     data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")
 
 
-class CompareQuery(BaseModel):
-    energy_type: str = Field("all")
-    start_year: int = Field(..., ge=2000, le=2100)
-    start_month: int = Field(..., ge=1, le=12)
-    end_year: int = Field(..., ge=2000, le=2100)
-    end_month: int = Field(..., ge=1, le=12)
-    data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")
-
-
 class YearlyQuery(BaseModel):
     year: int = Field(..., ge=2000, le=2100)
     energy_type: str = Field("all")

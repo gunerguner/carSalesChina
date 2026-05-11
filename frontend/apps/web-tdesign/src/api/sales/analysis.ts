@@ -23,12 +23,6 @@ export interface OriginShareTrendParams {
   granularity?: 'monthly' | 'yearly';
 }
 
-export interface OriginShareOverviewParams {
-  year: number;
-  month: number;
-  data_type?: 'production' | 'retail' | 'wholesale';
-}
-
 export function getNevShareTrendApi(params?: NevShareTrendParams) {
   return requestClient.get('/v1/analysis/nev-share/trend', { params });
 }
@@ -43,8 +37,4 @@ export function getNevBreakdownApi(params?: NevBreakdownParams) {
 
 export function getOriginShareTrendApi(params?: OriginShareTrendParams) {
   return requestClient.get('/v1/analysis/origin-share/trend', { params });
-}
-
-export function getOriginShareOverviewApi(params: OriginShareOverviewParams) {
-  return requestClient.get('/v1/analysis/origin-share/overview', { params });
 }

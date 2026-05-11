@@ -6,7 +6,7 @@ from sqlmodel import Session, select
 
 from backend.core.database import get_db
 from backend.models.overall import SalesData
-from backend.schemas.market import CompareQuery, OverviewQuery, TrendQuery, YearlyQuery
+from backend.schemas.market import OverviewQuery, TrendQuery, YearlyQuery
 from backend.schemas.response import success
 
 router = APIRouter(prefix="/api/v1/market", tags=["market"])
@@ -105,49 +105,7 @@ def trend(
     return success(data)
 
 
-@router.get("/compare")
-def compare(
-    query: CompareQuery = Depends(),
-    db: Session = Depends(get_db),
-):
-    field = ENERGY_FIELD_MAP.get(query.energy_type, "total_sales")
 
-    rows = db.exec(select(SalesData).where(
-        SalesData.data_type == query.data_type,
-    ).order_by(SalesData.year, SalesData.month)).all()
-
-    period1, period2 = [], []
-    for r in rows:
-        val = float(getattr(r, field) or 0)
-        entry = {"year": r.year, "month": r.month, "sales": val}
-        if (query.start_year, query.start_month) <= (r.year, r.month) <= (query.end_year, query.end_month):
-            period2.append(entry)
-
-    if period2:
-        months_diff = (query.end_year - query.start_year) * 12 + query.end_month - query.start_month + 1
-        p1_start_year = query.start_year - (months_diff // 12 + 1)
-        p1_start_month = query.start_month - (months_diff % 12)
-        if p1_start_month <= 0:
-            p1_start_month += 12
-            p1_start_year -= 1
-        p1_end_year = query.start_year - 1 if query.start_month == 1 else query.start_year
-        p1_end_month = query.start_month - 1 if query.start_month > 1 else 12
-
-        for r in rows:
-            val = float(getattr(r, field) or 0)
-            entry = {"year": r.year, "month": r.month, "sales": val}
-            if (p1_start_year, p1_start_month) <= (r.year, r.month) <= (p1_end_year, p1_end_month):
-                period1.append(entry)
-
-    sum1 = sum(e["sales"] for e in period1)
-    sum2 = sum(e["sales"] for e in period2)
-    change = ((sum2 - sum1) / sum1 * 100) if sum1 else None
-
-    return success({
-        "period1": {"data": period1, "total": sum1},
-        "period2": {"data": period2, "total": sum2},
-        "change_pct": round(change, 2) if change else None,
-    })
 
 
 @router.get("/yearly")
@@ -196,31 +154,4 @@ def yearly(
     return success(data)
 
 
-@router.get("/byEnergyType")
-def by_energy_type(
-    year: int = Query(...),
-    month: int = Query(...),
-    data_type: str = DATA_TYPE_ENUM,
-    db: Session = Depends(get_db),
-):
-    row = db.exec(select(SalesData).where(
-        SalesData.year == year,
-        SalesData.month == month,
-        SalesData.data_type == data_type,
-    )).first()
 
-    if not row:
-        return success([])
-
-    total = float(row.total_sales) if row.total_sales else 0
-    data = [
-        {"name": "纯电动", "value": float(row.bev_sales) if row.bev_sales else 0},
-        {"name": "插电混动", "value": float(row.phev_sales) if row.phev_sales else 0},
-        {"name": "其他混动", "value": float(row.hybrid_sales) if row.hybrid_sales else 0},
-        {"name": "燃油车", "value": float(row.ice_sales) if row.ice_sales else 0},
-    ]
-    for item in data:
-        if total:
-            item["percent"] = round(item["value"] / total * 100, 2)
-
-    return success(data)
