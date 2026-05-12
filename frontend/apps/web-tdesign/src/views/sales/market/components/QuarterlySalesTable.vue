@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { YearlyTrendRecord } from '../useMarketData';
+import type { QuarterlyTrendRecord } from '../useMarketData';
 
 import { computed } from 'vue';
 
@@ -10,28 +10,31 @@ import { Table } from 'tdesign-vue-next';
 import { $t } from '#/locales';
 
 const props = defineProps<{
-  data: YearlyTrendRecord[];
+  data: QuarterlyTrendRecord[];
 }>();
 
-function periodText(r: YearlyTrendRecord): string {
-  return preferences.app.locale === 'zh-CN' ? `${r.year}年` : String(r.year);
+function periodText(r: QuarterlyTrendRecord): string {
+  return preferences.app.locale === 'zh-CN'
+    ? `${r.year}年Q${r.quarter}`
+    : `${r.year} Q${r.quarter}`;
 }
 
-function sortByYear(a: unknown, b: unknown): number {
-  const ra = a as YearlyTrendRecord;
-  const rb = b as YearlyTrendRecord;
-  return ra.year - rb.year;
+function sortByYearQuarter(a: unknown, b: unknown): number {
+  const ra = a as QuarterlyTrendRecord;
+  const rb = b as QuarterlyTrendRecord;
+  return ra.year * 10 + ra.quarter - (rb.year * 10 + rb.quarter);
 }
 
 const columns = [
   {
     colKey: 'periodText',
     title: $t('sales.market.timePeriod'),
-    width: 110,
-    sorter: sortByYear,
+    width: 130,
+    sorter: sortByYearQuarter,
   },
-  { colKey: 'salesText', title: $t('sales.market.yearly.sales'), width: 150 },
-  { colKey: 'yoyGrowth', title: $t('sales.market.yearly.yoyGrowth'), width: 140 },
+  { colKey: 'salesText', title: $t('sales.market.quarterly.sales'), width: 150 },
+  { colKey: 'yoyGrowth', title: $t('sales.market.quarterly.yoyGrowth'), width: 140 },
+  { colKey: 'qoqGrowth', title: $t('sales.market.quarterly.qoqGrowth'), width: 140 },
 ];
 
 function growthColor(val: null | number | undefined): string {
@@ -46,7 +49,9 @@ const tableData = computed(() =>
     .map((r) => ({
       ...r,
       periodText: periodText(r),
-      salesText: r.sales == null ? '-' : Math.round(r.sales).toLocaleString(),
+      salesText: Math.round(r.sales).toLocaleString(),
+      qoqGrowthText: r.qoqGrowth == null ? '-' : `${r.qoqGrowth.toFixed(2)}%`,
+      qoqGrowthColor: growthColor(r.qoqGrowth),
       yoyGrowthText: r.yoyGrowth == null ? '-' : `${r.yoyGrowth.toFixed(2)}%`,
       yoyGrowthColor: growthColor(r.yoyGrowth),
     }))
@@ -64,6 +69,9 @@ const tableData = computed(() =>
   >
     <template #periodText="{ row }">{{ row.periodText }}</template>
     <template #salesText="{ row }">{{ row.salesText }}</template>
+    <template #qoqGrowth="{ row }">
+      <span :style="{ color: row.qoqGrowthColor, fontWeight: 500 }">{{ row.qoqGrowthText }}</span>
+    </template>
     <template #yoyGrowth="{ row }">
       <span :style="{ color: row.yoyGrowthColor, fontWeight: 500 }">{{ row.yoyGrowthText }}</span>
     </template>

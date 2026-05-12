@@ -1,6 +1,7 @@
 {
   "market": {
     "title": "Market Sales",
+    "timePeriod": "Time period",
     "filter": {
       "levelType": "Vehicle Level",
       "levelAll": "All",
@@ -27,6 +28,14 @@
       "yoyGrowth": "YoY Growth(%)",
       "totalSales": "Total Sales",
       "nevSales": "NEV Sales"
+    },
+    "quarterly": {
+      "title": "Quarterly Sales",
+      "chartTitle": "Quarterly Sales Trend",
+      "quarter": "Quarter",
+      "sales": "Sales",
+      "qoqGrowth": "QoQ Growth(%)",
+      "yoyGrowth": "YoY Growth(%)"
     },
     "yearly": {
       "title": "Yearly Sales",

@@ -7,6 +7,8 @@ import { $t } from '#/locales';
 
 import MonthlySalesChart from './components/MonthlySalesChart.vue';
 import MonthlySalesTable from './components/MonthlySalesTable.vue';
+import QuarterlySalesChart from './components/QuarterlySalesChart.vue';
+import QuarterlySalesTable from './components/QuarterlySalesTable.vue';
 import SalesFilterBar from './components/SalesFilterBar.vue';
 import YearlySalesChart from './components/YearlySalesChart.vue';
 import YearlySalesTable from './components/YearlySalesTable.vue';
@@ -16,12 +18,14 @@ const levelType = ref('all');
 const dataType = ref<'production' | 'retail'>('retail');
 const activeTab = ref('monthly');
 
-const { loading, fetchAll, getMonthlyTrend, getMonthlyDetail, getYearlyTrend } = useMarketData();
+const { loading, fetchAll, getMonthlyTrend, getMonthlyDetail, getQuarterlyTrend, getYearlyTrend } =
+  useMarketData();
 
 onMounted(() => fetchAll());
 
 const monthlyTrendData = computed(() => getMonthlyTrend(levelType.value, dataType.value));
 const monthlyDetailData = computed(() => getMonthlyDetail(levelType.value, dataType.value));
+const quarterlyTrendData = computed(() => getQuarterlyTrend(levelType.value, dataType.value));
 const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.value));
 </script>
 
@@ -41,6 +45,18 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
           </Card>
           <Card :title="$t('sales.market.monthly.title')">
             <MonthlySalesTable :data="monthlyDetailData" />
+          </Card>
+        </TabPanel>
+        <TabPanel
+          :label="$t('sales.market.quarterly.title')"
+          :destroy-on-hide="false"
+          value="quarterly"
+        >
+          <Card :title="$t('sales.market.quarterly.chartTitle')" class="mb-4">
+            <QuarterlySalesChart :data="quarterlyTrendData" />
+          </Card>
+          <Card :title="$t('sales.market.quarterly.title')">
+            <QuarterlySalesTable :data="quarterlyTrendData" />
           </Card>
         </TabPanel>
         <TabPanel

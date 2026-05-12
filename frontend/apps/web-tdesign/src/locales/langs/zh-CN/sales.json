@@ -1,6 +1,7 @@
 {
     "market": {
         "title": "市场销量",
+        "timePeriod": "时间段",
         "filter": {
             "levelType": "车型级别",
             "levelAll": "全部",
@@ -27,6 +28,14 @@
             "yoyGrowth": "同比增长(%)",
             "totalSales": "总销量",
             "nevSales": "新能源销量"
+        },
+        "quarterly": {
+            "title": "季度销量",
+            "chartTitle": "季度销量趋势",
+            "quarter": "季度",
+            "sales": "销量",
+            "qoqGrowth": "环比增长(%)",
+            "yoyGrowth": "同比增长(%)"
         },
         "yearly": {
             "title": "年度销量",

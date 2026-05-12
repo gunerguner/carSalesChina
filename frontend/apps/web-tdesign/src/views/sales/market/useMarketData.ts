@@ -25,6 +25,15 @@ export interface YearlyTrendRecord {
   yoyGrowth: null | number;
 }
 
+export interface QuarterlyTrendRecord {
+  key: string;
+  quarter: number;
+  qoqGrowth: null | number;
+  sales: number;
+  year: number;
+  yoyGrowth: null | number;
+}
+
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
@@ -86,6 +95,52 @@ export function useMarketData() {
       .toReversed();
   }
 
+  /**
+   * 季度聚合（环比：上一季度，同比：去年同期季度）。
+   * 先用全量原始数据汇总，再按年过滤展示（与月度趋势相同的近 N 年窗口）。
+   */
+  function getQuarterlyTrend(levelType: string, dataType: string, years = 3): QuarterlyTrendRecord[] {
+    const rows = filterSorted(levelType, dataType);
+    const quarterMap = new Map<string, number>();
+    for (const r of rows) {
+      const q = Math.ceil(r.month / 3);
+      const k = `${r.year}-${q}`;
+      quarterMap.set(k, (quarterMap.get(k) ?? 0) + r.sales);
+    }
+    const startYear = new Date().getFullYear() - years + 1;
+    const parseQuarterKey = (key: string): { q: number; y: number } => {
+      const [yPart, qPart] = key.split('-');
+      return { y: Number(yPart), q: Number(qPart) };
+    };
+    const allKeys = [...quarterMap.keys()].toSorted((a, b) => {
+      const A = parseQuarterKey(a);
+      const B = parseQuarterKey(b);
+      return A.y === B.y ? A.q - B.q : A.y - B.y;
+    });
+    const keys = allKeys.filter((k) => Number(k.split('-')[0]) >= startYear);
+
+    const getQ = (year: number, quarter: number): null | number => {
+      const key = `${year}-${quarter}`;
+      if (!quarterMap.has(key)) return null;
+      return Math.round(quarterMap.get(key)!);
+    };
+
+    return keys.map((k, i) => {
+      const year = Number(k.split('-')[0]);
+      const quarter = Number(k.split('-')[1]);
+      const sales = getQ(year, quarter)!;
+      const prevQ = quarter === 1 ? 4 : quarter - 1;
+      const prevQYear = quarter === 1 ? year - 1 : year;
+      const prevQSales = getQ(prevQYear, prevQ);
+      const qoqGrowth =
+        prevQSales != null && prevQSales > 0 ? round2((sales - prevQSales) / prevQSales * 100) : null;
+      const yoyBase = getQ(year - 1, quarter);
+      const yoyGrowth =
+        yoyBase != null && yoyBase > 0 ? round2((sales - yoyBase) / yoyBase * 100) : null;
+      return { key: `${k}-${i}`, year, quarter, sales, qoqGrowth, yoyGrowth };
+    });
+  }
+
   /** 年度聚合（含同比），供年度柱状图和年度汇总表使用 */
   function getYearlyTrend(levelType: string, dataType: string): YearlyTrendRecord[] {
     const rows = filterSorted(levelType, dataType);
@@ -95,9 +150,9 @@ export function useMarketData() {
     }
     const years = [...yearMap.keys()].toSorted((a, b) => a - b);
     return years.map((year, i) => {
-      const sales = yearMap.get(year) ?? 0;
+      const sales = Math.round(yearMap.get(year) ?? 0);
       const prevYear = years.at(i - 1);
-      const prevSales = prevYear == null ? 0 : (yearMap.get(prevYear) ?? 0);
+      const prevSales = prevYear == null ? 0 : Math.round(yearMap.get(prevYear) ?? 0);
       const yoyGrowth = prevSales ? round2((sales - prevSales) / prevSales * 100) : null;
       return { key: `${year}-${i}`, year, sales, yoyGrowth };
     });
@@ -109,6 +164,7 @@ export function useMarketData() {
     fetchAll,
     getMonthlyDetail,
     getMonthlyTrend,
+    getQuarterlyTrend,
     getYearlyTrend,
   };
 }

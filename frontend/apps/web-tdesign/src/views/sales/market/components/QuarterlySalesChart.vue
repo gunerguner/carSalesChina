@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EchartsUIType } from '@vben/plugins/echarts';
 
-import type { YearlyTrendRecord } from '../useMarketData';
+import type { QuarterlyTrendRecord } from '../useMarketData';
 
 import { ref, watch } from 'vue';
 
@@ -9,17 +9,19 @@ import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 import { preferences } from '@vben/preferences';
 
 const props = defineProps<{
-  data: YearlyTrendRecord[];
+  data: QuarterlyTrendRecord[];
 }>();
 
-function yearAxisLabel(r: YearlyTrendRecord): string {
-  return preferences.app.locale === 'zh-CN' ? `${r.year}年` : String(r.year);
+function periodAxisLabel(r: QuarterlyTrendRecord): string {
+  return preferences.app.locale === 'zh-CN'
+    ? `${r.year}年Q${r.quarter}`
+    : `${r.year} Q${r.quarter}`;
 }
 
 const chartRef = ref<EchartsUIType>();
 const { renderEcharts } = useEcharts(chartRef);
 
-function render(data: YearlyTrendRecord[]) {
+function render(data: QuarterlyTrendRecord[]) {
   if (!data || data.length === 0) {
     renderEcharts({
       animation: false,
@@ -51,7 +53,12 @@ function render(data: YearlyTrendRecord[]) {
       },
     },
     grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-    xAxis: { type: 'category', boundaryGap: false, data: data.map((r) => yearAxisLabel(r)) },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: data.map((r) => periodAxisLabel(r)),
+      axisLabel: { interval: 0, rotate: data.length > 8 ? 30 : 0 },
+    },
     yAxis: {
       type: 'value',
       axisLabel: { formatter: (val: number) => `${(val / 10_000).toFixed(0)}万` },
