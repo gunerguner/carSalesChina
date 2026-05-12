@@ -1,81 +1,337 @@
 brands:
-  比亚迪: BYD
-  吉利: Geely
-  长安: Changan
-  长城: Great Wall
-  奇瑞: Chery
-  蔚来: NIO
-  小鹏: XPeng
-  理想: Li Auto
-  零跑: Leapmotor
-  哪吒: NE
-  问界: AITO
-  埃安: Aion
-  红旗: Hongqi
-  五菱: Wuling
-  荣威: Roewe
-  名爵: MG
-  传祺: Trumpchi
-  奔腾: Bestune
-  江淮: JAC
-  北汽: BAIC
-  极氪: ZEEKR
-  深蓝: Deepal
-  智己: Zhiji
-  岚图: Voyah
-  阿维塔: Avatr
-  领克: Lynk & Co
-  魏牌: Wey
-  坦克: Tank
-  星途: Exeed
-  捷途: Jetour
-  宝骏: Baojun
-  东风: Dongfeng
-  海马: Haima
-  东南: Southeast
-  大通: Maxus
-  北京: Beijing
-  极狐: Arcfox
-  小米: Xiaomi
-  大众: Volkswagen
-  奥迪: Audi
-  奔驰: Mercedes-Benz
-  宝马: BMW
-  保时捷: Porsche
-  斯柯达: Skoda
-  迈巴赫: Maybach
-  丰田: Toyota
-  本田: Honda
-  日产: Nissan
-  马自达: Mazda
-  雷克萨斯: Lexus
-  英菲尼迪: Infiniti
-  讴歌: Acura
-  斯巴鲁: Subaru
-  三菱: Mitsubishi
-  铃木: Suzuki
-  别克: Buick
-  雪佛兰: Chevrolet
-  凯迪拉克: Cadillac
-  福特: Ford
-  林肯: Lincoln
-  Jeep: Jeep
-  特斯拉: Tesla
-  沃尔沃: Volvo
-  标致: Peugeot
-  雪铁龙: Citroen
-  DS: DS
-  捷豹: Jaguar
-  路虎: Land Rover
-  MINI: MINI
-  Smart: Smart
-  极星: Polestar
-  法拉利: Ferrari
-  玛莎拉蒂: Maserati
-  兰博基尼: Lamborghini
-  宾利: Bentley
-  劳斯莱斯: Rolls-Royce
-  阿尔法: Alfa Romeo
-  现代: Hyundai
-  起亚: Kia
-  捷尼赛思: Genesis
+  mercedesbenz:
+    name: 奔驰
+    master_id: 2
+  bmw:
+    name: 宝马
+    master_id: 3
+  peugeot:
+    name: 标致
+    master_id: 5
+  citroen:
+    name: 雪铁龙
+    master_id: 6
+  toyota:
+    name: 丰田
+    master_id: 7
+  volkswagen:
+    name: 大众
+    master_id: 8
+  audi:
+    name: 奥迪
+    master_id: 9
+  skoda:
+    name: 斯柯达
+    master_id: 10
+  hyundai:
+    name: 现代
+    master_id: 13
+  beijingjeep:
+    name: 北京汽车制造厂
+    master_id: 14
+  bydauto:
+    name: 比亚迪
+    master_id: 15
+  ford:
+    name: 福特
+    master_id: 17
+  mazda:
+    name: 马自达
+    master_id: 18
+  volvo:
+    name: 沃尔沃
+    master_id: 19
+  mitsubishi:
+    name: 三菱
+    master_id: 25
+  honda:
+    name: 本田
+    master_id: 26
+  dongfeng-27:
+    name: 东风
+    master_id: 27
+  kia:
+    name: 起亚
+    master_id: 28
+  southeastautomobile:
+    name: 东南
+    master_id: 29
+  nissan:
+    name: 日产
+    master_id: 30
+  hama:
+    name: 海马
+    master_id: 32
+  zxauto:
+    name: 中兴
+    master_id: 33
+  geely:
+    name: 吉利汽车
+    master_id: 34
+  jac:
+    name: 江汽集团
+    master_id: 35
+  jinbei:
+    name: 金杯
+    master_id: 39
+  chery:
+    name: 奇瑞
+    master_id: 42
+  sgmw:
+    name: 五菱汽车
+    master_id: 48
+  chevrolet:
+    name: 雪佛兰
+    master_id: 49
+  faw:
+    name: 一汽
+    master_id: 53
+  faw-hongqi:
+    name: 红旗
+    master_id: 58
+  besturn:
+    name: 奔腾
+    master_id: 59
+  roewe:
+    name: 荣威
+    master_id: 78
+  mg-79:
+    name: 名爵
+    master_id: 79
+  mini:
+    name: MINI
+    master_id: 81
+  acura:
+    name: 讴歌
+    master_id: 84
+  smart:
+    name: smart
+    master_id: 89
+  lincoln:
+    name: 林肯
+    master_id: 95
+  landrover:
+    name: 路虎
+    master_id: 96
+  jauger:
+    name: 捷豹
+    master_id: 98
+  infiniti:
+    name: 英菲尼迪
+    master_id: 100
+  cadillac:
+    name: 凯迪拉克
+    master_id: 107
+  fengxingauto:
+    name: 东风风行
+    master_id: 115
+  buick:
+    name: 别克
+    master_id: 127
+  foton:
+    name: 福田
+    master_id: 128
+  isuzu-132:
+    name: 五十铃
+    master_id: 132
+  cajc:
+    name: 长安
+    master_id: 136
+  fs:
+    name: 东风风神
+    master_id: 141
+  gq:
+    name: 广汽传祺
+    master_id: 147
+  karry:
+    name: 开瑞
+    master_id: 150
+  venucia:
+    name: 启辰
+    master_id: 156
+  bj:
+    name: 宝骏
+    master_id: 157
+  casyc:
+    name: 长安欧尚
+    master_id: 159
+  bjqc:
+    name: 北京越野
+    master_id: 163
+  maxus:
+    name: 大通
+    master_id: 165
+  everus:
+    name: 理念
+    master_id: 166
+  denza:
+    name: 腾势
+    master_id: 175
+  ds:
+    name: DS
+    master_id: 179
+  tesla:
+    name: 特斯拉
+    master_id: 189
+  shenbao:
+    name: 北京汽车
+    master_id: 195
+  hafu-196:
+    name: 哈弗
+    master_id: 196
+  dongfengfengdu:
+    name: 东风风度
+    master_id: 197
+  fujianxinlongmaqichegufenyouxiangongsi:
+    name: 新龙马汽车
+    master_id: 208
+  dongfengfengguang:
+    name: 东风风光
+    master_id: 253
+  siwei:
+    name: SWM斯威汽车
+    master_id: 260
+  weilaiqiche:
+    name: 蔚来
+    master_id: 266
+  lynkco:
+    name: 领克
+    master_id: 267
+  wey:
+    name: 魏牌
+    master_id: 270
+  changanqingxingche-281:
+    name: 长安凯程
+    master_id: 281
+  arcfox-289:
+    name: ARCFOX极狐
+    master_id: 289
+  sinogold:
+    name: 国金汽车
+    master_id: 290
+  polestar:
+    name: Polestar极星
+    master_id: 293
+  gacne:
+    name: 埃安
+    master_id: 295
+  jetour:
+    name: 捷途
+    master_id: 296
+  xpeng:
+    name: 小鹏
+    master_id: 297
+  sol:
+    name: 思皓
+    master_id: 299
+  leapmotor:
+    name: 零跑汽车
+    master_id: 301
+  ora:
+    name: 欧拉
+    master_id: 305
+  linktour:
+    name: 领途汽车
+    master_id: 307
+  li:
+    name: 理想汽车
+    master_id: 309
+  skywell-394:
+    name: 创维汽车
+    master_id: 394
+  maple:
+    name: 睿蓝汽车
+    master_id: 395
+  lingbox:
+    name: 凌宝汽车
+    master_id: 396
+  voyah:
+    name: 岚图汽车
+    master_id: 402
+  zhiyiqiche:
+    name: 智己汽车
+    master_id: 439
+  zeekr:
+    name: 极氪
+    master_id: 450
+  tank:
+    name: 坦克
+    master_id: 453
+  diandongwu:
+    name: 电动屋
+    master_id: 457
+  chery-463:
+    name: 奇瑞新能源
+    master_id: 463
+  hongruiqiche:
+    name: 小虎
+    master_id: 464
+  jmev-468:
+    name: 江铃集团新能源
+    master_id: 468
+  jidu:
+    name: 极越
+    master_id: 624
+  aito:
+    name: AITO
+    master_id: 629
+  ruifengqiche:
+    name: 江淮瑞风
+    master_id: 655
+  changanshenlan:
+    name: 深蓝汽车
+    master_id: 658
+  mengshi-672:
+    name: 猛士
+    master_id: 672
+  yuanhangqiche:
+    name: 远航汽车
+    master_id: 676
+  yangwang:
+    name: 仰望
+    master_id: 689
+  xiaomiqiche:
+    name: 小米汽车
+    master_id: 702
+  yinhe:
+    name: 吉利银河
+    master_id: 726
+  biyadifpinpai:
+    name: 方程豹
+    master_id: 732
+  jiangqiyiwei:
+    name: 江淮钇为
+    master_id: 734
+  landian:
+    name: 蓝电
+    master_id: 737
+  caocao:
+    name: 曹操
+    master_id: 738
+  changanqiyuan:
+    name: 长安启源
+    master_id: 740
+  icarqiche:
+    name: iCAR汽车
+    master_id: 743
+  jishiqiche:
+    name: ROX 极石
+    master_id: 752
+  haobo:
+    name: 广汽昊铂
+    master_id: 754
+  aerbeisi:
+    name: 乐道
+    master_id: 757
+  jianghuaiqiche:
+    name: 江淮汽车
+    master_id: 758
+  dongfengyipai:
+    name: 东风奕派
+    master_id: 759
+  luxeed:
+    name: 智界
+    master_id: 760
+  lingxi:
+    name: 灵悉
+    master_id: 768

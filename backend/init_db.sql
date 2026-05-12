@@ -3,27 +3,25 @@ CREATE DATABASE IF NOT EXISTS car_sales DEFAULT CHARSET utf8mb4 COLLATE utf8mb4_
 
 USE car_sales;
 
--- 1. 销售数据表（支持月度/年度）
+-- 1. 销售数据表（支持月度/季度/年度，零售/产量，所有/新能源/纯电）
 CREATE TABLE IF NOT EXISTS sales_data (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     year INT NOT NULL,
     month INT NOT NULL,
-    total_sales DECIMAL(15,2) COMMENT '乘用车总销量',
-    nev_sales DECIMAL(15,2) COMMENT '新能源车销量',
-    ice_sales DECIMAL(15,2) COMMENT '燃油车销量',
-    bev_sales DECIMAL(15,2) COMMENT '纯电销量',
-    phev_sales DECIMAL(15,2) COMMENT '插电混动销量',
-    hybrid_sales DECIMAL(15,2) COMMENT '其他混动销量',
-    data_type ENUM('retail','wholesale','production') DEFAULT 'retail' COMMENT '零售/批发/产量口径',
+    sales DECIMAL(15,2) COMMENT '销量（万辆）',
+    data_type ENUM('retail','production') NOT NULL DEFAULT 'retail' COMMENT '零售/产量口径',
+    date_type ENUM('monthly','quarterly','yearly') NOT NULL DEFAULT 'monthly' COMMENT '时间维度',
+    level_type ENUM('all','nev','bev') NOT NULL DEFAULT 'all' COMMENT '车型级别',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uk_year_month_type (year, month, data_type)
-) ENGINE=InnoDB;
+    UNIQUE KEY uk_sales_data_unique (year, month, data_type, date_type, level_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='总销量数据（易车API）';
 
 -- 2. 品牌元数据表
 CREATE TABLE IF NOT EXISTS brand_meta (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     brand_name VARCHAR(100) NOT NULL COMMENT '品牌名称',
     brand_name_en VARCHAR(100) COMMENT '品牌英文名',
+    master_id INT COMMENT '外部系统品牌ID',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uk_brand_name (brand_name)
 ) ENGINE=InnoDB;

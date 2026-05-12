@@ -14,6 +14,7 @@ class BrandMeta(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     brand_name: str = Field(sa_column=Column(String(100), nullable=False))
     brand_name_en: Optional[str] = Field(default=None, sa_column=Column(String(100)))
+    master_id: Optional[int] = Field(default=None)
     created_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, server_default=func.now()))
 
 

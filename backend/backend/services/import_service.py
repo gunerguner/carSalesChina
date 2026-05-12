@@ -12,44 +12,14 @@ from backend.models.log import CollectionLog
 from backend.models.origin import OriginShareData
 from backend.models.overall import SalesData
 from backend.sources.cpca_client import CpcaClient
+from backend.sources.yiche_client import YicheClient
 
 logger = logging.getLogger(__name__)
 
 client = CpcaClient()
+yiche_client = YicheClient()
 DEFAULT_IMPORT_DATA_TYPES = ("retail", "wholesale", "production")
 BRAND_DATA_TYPES = ("retail", "wholesale")
-
-
-def _normalize_overall_record(rec: dict) -> dict:
-    mapping = {
-        "总销量": "total_sales",
-        "新能源销量": "nev_sales",
-        "燃油销量": "ice_sales",
-        "BEV": "bev_sales",
-        "PHEV": "phev_sales",
-        "HEV": "hybrid_sales",
-    }
-    for cn_key, en_key in mapping.items():
-        if cn_key in rec:
-            rec[en_key] = rec.pop(cn_key)
-    return rec
-
-
-def _merge_retail_energy_fields(overall_records: list[dict], nev_records: list[dict]) -> list[dict]:
-    nev_by_month = {(r["year"], r["month"]): r.get("新能源销量") for r in nev_records}
-    for rec in overall_records:
-        if rec.get("data_type") != "retail":
-            continue
-        nev_sales = nev_by_month.get((rec["year"], rec["month"]))
-        total_sales = rec.get("总销量") or 0
-        if nev_sales is not None:
-            rec["新能源销量"] = nev_sales
-            rec["燃油销量"] = max(total_sales - nev_sales, 0)
-        _normalize_overall_record(rec)
-    for rec in overall_records:
-        if rec.get("data_type") != "retail":
-            _normalize_overall_record(rec)
-    return overall_records
 
 
 def _batch_upsert(db: Session, model: type, records: list[dict], fields: list[str]) -> int:
@@ -69,22 +39,72 @@ def _batch_upsert(db: Session, model: type, records: list[dict], fields: list[st
 
 
 def upsert_brand_meta(db: Session, brands: dict) -> int:
-    records = [{"brand_name": name, "brand_name_en": en} for name, en in brands.items()]
-    return _batch_upsert(db, BrandMeta, records, ["brand_name", "brand_name_en"])
+    records = []
+    for name, info in brands.items():
+        rec = {"brand_name": name}
+        if isinstance(info, dict):
+            rec["brand_name_en"] = info.get("brand_name_en")
+            rec["master_id"] = info.get("master_id")
+        else:
+            rec["brand_name_en"] = info
+        records.append(rec)
+    return _batch_upsert(db, BrandMeta, records, ["brand_name", "brand_name_en", "master_id"])
 
 
 def _get_brand_id_map(db: Session, brand_names: Iterable[str]) -> dict[str, int]:
     names = sorted(set(brand_names))
     if not names:
         return {}
-    upsert_brand_meta(db, {n: None for n in names})
+    existing = db.exec(select(BrandMeta).where(BrandMeta.brand_name.in_(names))).all()
+    existing_names = {r.brand_name for r in existing}
+    new_names = [n for n in names if n not in existing_names]
+    for name in new_names:
+        db.add(BrandMeta(brand_name=name))
+    if new_names:
+        db.commit()
     rows = db.exec(select(BrandMeta).where(BrandMeta.brand_name.in_(names))).all()
     return {r.brand_name: r.id for r in rows}
 
 
 def _upsert_overall(db: Session, records: list[dict]) -> int:
-    fields = ["year", "month", "total_sales", "nev_sales", "ice_sales", "bev_sales", "phev_sales", "hybrid_sales", "data_type"]
+    fields = ["year", "month", "sales", "data_type", "date_type", "level_type"]
     return _batch_upsert(db, SalesData, records, fields)
+
+
+def _upsert_total_sales(db: Session, records: list[dict]) -> int:
+    fields = ["year", "month", "sales", "data_type", "date_type", "level_type"]
+    return _batch_upsert(db, SalesData, records, fields)
+
+
+def refresh_total_sales_data(db: Session) -> dict:
+    log = CollectionLog(
+        task_type="refresh_total_sales",
+        status="pending",
+        started_at=datetime.now(),
+    )
+    db.add(log)
+    db.commit()
+
+    try:
+        records = yiche_client.fetch_all()
+        count = _upsert_total_sales(db, records)
+
+        log.status = "success"
+        log.records_count = count
+        log.finished_at = datetime.now()
+        db.commit()
+        logger.info("总销量数据刷新完成: %s 条", count)
+        return {
+            "records_count": count,
+            "status": "success",
+        }
+    except Exception as e:
+        log.status = "failed"
+        log.error_message = str(e)
+        log.finished_at = datetime.now()
+        db.commit()
+        logger.error("总销量数据刷新失败: %s", e)
+        raise
 
 
 def _upsert_brand(db: Session, records: list[dict]) -> int:
@@ -133,14 +153,24 @@ def refresh_brand_meta(db: Session) -> dict:
 
     updated = 0
     inserted = 0
-    for cn_name, en_name in brands.items():
+    for en_name, info in brands.items():
+        cn_name = info.get("name", "") if isinstance(info, dict) else str(info)
+        master_id = info.get("master_id") if isinstance(info, dict) else None
+        if not cn_name:
+            continue
         if cn_name in existing_map:
             row = existing_map[cn_name]
+            changed = False
             if en_name and row.brand_name_en != en_name:
                 row.brand_name_en = en_name
+                changed = True
+            if master_id is not None and row.master_id != master_id:
+                row.master_id = master_id
+                changed = True
+            if changed:
                 updated += 1
         else:
-            db.add(BrandMeta(brand_name=cn_name, brand_name_en=en_name))
+            db.add(BrandMeta(brand_name=cn_name, brand_name_en=en_name, master_id=master_id))
             inserted += 1
 
     db.commit()
@@ -162,36 +192,28 @@ def refresh_all_sales_data(
     db.commit()
 
     try:
-        overall_records = []
         brand_records = []
-        nev_records = client.get_nev_overall()
         for data_type in data_types:
-            overall_records.extend(client.get_monthly_overall(data_type=data_type))
             if data_type in BRAND_DATA_TYPES:
                 brand_records.extend(client.get_brand_ranking(data_type=data_type))
 
-        _merge_retail_energy_fields(overall_records, nev_records)
-
-        overall_count = _upsert_overall(db, overall_records)
         brand_count = _upsert_brand(db, brand_records)
         origin_records = client.get_country_data()
         origin_count = _upsert_origin_share(db, origin_records)
 
-        total_count = overall_count + brand_count + origin_count
+        total_count = brand_count + origin_count
 
         log.status = "success"
         log.records_count = total_count
         log.finished_at = datetime.now()
         db.commit()
         logger.info(
-            "全量数据刷新完成: 总体 %s 条, 品牌 %s 条, 国别 %s 条",
-            overall_count,
+            "全量数据刷新完成: 品牌 %s 条, 国别 %s 条",
             brand_count,
             origin_count,
         )
         return {
             "data_types": list(data_types),
-            "overall_count": overall_count,
             "brand_count": brand_count,
             "origin_count": origin_count,
             "records_count": total_count,

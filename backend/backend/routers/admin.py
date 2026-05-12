@@ -6,7 +6,7 @@ from sqlmodel import Session, select, func
 
 from backend.core.database import get_db
 from backend.models.log import CollectionLog
-from backend.services.import_service import refresh_brand_meta, refresh_all_sales_data
+from backend.services.import_service import refresh_brand_meta, refresh_all_sales_data, refresh_total_sales_data
 from backend.schemas.response import success, error
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
@@ -18,6 +18,17 @@ def trigger_refresh_sales(
 ):
     try:
         result = refresh_all_sales_data(db)
+        return success(result)
+    except Exception as e:
+        return error(str(e))
+
+
+@router.post("/data/refresh/total-sales")
+def trigger_refresh_total_sales(
+    db: Session = Depends(get_db),
+):
+    try:
+        result = refresh_total_sales_data(db)
         return success(result)
     except Exception as e:
         return error(str(e))

@@ -2,15 +2,12 @@
     "market": {
         "title": "市场销量",
         "filter": {
-            "energyType": "能源类型",
-            "energyAll": "全部",
-            "energyFuel": "燃油",
-            "energyBev": "纯电动(BEV)",
-            "energyPhev": "插电混动(PHEV)",
-            "energyHev": "其他混动(HEV)",
+            "levelType": "车型级别",
+            "levelAll": "全部",
+            "levelNev": "新能源",
+            "levelBev": "纯电动(BEV)",
             "dataType": "数据类型",
             "dataTypeRetail": "零售量",
-            "dataTypeWholesale": "批发量",
             "dataTypeProduction": "产量"
         },
         "overview": {

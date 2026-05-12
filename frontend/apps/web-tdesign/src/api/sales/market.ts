@@ -3,21 +3,24 @@ import { requestClient } from '#/api/request';
 export interface MarketOverviewParams {
   year: number;
   month: number;
-  energy_type?: string;
-  data_type?: 'production' | 'retail' | 'wholesale';
+  level_type?: string;
+  data_type?: 'production' | 'retail';
+  date_type?: 'monthly' | 'quarterly' | 'yearly';
 }
 
 export interface MarketTrendParams {
-  energy_type?: string;
+  level_type?: string;
   years?: number;
   granularity?: 'monthly' | 'yearly';
-  data_type?: 'production' | 'retail' | 'wholesale';
+  data_type?: 'production' | 'retail';
+  date_type?: 'monthly' | 'quarterly' | 'yearly';
 }
 
 export interface MarketYearlyParams {
   year: number;
-  energy_type?: string;
-  data_type?: 'production' | 'retail' | 'wholesale';
+  level_type?: string;
+  data_type?: 'production' | 'retail';
+  date_type?: 'monthly' | 'quarterly' | 'yearly';
 }
 
 export function getMarketOverviewApi(params: MarketOverviewParams) {

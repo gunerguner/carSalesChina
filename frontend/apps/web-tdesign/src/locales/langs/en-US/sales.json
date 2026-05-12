@@ -2,15 +2,12 @@
   "market": {
     "title": "Market Sales",
     "filter": {
-      "energyType": "Energy Type",
-      "energyAll": "All",
-      "energyFuel": "ICE",
-      "energyBev": "BEV",
-      "energyPhev": "PHEV",
-      "energyHev": "HEV",
+      "levelType": "Vehicle Level",
+      "levelAll": "All",
+      "levelNev": "NEV",
+      "levelBev": "BEV",
       "dataType": "Data Type",
       "dataTypeRetail": "Retail",
-      "dataTypeWholesale": "Wholesale",
       "dataTypeProduction": "Production"
     },
     "overview": {

@@ -28,6 +28,24 @@ ORIGIN_FIELD_MAP = {
 }
 
 
+def _get_level_sales(
+    db: Session, year: int, month: int, data_type: str, date_type: str
+) -> dict[str, float]:
+    rows = db.exec(
+        select(SalesData).where(
+            SalesData.year == year,
+            SalesData.month == month,
+            SalesData.data_type == data_type,
+            SalesData.date_type == date_type,
+        )
+    ).all()
+    result = {}
+    for row in rows:
+        if row.level_type and row.sales is not None:
+            result[row.level_type] = float(row.sales)
+    return result
+
+
 @router.get("/nev-share/trend")
 def nev_share_trend(
     query: NevShareTrendQuery = Depends(),
@@ -37,36 +55,69 @@ def nev_share_trend(
     start_year = now.year - query.years + 1
 
     if query.granularity == "yearly":
-        yearly_rows = db.exec(select(
-            SalesData.year,
-            func.sum(SalesData.total_sales).label("total_sales"),
-            func.sum(SalesData.nev_sales).label("nev_sales"),
-        ).where(
-            SalesData.year >= start_year,
-            SalesData.data_type == "retail",
-        ).group_by(SalesData.year).order_by(SalesData.year)).all()
+        yearly_rows = db.exec(
+            select(
+                SalesData.year,
+                SalesData.level_type,
+                func.sum(SalesData.sales).label("sales"),
+            )
+            .where(
+                SalesData.year >= start_year,
+                SalesData.data_type == "retail",
+                SalesData.date_type == "monthly",
+                SalesData.level_type.in_(["all", "nev"]),
+            )
+            .group_by(SalesData.year, SalesData.level_type)
+            .order_by(SalesData.year)
+        ).all()
 
-        data = []
+        year_data: dict[int, dict[str, float]] = {}
         for r in yearly_rows:
-            total = float(r.total_sales or 0)
-            nev = float(r.nev_sales or 0)
-            rate = (nev / total * 100) if total else 0
-            data.append({"year": r.year, "nev_penetration_rate": round(rate, 2), "total_sales": total, "nev_sales": nev})
-    else:
-        rows = db.exec(select(SalesData).where(
-            SalesData.year >= start_year,
-            SalesData.data_type == "retail",
-        ).order_by(SalesData.year, SalesData.month)).all()
+            if r.year not in year_data:
+                year_data[r.year] = {}
+            year_data[r.year][r.level_type] = float(r.sales or 0)
 
         data = []
-        for r in rows:
-            total = float(r.total_sales or 0)
-            nev = float(r.nev_sales or 0)
+        for year in sorted(year_data.keys()):
+            total = year_data[year].get("all", 0)
+            nev = year_data[year].get("nev", 0)
             rate = (nev / total * 100) if total else 0
             data.append({
-                "year": r.year, "month": r.month,
+                "year": year,
                 "nev_penetration_rate": round(rate, 2),
-                "total_sales": total, "nev_sales": nev,
+                "total_sales": total,
+                "nev_sales": nev,
+            })
+    else:
+        rows = db.exec(
+            select(SalesData)
+            .where(
+                SalesData.year >= start_year,
+                SalesData.data_type == "retail",
+                SalesData.date_type == "monthly",
+                SalesData.level_type.in_(["all", "nev"]),
+            )
+            .order_by(SalesData.year, SalesData.month)
+        ).all()
+
+        month_data: dict[tuple[int, int], dict[str, float]] = {}
+        for r in rows:
+            key = (r.year, r.month)
+            if key not in month_data:
+                month_data[key] = {}
+            month_data[key][r.level_type] = float(r.sales or 0)
+
+        data = []
+        for (year, month), levels in sorted(month_data.items()):
+            total = levels.get("all", 0)
+            nev = levels.get("nev", 0)
+            rate = (nev / total * 100) if total else 0
+            data.append({
+                "year": year,
+                "month": month,
+                "nev_penetration_rate": round(rate, 2),
+                "total_sales": total,
+                "nev_sales": nev,
             })
 
     return success(data)
@@ -77,18 +128,16 @@ def nev_share_overview(
     query: NevShareOverviewQuery = Depends(),
     db: Session = Depends(get_db),
 ):
-    row = db.exec(select(SalesData).where(
-        SalesData.year == query.year,
-        SalesData.month == query.month,
-        SalesData.data_type == "retail",
-    )).first()
+    sales_map = _get_level_sales(
+        db, query.year, query.month, "retail", "monthly"
+    )
 
-    if not row:
-        return success(None)
-
-    total = float(row.total_sales) if row.total_sales else 0
-    nev = float(row.nev_sales) if row.nev_sales else 0
+    total = sales_map.get("all", 0)
+    nev = sales_map.get("nev", 0)
+    bev = sales_map.get("bev", 0)
     nev_penetration_rate = (nev / total * 100) if total else 0
+    ice = max(total - nev, 0)
+    other_nev = max(nev - bev, 0)
 
     data = {
         "year": query.year,
@@ -97,10 +146,9 @@ def nev_share_overview(
         "nev_sales": nev,
         "nev_penetration_rate": round(nev_penetration_rate, 2),
         "breakdown": [
-            {"name": "纯电动", "value": float(row.bev_sales) if row.bev_sales else 0},
-            {"name": "插电混动", "value": float(row.phev_sales) if row.phev_sales else 0},
-            {"name": "其他混动", "value": float(row.hybrid_sales) if row.hybrid_sales else 0},
-            {"name": "燃油车", "value": float(row.ice_sales) if row.ice_sales else 0},
+            {"name": "纯电动", "value": bev},
+            {"name": "插电混动/其他混动", "value": other_nev},
+            {"name": "燃油车", "value": ice},
         ],
     }
 
@@ -116,54 +164,80 @@ def nev_breakdown(
     start_year = now.year - query.years + 1
 
     if query.granularity == "yearly":
-        yearly_rows = db.exec(select(
-            SalesData.year,
-            func.sum(SalesData.nev_sales).label("nev_sales"),
-            func.sum(SalesData.bev_sales).label("bev_sales"),
-            func.sum(SalesData.phev_sales).label("phev_sales"),
-            func.sum(SalesData.hybrid_sales).label("hybrid_sales"),
-        ).where(
-            SalesData.year >= start_year,
-            SalesData.data_type == "retail",
-        ).group_by(SalesData.year).order_by(SalesData.year)).all()
+        yearly_rows = db.exec(
+            select(
+                SalesData.year,
+                SalesData.level_type,
+                func.sum(SalesData.sales).label("sales"),
+            )
+            .where(
+                SalesData.year >= start_year,
+                SalesData.data_type == "retail",
+                SalesData.date_type == "monthly",
+                SalesData.level_type.in_(["nev", "bev"]),
+            )
+            .group_by(SalesData.year, SalesData.level_type)
+            .order_by(SalesData.year)
+        ).all()
+
+        year_data: dict[int, dict[str, float]] = {}
+        for r in yearly_rows:
+            if r.year not in year_data:
+                year_data[r.year] = {}
+            year_data[r.year][r.level_type] = float(r.sales or 0)
 
         data = []
-        for r in yearly_rows:
-            nev = float(r.nev_sales or 0)
-            bev = float(r.bev_sales or 0)
-            phev = float(r.phev_sales or 0)
-            hybrid = float(r.hybrid_sales or 0)
+        for year in sorted(year_data.keys()):
+            nev = year_data[year].get("nev", 0)
+            bev = year_data[year].get("bev", 0)
+            other_nev = max(nev - bev, 0)
             data.append({
-                "year": r.year,
+                "year": year,
                 "nev_sales": nev,
-                "bev_sales": bev, "bev_ratio": round(bev / nev * 100, 2) if nev else 0,
-                "phev_sales": phev, "phev_ratio": round(phev / nev * 100, 2) if nev else 0,
-                "hybrid_sales": hybrid, "hybrid_ratio": round(hybrid / nev * 100, 2) if nev else 0,
+                "bev_sales": bev,
+                "bev_ratio": round(bev / nev * 100, 2) if nev else 0,
+                "phev_sales": other_nev,
+                "phev_ratio": round(other_nev / nev * 100, 2) if nev else 0,
+                "hybrid_sales": 0,
+                "hybrid_ratio": 0,
             })
     else:
-        rows = db.exec(select(SalesData).where(
-            SalesData.year >= start_year,
-            SalesData.data_type == "retail",
-        ).order_by(SalesData.year, SalesData.month)).all()
+        rows = db.exec(
+            select(SalesData)
+            .where(
+                SalesData.year >= start_year,
+                SalesData.data_type == "retail",
+                SalesData.date_type == "monthly",
+                SalesData.level_type.in_(["nev", "bev"]),
+            )
+            .order_by(SalesData.year, SalesData.month)
+        ).all()
+
+        month_data: dict[tuple[int, int], dict[str, float]] = {}
+        for r in rows:
+            key = (r.year, r.month)
+            if key not in month_data:
+                month_data[key] = {}
+            month_data[key][r.level_type] = float(r.sales or 0)
 
         data = []
-        for r in rows:
-            nev = float(r.nev_sales or 0)
-            bev = float(r.bev_sales or 0)
-            phev = float(r.phev_sales or 0)
-            hybrid = float(r.hybrid_sales or 0)
+        for (year, month), levels in sorted(month_data.items()):
+            nev = levels.get("nev", 0)
+            bev = levels.get("bev", 0)
+            other_nev = max(nev - bev, 0)
             data.append({
-                "year": r.year, "month": r.month,
+                "year": year,
+                "month": month,
                 "nev_sales": nev,
-                "bev_sales": bev, "bev_ratio": round(bev / nev * 100, 2) if nev else 0,
-                "phev_sales": phev, "phev_ratio": round(phev / nev * 100, 2) if nev else 0,
-                "hybrid_sales": hybrid, "hybrid_ratio": round(hybrid / nev * 100, 2) if nev else 0,
+                "bev_sales": bev,
+                "bev_ratio": round(bev / nev * 100, 2) if nev else 0,
+                "phev_sales": other_nev,
+                "phev_ratio": round(other_nev / nev * 100, 2) if nev else 0,
+                "hybrid_sales": 0,
+                "hybrid_ratio": 0,
             })
 
     return success(data)
-
-
-
 
 
 @router.get("/origin-share/trend")
@@ -198,9 +272,9 @@ def origin_share_trend(
         for year in sorted(year_origins.keys()):
             entry: dict = {"year": year}
             total = year_totals[year]
-            for cn_key, en_key in ORIGIN_FIELD_MAP.items():
-                sv = year_origins[year].get(cn_key, 0)
-                entry[en_key] = round(sv / total * 100, 2) if total else 0
+            for origin_cn, origin_en in ORIGIN_FIELD_MAP.items():
+                sv = year_origins[year].get(origin_cn, 0)
+                entry[origin_en] = round(sv / total * 100, 2) if total else 0
             data.append(entry)
     else:
         rows = db.exec(select(OriginShareData).where(
@@ -208,8 +282,8 @@ def origin_share_trend(
             OriginShareData.data_type == query.data_type,
         ).order_by(OriginShareData.year, OriginShareData.month)).all()
 
-        month_totals: dict[tuple, float] = {}
-        month_origins: dict[tuple, dict[str, float]] = {}
+        month_totals: dict[tuple[int, int], float] = {}
+        month_origins: dict[tuple[int, int], dict[str, float]] = {}
         for r in rows:
             key = (r.year, r.month)
             if key not in month_origins:
@@ -221,14 +295,11 @@ def origin_share_trend(
 
         data = []
         for (year, month) in sorted(month_origins.keys()):
-            entry = {"year": year, "month": month}
+            entry: dict = {"year": year, "month": month}
             total = month_totals[(year, month)]
-            for cn_key, en_key in ORIGIN_FIELD_MAP.items():
-                sv = month_origins[(year, month)].get(cn_key, 0)
-                entry[en_key] = round(sv / total * 100, 2) if total else 0
+            for origin_cn, origin_en in ORIGIN_FIELD_MAP.items():
+                sv = month_origins[(year, month)].get(origin_cn, 0)
+                entry[origin_en] = round(sv / total * 100, 2) if total else 0
             data.append(entry)
 
     return success(data)
-
-
-

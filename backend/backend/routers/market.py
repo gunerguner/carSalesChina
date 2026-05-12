@@ -11,15 +11,38 @@ from backend.schemas.response import success
 
 router = APIRouter(prefix="/api/v1/market", tags=["market"])
 
-ENERGY_FIELD_MAP = {
-    "all": "total_sales",
-    "fuel": "ice_sales",
-    "bev": "bev_sales",
-    "phev": "phev_sales",
-    "hybrid": "hybrid_sales",
-}
+DATA_TYPE_ENUM = Query("retail", pattern="^(retail|production)$")
 
-DATA_TYPE_ENUM = Query("retail", pattern="^(retail|wholesale|production)$")
+
+def _get_sales_by_level(
+    db: Session, year: int, month: int, data_type: str, date_type: str
+) -> dict[str, float]:
+    rows = db.exec(
+        select(SalesData).where(
+            SalesData.year == year,
+            SalesData.month == month,
+            SalesData.data_type == data_type,
+            SalesData.date_type == date_type,
+        )
+    ).all()
+    result = {}
+    for row in rows:
+        if row.level_type and row.sales is not None:
+            result[row.level_type] = float(row.sales)
+    return result
+
+
+def _get_prev_period(year: int, month: int, date_type: str) -> tuple[int, int]:
+    if date_type == "monthly":
+        if month > 1:
+            return year, month - 1
+        return year - 1, 12
+    elif date_type == "quarterly":
+        if month > 1:
+            return year, month - 1
+        return year - 1, 4
+    else:
+        return year - 1, 0
 
 
 @router.get("/overview")
@@ -27,50 +50,50 @@ def overview(
     query: OverviewQuery = Depends(),
     db: Session = Depends(get_db),
 ):
-    row = db.exec(select(SalesData).where(
-        SalesData.year == query.year,
-        SalesData.month == query.month,
-        SalesData.data_type == query.data_type,
-    )).first()
+    sales_map = _get_sales_by_level(
+        db, query.year, query.month, query.data_type, query.date_type
+    )
 
-    prev_month_row = db.exec(select(SalesData).where(
-        SalesData.year == (query.year if query.month > 1 else query.year - 1),
-        SalesData.month == (query.month - 1 if query.month > 1 else 12),
-        SalesData.data_type == query.data_type,
-    )).first()
+    current_val = sales_map.get(query.level_type, 0)
 
-    prev_year_row = db.exec(select(SalesData).where(
-        SalesData.year == query.year - 1,
-        SalesData.month == query.month,
-        SalesData.data_type == query.data_type,
-    )).first()
+    prev_year, prev_month = _get_prev_period(query.year, query.month, query.date_type)
+    prev_period_map = _get_sales_by_level(
+        db, prev_year, prev_month, query.data_type, query.date_type
+    )
+    prev_period_val = prev_period_map.get(query.level_type, 0)
 
-    field = ENERGY_FIELD_MAP.get(query.energy_type, "total_sales")
-    current_val = getattr(row, field) or 0 if row else 0
-    prev_month_val = getattr(prev_month_row, field) or 0 if prev_month_row else 0
-    prev_year_val = getattr(prev_year_row, field) or 0 if prev_year_row else 0
+    prev_year_map = _get_sales_by_level(
+        db, query.year - 1, query.month, query.data_type, query.date_type
+    )
+    prev_year_val = prev_year_map.get(query.level_type, 0)
 
-    mom_growth = ((current_val - prev_month_val) / prev_month_val * 100) if prev_month_val else None
-    yoy_growth = ((current_val - prev_year_val) / prev_year_val * 100) if prev_year_val else None
+    mom_growth = (
+        ((current_val - prev_period_val) / prev_period_val * 100)
+        if prev_period_val
+        else None
+    )
+    yoy_growth = (
+        ((current_val - prev_year_val) / prev_year_val * 100)
+        if prev_year_val
+        else None
+    )
 
-    total_sales = float(row.total_sales) if row and row.total_sales else 0
-    nev_sales = float(row.nev_sales) if row and row.nev_sales else 0
+    total_sales = sales_map.get("all", 0)
+    nev_sales = sales_map.get("nev", 0)
     nev_penetration_rate = (nev_sales / total_sales * 100) if total_sales else 0
 
     return success({
         "year": query.year,
         "month": query.month,
-        "energy_type": query.energy_type,
         "data_type": query.data_type,
-        "sales": float(current_val),
-        "mom_growth": round(mom_growth, 2) if mom_growth else None,
-        "yoy_growth": round(yoy_growth, 2) if yoy_growth else None,
+        "date_type": query.date_type,
+        "level_type": query.level_type,
+        "sales": current_val,
+        "mom_growth": round(mom_growth, 2) if mom_growth is not None else None,
+        "yoy_growth": round(yoy_growth, 2) if yoy_growth is not None else None,
         "total_sales": total_sales,
         "nev_sales": nev_sales,
-        "ice_sales": float(row.ice_sales) if row and row.ice_sales else 0,
-        "bev_sales": float(row.bev_sales) if row and row.bev_sales else 0,
-        "phev_sales": float(row.phev_sales) if row and row.phev_sales else 0,
-        "hybrid_sales": float(row.hybrid_sales) if row and row.hybrid_sales else 0,
+        "bev_sales": sales_map.get("bev", 0),
         "nev_penetration_rate": round(nev_penetration_rate, 2),
     })
 
@@ -82,30 +105,42 @@ def trend(
 ):
     now = datetime.now()
     start_year = now.year - query.years + 1
-    field = ENERGY_FIELD_MAP.get(query.energy_type, "total_sales")
 
     if query.granularity == "yearly":
-        rows = db.exec(select(
-            SalesData.year,
-            func.sum(getattr(SalesData, field)).label("sales"),
-        ).where(
-            SalesData.year >= start_year,
-            SalesData.data_type == query.data_type,
-        ).group_by(SalesData.year).order_by(SalesData.year)).all()
+        rows = db.exec(
+            select(
+                SalesData.year,
+                func.sum(SalesData.sales).label("sales"),
+            )
+            .where(
+                SalesData.year >= start_year,
+                SalesData.data_type == query.data_type,
+                SalesData.date_type == query.date_type,
+                SalesData.level_type == query.level_type,
+            )
+            .group_by(SalesData.year)
+            .order_by(SalesData.year)
+        ).all()
 
         data = [{"year": r.year, "sales": float(r.sales or 0)} for r in rows]
     else:
-        rows = db.exec(select(SalesData).where(
-            SalesData.year >= start_year,
-            SalesData.data_type == query.data_type,
-        ).order_by(SalesData.year, SalesData.month)).all()
+        rows = db.exec(
+            select(SalesData)
+            .where(
+                SalesData.year >= start_year,
+                SalesData.data_type == query.data_type,
+                SalesData.date_type == query.date_type,
+                SalesData.level_type == query.level_type,
+            )
+            .order_by(SalesData.year, SalesData.month)
+        ).all()
 
-        data = [{"year": r.year, "month": r.month, "sales": float(getattr(r, field) or 0)} for r in rows]
+        data = [
+            {"year": r.year, "month": r.month, "sales": float(r.sales or 0)}
+            for r in rows
+        ]
 
     return success(data)
-
-
-
 
 
 @router.get("/yearly")
@@ -113,45 +148,54 @@ def yearly(
     query: YearlyQuery = Depends(),
     db: Session = Depends(get_db),
 ):
-    min_year = db.execute(select(func.min(SalesData.year)).where(
-        SalesData.data_type == query.data_type,
-    )).scalar() or query.year - 2
+    min_year = db.execute(
+        select(func.min(SalesData.year)).where(
+            SalesData.data_type == query.data_type,
+            SalesData.date_type == query.date_type,
+            SalesData.level_type == query.level_type,
+        )
+    ).scalar() or query.year - 2
 
-    field = ENERGY_FIELD_MAP.get(query.energy_type, "total_sales")
-    rows = db.exec(select(SalesData).where(
-        SalesData.year >= min_year,
-        SalesData.data_type == query.data_type,
-    ).order_by(SalesData.year, SalesData.month)).all()
+    rows = db.exec(
+        select(SalesData)
+        .where(
+            SalesData.year >= min_year,
+            SalesData.data_type == query.data_type,
+            SalesData.date_type == query.date_type,
+            SalesData.level_type == query.level_type,
+        )
+        .order_by(SalesData.year, SalesData.month)
+    ).all()
 
     all_rows_map = {(r.year, r.month): r for r in rows}
 
     data = []
     for r in rows:
-        prev_month_key = (r.year - 1, 12) if r.month == 1 else (r.year, r.month - 1)
-        prev_year_key = (r.year - 1, r.month)
+        prev_year, prev_month = _get_prev_period(r.year, r.month, query.date_type)
+        prev_period_row = all_rows_map.get((prev_year, prev_month))
+        prev_year_row = all_rows_map.get((r.year - 1, r.month))
 
-        prev_month_row = all_rows_map.get(prev_month_key)
-        prev_year_row = all_rows_map.get(prev_year_key)
+        current_val = float(r.sales or 0)
+        prev_period_val = float(prev_period_row.sales or 0) if prev_period_row else 0
+        prev_year_val = float(prev_year_row.sales or 0) if prev_year_row else 0
 
-        current_val = float(getattr(r, field) or 0)
-        prev_month_val = float(getattr(prev_month_row, field) or 0) if prev_month_row else 0
-        prev_year_val = float(getattr(prev_year_row, field) or 0) if prev_year_row else 0
-
-        mom_growth = ((current_val - prev_month_val) / prev_month_val * 100) if prev_month_val else None
-        yoy_growth = ((current_val - prev_year_val) / prev_year_val * 100) if prev_year_val else None
+        mom_growth = (
+            ((current_val - prev_period_val) / prev_period_val * 100)
+            if prev_period_val
+            else None
+        )
+        yoy_growth = (
+            ((current_val - prev_year_val) / prev_year_val * 100)
+            if prev_year_val
+            else None
+        )
 
         data.append({
             "year": r.year,
             "month": r.month,
             "sales": current_val,
-            "yoy_growth": round(yoy_growth, 2) if yoy_growth else None,
-            "mom_growth": round(mom_growth, 2) if mom_growth else None,
-            "total_sales": float(r.total_sales) if r.total_sales else 0,
-            "nev_sales": float(r.nev_sales) if r.nev_sales else 0,
-            "ice_sales": float(r.ice_sales) if r.ice_sales else 0,
+            "yoy_growth": round(yoy_growth, 2) if yoy_growth is not None else None,
+            "mom_growth": round(mom_growth, 2) if mom_growth is not None else None,
         })
 
     return success(data)
-
-
-

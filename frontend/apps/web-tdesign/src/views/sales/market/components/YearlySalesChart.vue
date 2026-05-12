@@ -8,8 +8,8 @@ import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 import { getMarketTrendApi } from '#/api/sales/market';
 
 const props = defineProps<{
-  dataType: 'production' | 'retail' | 'wholesale';
-  energyType: string;
+  dataType: 'production' | 'retail';
+  levelType: string;
 }>();
 
 const chartRef = ref<EchartsUIType>();
@@ -20,9 +20,10 @@ async function fetchAndRender() {
   loading.value = true;
   try {
     const data = await getMarketTrendApi({
-      energy_type: props.energyType,
+      level_type: props.levelType,
       granularity: 'yearly',
       data_type: props.dataType,
+      date_type: 'monthly',
     });
 
     if (!data || !Array.isArray(data) || data.length === 0) {
@@ -62,7 +63,7 @@ async function fetchAndRender() {
 
 onMounted(() => fetchAndRender());
 
-watch([() => props.energyType, () => props.dataType], () => fetchAndRender());
+watch([() => props.levelType, () => props.dataType], () => fetchAndRender());
 </script>
 
 <template>
