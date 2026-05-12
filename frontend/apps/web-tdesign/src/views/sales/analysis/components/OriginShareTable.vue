@@ -57,6 +57,5 @@ onMounted(() => fetchData());
     row-key="key"
     size="small"
     bordered
-    :pagination="{ pageSize: 12 }"
   />
 </template>

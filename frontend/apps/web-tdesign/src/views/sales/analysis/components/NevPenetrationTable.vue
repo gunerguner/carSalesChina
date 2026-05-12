@@ -36,7 +36,7 @@ async function fetchData() {
       penetrationRate: item.nev_penetration_rate ?? null,
       bevShare: item.bev_sales ?? null,
       phevShare: item.phev_sales ?? null,
-    }));
+    })).toReversed();
   } finally {
     loading.value = false;
   }
@@ -53,6 +53,5 @@ onMounted(() => fetchData());
     row-key="key"
     size="small"
     bordered
-    :pagination="{ pageSize: 12 }"
   />
 </template>
