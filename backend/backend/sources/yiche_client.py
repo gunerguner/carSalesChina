@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Any, Optional
 
-import requests
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +168,7 @@ class YicheClient:
             "salesType": sales_type,
         }
         try:
-            resp = requests.get(_OVERALL_API_URL, params=params, timeout=30)
+            resp = httpx.get(_OVERALL_API_URL, params=params, timeout=30)
             resp.raise_for_status()
             body = resp.json()
             if body.get("status") != 1:
@@ -241,7 +241,7 @@ class YicheClient:
             ),
             "Referer": "https://h5mp.yiche.com/",
         }
-        resp = requests.get(
+        resp = httpx.get(
             _BRAND_API_URL,
             params={"cid": _CID, "param": param_json},
             headers=headers,
