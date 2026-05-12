@@ -7,6 +7,7 @@ class RankingQuery(BaseModel):
     page: int = Field(1, ge=1)
     pageSize: int = Field(20, ge=1, le=100)
     data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")
+    level_type: str = Field("all", pattern="^(all|nev|bev)$")
 
 
 class YearlyRankingQuery(BaseModel):
@@ -14,6 +15,7 @@ class YearlyRankingQuery(BaseModel):
     page: int = Field(1, ge=1)
     pageSize: int = Field(20, ge=1, le=100)
     data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")
+    level_type: str = Field("all", pattern="^(all|nev|bev)$")
 
 
 class CompareTrendQuery(BaseModel):
@@ -21,3 +23,4 @@ class CompareTrendQuery(BaseModel):
     years: int = Field(3, ge=1, le=10)
     granularity: str = Field("monthly", pattern="^(monthly|yearly)$")
     data_type: str = Field("retail", pattern="^(retail|wholesale|production)$")
+    level_type: str = Field("all", pattern="^(all|nev|bev)$")

@@ -34,8 +34,10 @@ CREATE TABLE IF NOT EXISTS brand_sales (
     brand_id BIGINT NOT NULL COMMENT '品牌ID(外键)',
     sales_volume DECIMAL(15,2) COMMENT '销量',
     data_type ENUM('retail','wholesale','production') DEFAULT 'retail' COMMENT '零售/批发/产量口径',
+    date_type ENUM('monthly','quarterly','yearly') DEFAULT 'monthly' COMMENT '时间维度',
+    level_type ENUM('all','nev','bev') DEFAULT 'all' COMMENT '车型级别',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uk_year_month_brand_type (year, month, brand_id, data_type),
+    UNIQUE KEY uk_brand_sales_unique (year, month, brand_id, data_type, date_type, level_type),
     INDEX idx_brand_id (brand_id),
     CONSTRAINT fk_brand_sales_brand_meta FOREIGN KEY (brand_id) REFERENCES brand_meta(id)
 ) ENGINE=InnoDB;

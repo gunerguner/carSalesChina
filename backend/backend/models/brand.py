@@ -21,7 +21,10 @@ class BrandMeta(SQLModel, table=True):
 class BrandSales(SQLModel, table=True):
     __tablename__ = "brand_sales"
     __table_args__ = (
-        UniqueConstraint("year", "month", "brand_id", "data_type", name="uk_year_month_brand_type"),
+        UniqueConstraint(
+            "year", "month", "brand_id", "data_type", "date_type", "level_type",
+            name="uk_brand_sales_unique",
+        ),
         Index("idx_brand_id", "brand_id"),
     )
 
@@ -30,5 +33,13 @@ class BrandSales(SQLModel, table=True):
     month: int
     brand_id: int = Field(foreign_key="brand_meta.id")
     sales_volume: Optional[float] = Field(default=None, sa_column=Column(Numeric(15, 2)))
-    data_type: Optional[str] = Field(default="retail", sa_column=Column(SAEnum("retail", "wholesale", "production"), default="retail"))
+    data_type: Optional[str] = Field(default="retail", sa_column=Column(SAEnum("retail", "production"), default="retail"))
+    date_type: Optional[str] = Field(
+        default="monthly",
+        sa_column=Column(SAEnum("monthly", "quarterly", "yearly"), default="monthly"),
+    )
+    level_type: Optional[str] = Field(
+        default="all",
+        sa_column=Column(SAEnum("all", "nev", "bev"), default="all"),
+    )
     created_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, server_default=func.now()))

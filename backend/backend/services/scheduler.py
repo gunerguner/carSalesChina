@@ -6,7 +6,7 @@ from apscheduler.triggers.cron import CronTrigger
 from sqlmodel import Session
 
 from backend.core.database import engine
-from backend.services.import_service import refresh_all_sales_data
+from backend.services.import_service import refresh_origin_data, refresh_sales_data
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,8 @@ def _scheduled_collect():
     with Session(engine) as db:
         try:
             logger.info("定时采集任务启动")
-            refresh_all_sales_data(db)
+            refresh_sales_data(db)
+            refresh_origin_data(db)
         except Exception as e:
             logger.error(f"定时采集任务失败: {e}")
 

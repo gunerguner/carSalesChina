@@ -30,6 +30,7 @@ def ranking(
         BrandSales.year == query.year,
         BrandSales.month == query.month,
         BrandSales.data_type == query.data_type,
+        BrandSales.level_type == query.level_type,
     ).group_by(BrandSales.brand_id).subquery()
 
     query_sql = select(
@@ -64,6 +65,7 @@ def yearly_ranking(
     ).where(
         BrandSales.year == query.year,
         BrandSales.data_type == query.data_type,
+        BrandSales.level_type == query.level_type,
     ).group_by(BrandSales.brand_id).subquery()
 
     query_sql = select(
@@ -113,6 +115,7 @@ def compare_trend(
             BrandSales.brand_id.in_(ids),
             BrandSales.year >= start_year,
             BrandSales.data_type == query.data_type,
+            BrandSales.level_type == query.level_type,
         ).group_by(BrandSales.brand_id, BrandSales.year).order_by(BrandSales.year)).all()
 
         data = {}
@@ -126,6 +129,7 @@ def compare_trend(
             BrandSales.brand_id.in_(ids),
             BrandSales.year >= start_year,
             BrandSales.data_type == query.data_type,
+            BrandSales.level_type == query.level_type,
         ).order_by(BrandSales.year, BrandSales.month)).all()
 
         data = {}
