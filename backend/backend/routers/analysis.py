@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlmodel import Session, select
 
@@ -9,7 +9,6 @@ from backend.models.overall import SalesData
 from backend.models.origin import OriginShareData
 from backend.schemas.analysis import (
     NevBreakdownQuery,
-    NevShareOverviewQuery,
     NevShareTrendQuery,
     OriginShareTrendQuery,
 )
@@ -26,24 +25,6 @@ ORIGIN_FIELD_MAP = {
     "法系": "french",
     "韩系": "korean",
 }
-
-
-def _get_level_sales(
-    db: Session, year: int, month: int, data_type: str, date_type: str
-) -> dict[str, float]:
-    rows = db.exec(
-        select(SalesData).where(
-            SalesData.year == year,
-            SalesData.month == month,
-            SalesData.data_type == data_type,
-            SalesData.date_type == date_type,
-        )
-    ).all()
-    result = {}
-    for row in rows:
-        if row.level_type and row.sales is not None:
-            result[row.level_type] = float(row.sales)
-    return result
 
 
 @router.get("/nev-share/trend")
@@ -119,38 +100,6 @@ def nev_share_trend(
                 "total_sales": total,
                 "nev_sales": nev,
             })
-
-    return success(data)
-
-
-@router.get("/nev-share/overview")
-def nev_share_overview(
-    query: NevShareOverviewQuery = Depends(),
-    db: Session = Depends(get_db),
-):
-    sales_map = _get_level_sales(
-        db, query.year, query.month, "retail", "monthly"
-    )
-
-    total = sales_map.get("all", 0)
-    nev = sales_map.get("nev", 0)
-    bev = sales_map.get("bev", 0)
-    nev_penetration_rate = (nev / total * 100) if total else 0
-    ice = max(total - nev, 0)
-    other_nev = max(nev - bev, 0)
-
-    data = {
-        "year": query.year,
-        "month": query.month,
-        "total_sales": total,
-        "nev_sales": nev,
-        "nev_penetration_rate": round(nev_penetration_rate, 2),
-        "breakdown": [
-            {"name": "纯电动", "value": bev},
-            {"name": "插电混动/其他混动", "value": other_nev},
-            {"name": "燃油车", "value": ice},
-        ],
-    }
 
     return success(data)
 

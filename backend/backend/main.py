@@ -9,7 +9,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.config import FASTAPI_PORT
 from backend.core.database import init_db
 from backend.routers import market, brand, analysis, admin
-from backend.services.scheduler import start_scheduler, stop_scheduler
 
 LOGS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "logs")
 os.makedirs(LOGS_DIR, exist_ok=True)
@@ -28,9 +27,7 @@ logging.basicConfig(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    start_scheduler()
     yield
-    stop_scheduler()
 
 
 app = FastAPI(title="中国汽车销售数据平台", version="1.0.0", lifespan=lifespan)
