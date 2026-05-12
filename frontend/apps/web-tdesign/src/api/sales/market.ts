@@ -23,6 +23,14 @@ export interface MarketYearlyParams {
   date_type?: 'monthly' | 'quarterly' | 'yearly';
 }
 
+export interface RawSalesRecord {
+  data_type: 'production' | 'retail';
+  level_type: 'all' | 'bev' | 'nev';
+  month: number;
+  sales: number;
+  year: number;
+}
+
 export function getMarketOverviewApi(params: MarketOverviewParams) {
   return requestClient.get('/v1/market/overview', { params });
 }
@@ -33,4 +41,8 @@ export function getMarketTrendApi(params: MarketTrendParams) {
 
 export function getMarketYearlyApi(params: MarketYearlyParams) {
   return requestClient.get('/v1/market/yearly', { params });
+}
+
+export function getMarketRawApi(): Promise<RawSalesRecord[]> {
+  return requestClient.get('/v1/market/raw');
 }

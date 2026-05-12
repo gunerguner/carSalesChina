@@ -5,20 +5,8 @@ import { RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
 
-export interface FilterState {
-  levelType: string;
-  dataType: 'production' | 'retail';
-}
-
-const props = defineProps<{
-  dataType: 'production' | 'retail';
-  levelType: string;
-}>();
-
-const emit = defineEmits<{
-  'update:dataType': [value: 'production' | 'retail'];
-  'update:levelType': [value: string];
-}>();
+const levelType = defineModel<string>('levelType', { required: true });
+const dataType = defineModel<'production' | 'retail'>('dataType', { required: true });
 
 const levelOptions = computed(() => [
   { label: $t('sales.market.filter.levelAll'), value: 'all' },
@@ -37,18 +25,16 @@ const dataTypeOptions = computed(() => [
     <div class="flex items-center gap-2">
       <span class="text-sm text-gray-600">{{ $t('sales.market.filter.levelType') }}</span>
       <Select
-        :value="props.levelType"
+        v-model="levelType"
         :options="levelOptions"
         style="width: 180px"
-        @change="emit('update:levelType', $event as string)"
       />
     </div>
     <div class="flex items-center gap-2">
       <span class="text-sm text-gray-600">{{ $t('sales.market.filter.dataType') }}</span>
       <RadioGroup
-        :value="props.dataType"
+        v-model="dataType"
         variant="default-filled"
-        @change="emit('update:dataType', $event as 'retail' | 'production')"
       >
         <RadioButton
           v-for="opt in dataTypeOptions"

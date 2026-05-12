@@ -79,6 +79,8 @@
       "totalSales": "Total Sales",
       "nevSales": "NEV Sales",
       "penetrationRate": "NEV Penetration(%)",
+      "bevSales": "BEV Sales",
+      "bevRatioInNev": "BEV Share in NEV(%)",
       "bevShare": "BEV Share(%)",
       "phevShare": "PHEV Share(%)",
       "hevShare": "HEV Share(%)"

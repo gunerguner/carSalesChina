@@ -79,6 +79,8 @@
             "totalSales": "总销量",
             "nevSales": "新能源销量",
             "penetrationRate": "NEV渗透率(%)",
+            "bevSales": "纯电销量",
+            "bevRatioInNev": "纯电占新能源比例(%)",
             "bevShare": "BEV占比(%)",
             "phevShare": "PHEV占比(%)",
             "hevShare": "HEV占比(%)"

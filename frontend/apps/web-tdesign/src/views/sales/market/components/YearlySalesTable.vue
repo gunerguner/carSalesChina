@@ -1,79 +1,52 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import type { YearlyTrendRecord } from '../useMarketData';
+
+import { computed } from 'vue';
 
 import { Table } from 'tdesign-vue-next';
 
-import { getMarketTrendApi } from '#/api/sales/market';
 import { $t } from '#/locales';
 
 const props = defineProps<{
-  dataType: 'production' | 'retail';
-  levelType: string;
+  data: YearlyTrendRecord[];
 }>();
-
-const loading = ref(false);
-const tableData = ref<any[]>([]);
 
 const columns = [
   { colKey: 'year', title: $t('sales.market.yearly.year'), width: 100 },
-  {
-    colKey: 'sales',
-    title: $t('sales.market.yearly.sales'),
-    width: 150,
-    cell: (_h: any, { row }: any) => row.sales?.toLocaleString() ?? '-',
-  },
-  {
-    colKey: 'yoyGrowth',
-    title: $t('sales.market.yearly.yoyGrowth'),
-    width: 140,
-    cell: (_h: any, { row }: any) => formatGrowth(row.yoyGrowth),
-  },
+  { colKey: 'salesText', title: $t('sales.market.yearly.sales'), width: 150 },
+  { colKey: 'yoyGrowth', title: $t('sales.market.yearly.yoyGrowth'), width: 140 },
 ];
 
-function formatGrowth(val: null | number | undefined) {
-  if (val == null) return '-';
-  const formatted = val.toFixed(2) + '%';
-  return formatted;
+function growthColor(val: null | number | undefined): string {
+  if (val == null) return '#999';
+  if (val > 0) return '#ef4444';
+  if (val < 0) return '#22c55e';
+  return '#666';
 }
 
-async function fetchData() {
-  loading.value = true;
-  try {
-    const data = await getMarketTrendApi({
-      level_type: props.levelType,
-      granularity: 'yearly',
-      data_type: props.dataType,
-      date_type: 'monthly',
-    });
-
-    if (!data || !Array.isArray(data)) {
-      tableData.value = [];
-      return;
-    }
-
-    tableData.value = data.map((item: any, index: number) => ({
-      key: index,
-      year: item.year,
-      sales: item.sales ?? null,
-      yoyGrowth: item.yoy_growth ?? null,
-    })).toReversed();
-  } finally {
-    loading.value = false;
-  }
-}
-
-onMounted(() => fetchData());
-
-watch([() => props.levelType, () => props.dataType], () => fetchData());
+const tableData = computed(() =>
+  props.data
+    .map((r) => ({
+      ...r,
+      salesText: r.sales == null ? '-' : r.sales.toLocaleString(),
+      yoyGrowthText: r.yoyGrowth == null ? '-' : `${r.yoyGrowth.toFixed(2)}%`,
+      yoyGrowthColor: growthColor(r.yoyGrowth),
+    }))
+    .toReversed(),
+);
 </script>
 
 <template>
   <Table
     :columns="columns"
     :data="tableData"
-    :loading="loading"
     row-key="key"
     size="small"
     bordered
-  />
+  >
+    <template #salesText="{ row }">{{ row.salesText }}</template>
+    <template #yoyGrowth="{ row }">
+      <span :style="{ color: row.yoyGrowthColor, fontWeight: 500 }">{{ row.yoyGrowthText }}</span>
+    </template>
+  </Table>
 </template>

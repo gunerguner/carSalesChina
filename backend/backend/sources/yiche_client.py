@@ -24,20 +24,34 @@ _WORKERS = 8
 
 
 class SaleType:
+    """易车 carserialsalestrend 等接口 salesType 参数。"""
+
     WHOLESALE = 0
     RETAIL = 1
     TERMINAL = 2
-    EXPORT = 3
-    PRODUCTION = 4
+    PRODUCTION = 3
+    EXPORT = 4
 
 
-class EnergyType:
+class LevelType:
+    """易车 carserialsalestrend 接口 levelType 参数。
+    -1 所有轿车；4 新能源；5 纯电（与 total-sales 技术方案一致）。"""
+
+    ALL = -1
+    SEDAN = 1
+    SUV = 2
+    MPV = 3
+    NEW_ENERGY = 4
+    BEV = 5
+    HYBRID = 6
+
+
+class BrandIsNewEnergy:
+    """mhapi /get_master_sales_history 的 isNewEnergy 参数（与 levelType 无关）。"""
+
     ALL = -1
     NEW_ENERGY = 1
-    FUEL = 2
-    EV = 3
-    PHEV = 4
-    EREV = 5
+    BEV = 3
 
 
 @dataclass(frozen=True)
@@ -51,38 +65,38 @@ class FetchDim:
 
 
 FETCH_DIMS = [
-    FetchDim(SaleType.RETAIL, 0, EnergyType.ALL, "retail", "monthly", "all"),
-    FetchDim(SaleType.RETAIL, 0, EnergyType.PHEV, "retail", "monthly", "nev"),
-    FetchDim(SaleType.RETAIL, 0, EnergyType.EV, "retail", "monthly", "bev"),
-    FetchDim(SaleType.RETAIL, 1, EnergyType.ALL, "retail", "quarterly", "all"),
-    FetchDim(SaleType.RETAIL, 1, EnergyType.PHEV, "retail", "quarterly", "nev"),
-    FetchDim(SaleType.RETAIL, 1, EnergyType.EV, "retail", "quarterly", "bev"),
-    FetchDim(SaleType.RETAIL, 2, EnergyType.ALL, "retail", "yearly", "all"),
-    FetchDim(SaleType.RETAIL, 2, EnergyType.PHEV, "retail", "yearly", "nev"),
-    FetchDim(SaleType.RETAIL, 2, EnergyType.EV, "retail", "yearly", "bev"),
-    FetchDim(SaleType.PRODUCTION, 0, EnergyType.ALL, "production", "monthly", "all"),
-    FetchDim(SaleType.PRODUCTION, 0, EnergyType.PHEV, "production", "monthly", "nev"),
-    FetchDim(SaleType.PRODUCTION, 0, EnergyType.EV, "production", "monthly", "bev"),
-    FetchDim(SaleType.PRODUCTION, 1, EnergyType.ALL, "production", "quarterly", "all"),
-    FetchDim(SaleType.PRODUCTION, 1, EnergyType.PHEV, "production", "quarterly", "nev"),
-    FetchDim(SaleType.PRODUCTION, 1, EnergyType.EV, "production", "quarterly", "bev"),
-    FetchDim(SaleType.PRODUCTION, 2, EnergyType.ALL, "production", "yearly", "all"),
-    FetchDim(SaleType.PRODUCTION, 2, EnergyType.PHEV, "production", "yearly", "nev"),
-    FetchDim(SaleType.PRODUCTION, 2, EnergyType.EV, "production", "yearly", "bev"),
+    FetchDim(SaleType.RETAIL, 0, LevelType.ALL, "retail", "monthly", "all"),
+    FetchDim(SaleType.RETAIL, 0, LevelType.NEW_ENERGY, "retail", "monthly", "nev"),
+    FetchDim(SaleType.RETAIL, 0, LevelType.BEV, "retail", "monthly", "bev"),
+    FetchDim(SaleType.RETAIL, 1, LevelType.ALL, "retail", "quarterly", "all"),
+    FetchDim(SaleType.RETAIL, 1, LevelType.NEW_ENERGY, "retail", "quarterly", "nev"),
+    FetchDim(SaleType.RETAIL, 1, LevelType.BEV, "retail", "quarterly", "bev"),
+    FetchDim(SaleType.RETAIL, 2, LevelType.ALL, "retail", "yearly", "all"),
+    FetchDim(SaleType.RETAIL, 2, LevelType.NEW_ENERGY, "retail", "yearly", "nev"),
+    FetchDim(SaleType.RETAIL, 2, LevelType.BEV, "retail", "yearly", "bev"),
+    FetchDim(SaleType.PRODUCTION, 0, LevelType.ALL, "production", "monthly", "all"),
+    FetchDim(SaleType.PRODUCTION, 0, LevelType.NEW_ENERGY, "production", "monthly", "nev"),
+    FetchDim(SaleType.PRODUCTION, 0, LevelType.BEV, "production", "monthly", "bev"),
+    FetchDim(SaleType.PRODUCTION, 1, LevelType.ALL, "production", "quarterly", "all"),
+    FetchDim(SaleType.PRODUCTION, 1, LevelType.NEW_ENERGY, "production", "quarterly", "nev"),
+    FetchDim(SaleType.PRODUCTION, 1, LevelType.BEV, "production", "quarterly", "bev"),
+    FetchDim(SaleType.PRODUCTION, 2, LevelType.ALL, "production", "yearly", "all"),
+    FetchDim(SaleType.PRODUCTION, 2, LevelType.NEW_ENERGY, "production", "yearly", "nev"),
+    FetchDim(SaleType.PRODUCTION, 2, LevelType.BEV, "production", "yearly", "bev"),
 ]
 
 
 @dataclass(frozen=True)
 class BrandDim:
     sale_type_val: int = SaleType.RETAIL
-    energy_val: int = EnergyType.ALL
+    energy_val: int = BrandIsNewEnergy.ALL
     manu_val: int = -1
     city_id: int = 0
     province_id: int = 0
 
     def label(self) -> str:
         parts = [f"sale={self.sale_type_val}"]
-        if self.energy_val != EnergyType.ALL:
+        if self.energy_val != BrandIsNewEnergy.ALL:
             parts.append(f"energy={self.energy_val}")
         if self.manu_val != -1:
             parts.append(f"manu={self.manu_val}")
@@ -107,11 +121,31 @@ class BrandDim:
 
 
 BRAND_FETCH_DIMS = [
-    (BrandDim(sale_type_val=SaleType.RETAIL, energy_val=EnergyType.ALL), "retail", "all"),
-    (BrandDim(sale_type_val=SaleType.RETAIL, energy_val=EnergyType.NEW_ENERGY), "retail", "nev"),
-    (BrandDim(sale_type_val=SaleType.RETAIL, energy_val=EnergyType.EV), "retail", "bev"),
-    (BrandDim(sale_type_val=SaleType.WHOLESALE, energy_val=EnergyType.ALL), "wholesale", "all"),
-    (BrandDim(sale_type_val=SaleType.PRODUCTION, energy_val=EnergyType.ALL), "production", "all"),
+    (
+        BrandDim(sale_type_val=SaleType.RETAIL, energy_val=BrandIsNewEnergy.ALL),
+        "retail",
+        "all",
+    ),
+    (
+        BrandDim(sale_type_val=SaleType.RETAIL, energy_val=BrandIsNewEnergy.NEW_ENERGY),
+        "retail",
+        "nev",
+    ),
+    (
+        BrandDim(sale_type_val=SaleType.RETAIL, energy_val=BrandIsNewEnergy.BEV),
+        "retail",
+        "bev",
+    ),
+    (
+        BrandDim(sale_type_val=SaleType.WHOLESALE, energy_val=BrandIsNewEnergy.ALL),
+        "wholesale",
+        "all",
+    ),
+    (
+        BrandDim(sale_type_val=SaleType.PRODUCTION, energy_val=BrandIsNewEnergy.ALL),
+        "production",
+        "all",
+    ),
 ]
 
 

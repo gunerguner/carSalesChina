@@ -21,11 +21,11 @@ const activeTab = ref('nev');
         <Card :title="$t('sales.analysis.nev.penetrationChartTitle')" class="mb-4">
           <NevPenetrationChart />
         </Card>
+        <Card :title="$t('sales.analysis.nev.breakdownChartTitle')" class="mb-4">
+          <NevBreakdownChart />
+        </Card>
         <Card :title="$t('sales.analysis.nev.penetrationTitle')" class="mb-4">
           <NevPenetrationTable />
-        </Card>
-        <Card :title="$t('sales.analysis.nev.breakdownChartTitle')">
-          <NevBreakdownChart />
         </Card>
       </TabPanel>
       <TabPanel :label="$t('sales.analysis.originTab')" value="origin">
