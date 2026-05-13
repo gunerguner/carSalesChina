@@ -3,7 +3,8 @@ import { ref, watch } from 'vue';
 
 import { RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
 
-import { getBrandMetaAllApi } from '#/api/sales/brand';
+import { message } from '#/adapter/tdesign';
+import { type BrandMetaItem, getBrandMetaAllApi } from '#/api/sales/brand';
 import { $t } from '#/locales';
 
 import { DEFAULT_SELECTED_BRAND_NAMES } from '../brand-defaults';
@@ -26,13 +27,23 @@ const dataType = ref<DataType>('retail');
 const selectedBrands = ref<string[]>([...DEFAULT_SELECTED_BRAND_NAMES]);
 const brandOptions = ref<{ label: string; value: string }[]>([]);
 const brandLoading = ref(false);
+const brandOptionsLoaded = ref(false);
+
+function emitFilterChange() {
+  emit('change', {
+    granularity: granularity.value,
+    dataType: dataType.value,
+    brands: selectedBrands.value,
+  });
+}
 
 async function fetchBrandOptions() {
+  brandOptionsLoaded.value = false;
   brandLoading.value = true;
   try {
-    const list: any = await getBrandMetaAllApi();
+    const list = await getBrandMetaAllApi();
     brandOptions.value = Array.isArray(list)
-      ? list.map((item: any) => ({
+      ? list.map((item: BrandMetaItem) => ({
           label: item.brand_name,
           value: item.brand_name,
         }))
@@ -48,8 +59,15 @@ async function fetchBrandOptions() {
     if (!unchanged) {
       selectedBrands.value = next;
     }
+  } catch (err) {
+    brandOptions.value = [];
+    selectedBrands.value = [];
+    console.error('[BrandSelectBar] fetchBrandOptions failed', err);
+    message.error($t('common.requestFailed'));
   } finally {
+    brandOptionsLoaded.value = true;
     brandLoading.value = false;
+    emitFilterChange();
   }
 }
 
@@ -66,13 +84,12 @@ function handleBrandsChange(val: unknown) {
 watch(
   [granularity, dataType, selectedBrands],
   () => {
-    emit('change', {
-      granularity: granularity.value,
-      dataType: dataType.value,
-      brands: selectedBrands.value,
-    });
+    if (!brandOptionsLoaded.value) {
+      return;
+    }
+    emitFilterChange();
   },
-  { deep: true, immediate: true },
+  { deep: true },
 );
 
 fetchBrandOptions();

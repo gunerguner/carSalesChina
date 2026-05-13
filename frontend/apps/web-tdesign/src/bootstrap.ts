@@ -14,7 +14,6 @@ import { initComponentAdapter } from './adapter/component';
 import { initSetupVbenForm } from './adapter/form';
 import App from './app.vue';
 import { router } from './router';
-import salesRoutes from './router/routes/modules/sales';
 
 import 'tdesign-vue-next/es/style/index.css';
 
@@ -45,52 +44,6 @@ async function bootstrap(namespace: string) {
     homePath: '/market-sales',
     avatar: '',
   });
-
-  const { cloneDeep, generateMenus, generateRoutesByFrontend } = await import(
-    '@vben/utils'
-  );
-
-  const clonedRoutes = cloneDeep(salesRoutes);
-  const accessibleRoutes = await generateRoutesByFrontend(
-    clonedRoutes,
-    ['admin'],
-    null,
-  );
-
-  const root = router.getRoutes().find((item) => item.path === '/');
-  const names = root?.children?.map((item) => item.name) ?? [];
-
-  accessibleRoutes.forEach((route: any) => {
-    if (root && !route.meta?.noBasicLayout) {
-      if (route.children && route.children.length > 0) {
-        delete route.component;
-      }
-      if (names?.includes(route.name)) {
-        const index = root.children?.findIndex(
-          (item: any) => item.name === route.name,
-        );
-        if (index !== undefined && index !== -1 && root.children) {
-          root.children[index] = route;
-        }
-      } else {
-        root.children?.push(route);
-      }
-    } else {
-      router.addRoute(route);
-    }
-  });
-
-  if (root) {
-    if (root.name) {
-      router.removeRoute(root.name);
-    }
-    router.addRoute(root);
-  }
-
-  const accessibleMenus = generateMenus(accessibleRoutes, router);
-  accessStore.setAccessMenus(accessibleMenus);
-  accessStore.setAccessRoutes(accessibleRoutes);
-  accessStore.setIsAccessChecked(true);
 
   registerAccessDirective(app);
 

@@ -1,6 +1,6 @@
 import { parse } from 'yaml';
 
-import brandDefaultsYaml from './brand-defaults.yaml?raw';
+import brandDefaultsYaml from '#/brand-defaults.yaml?raw';
 
 interface BrandDefaultsFile {
   defaultSelectedBrands?: unknown;

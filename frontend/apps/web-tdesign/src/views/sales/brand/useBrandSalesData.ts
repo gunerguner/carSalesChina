@@ -1,20 +1,14 @@
 import { computed, ref } from 'vue';
 
-import { getBrandTrendAllPeriodsApi } from '#/api/sales/brand';
+import {
+  type BrandTrendAllPeriodsRecord,
+  getBrandTrendAllPeriodsApi,
+} from '#/api/sales/brand';
 
 type DataType = 'production' | 'retail';
 type Granularity = 'monthly' | 'yearly';
 
-interface MonthlyPoint {
-  month: number;
-  sales: number;
-  year: number;
-}
-
-interface BrandRawRecord {
-  brand_name: string;
-  monthly_data: MonthlyPoint[];
-}
+type BrandRawRecord = BrandTrendAllPeriodsRecord;
 
 interface BrandSeriesPoint {
   sales: number;
@@ -61,6 +55,7 @@ function getLastNMonthKeysEndingAt(endYear: number, endMonth: number, n: number)
 
 export function useBrandSalesData() {
   const loading = ref(false);
+  const error = ref<null | string>(null);
   const selectedBrands = ref<string[]>([]);
   const granularity = ref<Granularity>('monthly');
   const dataType = ref<DataType>('retail');
@@ -68,18 +63,22 @@ export function useBrandSalesData() {
 
   async function fetchRawData() {
     if (selectedBrands.value.length === 0) {
+      error.value = null;
       rawData.value = [];
       return;
     }
 
     loading.value = true;
+    error.value = null;
     try {
-      const result: any = await getBrandTrendAllPeriodsApi({
+      const result = await getBrandTrendAllPeriodsApi({
         brand_names: selectedBrands.value.join(','),
         data_type: dataType.value,
       });
       rawData.value = Array.isArray(result) ? result : [];
-    } catch {
+    } catch (err) {
+      error.value = 'failed_to_load_brand_sales_data';
+      console.error('[useBrandSalesData] fetchRawData failed', err);
       rawData.value = [];
     } finally {
       loading.value = false;
@@ -144,6 +143,7 @@ export function useBrandSalesData() {
   return {
     activeSeries,
     dataType,
+    error,
     fetchRawData,
     granularity,
     loading,
