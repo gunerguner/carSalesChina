@@ -1,5 +1,7 @@
 from datetime import datetime
+from pathlib import Path
 
+import yaml
 from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlmodel import Session, select
@@ -16,15 +18,18 @@ from backend.schemas.response import success
 
 router = APIRouter(prefix="/api/v1/analysis", tags=["analysis"])
 
-ORIGIN_FIELD_MAP = {
-    "自主": "domestic",
-    "德系": "german",
-    "日系": "japanese",
-    "美系": "american",
-    "其他欧系": "european",
-    "法系": "french",
-    "韩系": "korean",
-}
+_ORIGIN_FIELD_MAP_PATH = Path(__file__).resolve().parent.parent / "origin_field_map.yaml"
+
+
+def _load_origin_field_map() -> dict[str, str]:
+    with open(_ORIGIN_FIELD_MAP_PATH, encoding="utf-8") as f:
+        raw = yaml.safe_load(f) or {}
+    if not isinstance(raw, dict):
+        return {}
+    return {str(k): str(v) for k, v in raw.items()}
+
+
+ORIGIN_FIELD_MAP = _load_origin_field_map()
 
 
 @router.get("/nev-share/trend")

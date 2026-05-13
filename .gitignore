@@ -7,6 +7,9 @@ build/
 .venv/
 .env
 
+# 后端运行日志（根目录 logs/）
+logs/
+
 # Node
 node_modules/
 .nuxt/

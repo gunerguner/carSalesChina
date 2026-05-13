@@ -1,12 +1,15 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { ref, watch } from 'vue';
 
 import { Table } from 'tdesign-vue-next';
 
-import { getNevBreakdownApi, getNevShareTrendApi } from '#/api/sales/analysis';
 import { $t } from '#/locales';
 
-const loading = ref(false);
+const props = defineProps<{
+  breakdownTrend: any[];
+  shareTrend: any[];
+}>();
+
 const tableData = ref<any[]>([]);
 
 const columns = [
@@ -18,32 +21,25 @@ const columns = [
   { colKey: 'bevRatio', title: $t('sales.analysis.nev.bevRatioInNev'), width: 170, cell: (_h: any, { row }: any) => row.bevRatio == null ? '-' : `${row.bevRatio.toFixed(2)}%` },
 ];
 
-async function fetchData() {
-  loading.value = true;
-  try {
-    const [shareTrend, breakdownTrend] = await Promise.all([
-      getNevShareTrendApi({ granularity: 'monthly' }),
-      getNevBreakdownApi({ granularity: 'monthly' }),
-    ]);
+function buildRows(shareTrend: any[], breakdownTrend: any[]) {
+  if (!Array.isArray(shareTrend) || !Array.isArray(breakdownTrend)) {
+    tableData.value = [];
+    return;
+  }
 
-    if (!Array.isArray(shareTrend) || !Array.isArray(breakdownTrend)) {
-      tableData.value = [];
-      return;
-    }
+  const bevMap = new Map<string, { bevRatio: null | number; bevSales: null | number }>();
+  for (const item of breakdownTrend) {
+    const key = `${item.year}-${item.month}`;
+    bevMap.set(key, {
+      bevSales: item.bev_sales ?? null,
+      bevRatio: item.bev_ratio ?? null,
+    });
+  }
 
-    const bevMap = new Map<string, { bevRatio: null | number; bevSales: null | number }>();
-    for (const item of breakdownTrend) {
-      const key = `${item.year}-${item.month}`;
-      bevMap.set(key, {
-        bevSales: item.bev_sales ?? null,
-        bevRatio: item.bev_ratio ?? null,
-      });
-    }
-
-    tableData.value = shareTrend.map((item: any, index: number) => {
-      const key = `${item.year}-${item.month}`;
-      const bevInfo = bevMap.get(key);
-      return {
+  tableData.value = shareTrend.map((item: any, index: number) => {
+    const key = `${item.year}-${item.month}`;
+    const bevInfo = bevMap.get(key);
+    return {
       key: index,
       time: `${item.year}-${String(item.month).padStart(2, '0')}`,
       totalSales: item.total_sales ?? null,
@@ -51,21 +47,21 @@ async function fetchData() {
       penetrationRate: item.nev_penetration_rate ?? null,
       bevSales: bevInfo?.bevSales ?? null,
       bevRatio: bevInfo?.bevRatio ?? null,
-      };
-    }).toReversed();
-  } finally {
-    loading.value = false;
-  }
+    };
+  }).toReversed();
 }
 
-onMounted(() => fetchData());
+watch(
+  () => [props.shareTrend, props.breakdownTrend] as const,
+  ([share, breakdown]) => buildRows(share, breakdown),
+  { deep: true, immediate: true },
+);
 </script>
 
 <template>
   <Table
     :columns="columns"
     :data="tableData"
-    :loading="loading"
     row-key="key"
     size="small"
     bordered

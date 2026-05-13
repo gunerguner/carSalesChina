@@ -1,12 +1,14 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { ref, watch } from 'vue';
 
 import { Table } from 'tdesign-vue-next';
 
-import { getOriginShareTrendApi } from '#/api/sales/analysis';
 import { $t } from '#/locales';
 
-const loading = ref(false);
+const props = defineProps<{
+  data: any[];
+}>();
+
 const tableData = ref<any[]>([]);
 
 const columns = [
@@ -20,40 +22,32 @@ const columns = [
   { colKey: 'french', title: $t('sales.analysis.origin.french'), width: 100, cell: (_h: any, { row }: any) => row.french == null ? '-' : `${row.french.toFixed(2)}%` },
 ];
 
-async function fetchData() {
-  loading.value = true;
-  try {
-    const data = await getOriginShareTrendApi({ granularity: 'monthly' });
-
-    if (!data || !Array.isArray(data)) {
-      tableData.value = [];
-      return;
-    }
-
-    tableData.value = data.map((item: any, index: number) => ({
-      key: index,
-      time: `${item.year}-${String(item.month).padStart(2, '0')}`,
-      domestic: item.domestic ?? null,
-      german: item.german ?? null,
-      japanese: item.japanese ?? null,
-      american: item.american ?? null,
-      european: item.european ?? null,
-      korean: item.korean ?? null,
-      french: item.french ?? null,
-    })).toSorted((a: any, b: any) => b.time.localeCompare(a.time));
-  } finally {
-    loading.value = false;
+function buildRows(data: any[]) {
+  if (!data || !Array.isArray(data)) {
+    tableData.value = [];
+    return;
   }
+
+  tableData.value = data.map((item: any, index: number) => ({
+    key: index,
+    time: `${item.year}-${String(item.month).padStart(2, '0')}`,
+    domestic: item.domestic ?? null,
+    german: item.german ?? null,
+    japanese: item.japanese ?? null,
+    american: item.american ?? null,
+    european: item.european ?? null,
+    korean: item.korean ?? null,
+    french: item.french ?? null,
+  })).toSorted((a: any, b: any) => b.time.localeCompare(a.time));
 }
 
-onMounted(() => fetchData());
+watch(() => props.data, (val) => buildRows(val), { deep: true, immediate: true });
 </script>
 
 <template>
   <Table
     :columns="columns"
     :data="tableData"
-    :loading="loading"
     row-key="key"
     size="small"
     bordered

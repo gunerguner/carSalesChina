@@ -68,21 +68,9 @@ FETCH_DIMS = [
     FetchDim(SaleType.RETAIL, 0, LevelType.ALL, "retail", "monthly", "all"),
     FetchDim(SaleType.RETAIL, 0, LevelType.NEW_ENERGY, "retail", "monthly", "nev"),
     FetchDim(SaleType.RETAIL, 0, LevelType.BEV, "retail", "monthly", "bev"),
-    FetchDim(SaleType.RETAIL, 1, LevelType.ALL, "retail", "quarterly", "all"),
-    FetchDim(SaleType.RETAIL, 1, LevelType.NEW_ENERGY, "retail", "quarterly", "nev"),
-    FetchDim(SaleType.RETAIL, 1, LevelType.BEV, "retail", "quarterly", "bev"),
-    FetchDim(SaleType.RETAIL, 2, LevelType.ALL, "retail", "yearly", "all"),
-    FetchDim(SaleType.RETAIL, 2, LevelType.NEW_ENERGY, "retail", "yearly", "nev"),
-    FetchDim(SaleType.RETAIL, 2, LevelType.BEV, "retail", "yearly", "bev"),
     FetchDim(SaleType.PRODUCTION, 0, LevelType.ALL, "production", "monthly", "all"),
     FetchDim(SaleType.PRODUCTION, 0, LevelType.NEW_ENERGY, "production", "monthly", "nev"),
     FetchDim(SaleType.PRODUCTION, 0, LevelType.BEV, "production", "monthly", "bev"),
-    FetchDim(SaleType.PRODUCTION, 1, LevelType.ALL, "production", "quarterly", "all"),
-    FetchDim(SaleType.PRODUCTION, 1, LevelType.NEW_ENERGY, "production", "quarterly", "nev"),
-    FetchDim(SaleType.PRODUCTION, 1, LevelType.BEV, "production", "quarterly", "bev"),
-    FetchDim(SaleType.PRODUCTION, 2, LevelType.ALL, "production", "yearly", "all"),
-    FetchDim(SaleType.PRODUCTION, 2, LevelType.NEW_ENERGY, "production", "yearly", "nev"),
-    FetchDim(SaleType.PRODUCTION, 2, LevelType.BEV, "production", "yearly", "bev"),
 ]
 
 

@@ -1,15 +1,16 @@
 <script lang="ts" setup>
 import type { EchartsUIType } from '@vben/plugins/echarts';
 
-import { onMounted, ref } from 'vue';
+import { ref, watch } from 'vue';
 
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 
-import { getOriginShareTrendApi } from '#/api/sales/analysis';
+const props = defineProps<{
+  data: any[];
+}>();
 
 const chartRef = ref<EchartsUIType>();
 const { renderEcharts } = useEcharts(chartRef);
-const loading = ref(false);
 
 const ORIGIN_LABELS: Record<string, string> = {
   domestic: '自主',
@@ -31,51 +32,44 @@ const ORIGIN_COLORS: Record<string, string> = {
   french: '#9a6bef',
 };
 
-async function fetchAndRender() {
-  loading.value = true;
-  try {
-    const data = await getOriginShareTrendApi({ granularity: 'monthly' });
-
-    if (!data || !Array.isArray(data) || data.length === 0) {
-      renderEcharts({
-        animation: false,
-        title: { text: '暂无数据', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 } },
-        xAxis: { type: 'category', data: [] },
-        yAxis: { type: 'value' },
-        series: [],
-      });
-      return;
-    }
-
-    const timeLabels = data.map((item: any) =>
-      `${item.year}-${String(item.month).padStart(2, '0')}`
-    );
-
-    const originKeys = Object.keys(ORIGIN_LABELS);
-    const series = originKeys.map((key) => ({
-      name: ORIGIN_LABELS[key],
-      type: 'bar' as const,
-      stack: 'total',
-      data: data.map((item: any) => item[key] == null ? 0 : +(item[key]).toFixed(2)),
-      itemStyle: { color: ORIGIN_COLORS[key] },
-      emphasis: { focus: 'series' as const },
-    }));
-
+function render(data: any[]) {
+  if (!data || data.length === 0) {
     renderEcharts({
       animation: false,
-      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-      legend: { data: Object.values(ORIGIN_LABELS), bottom: 0, type: 'scroll' },
-      grid: { left: '3%', right: '4%', bottom: '15%', top: '8%', containLabel: true },
-      xAxis: { type: 'category', data: timeLabels },
-      yAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%' } },
-      series,
+      title: { text: '暂无数据', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 } },
+      xAxis: { type: 'category', data: [] },
+      yAxis: { type: 'value' },
+      series: [],
     });
-  } finally {
-    loading.value = false;
+    return;
   }
+
+  const timeLabels = data.map((item: any) =>
+    `${item.year}-${String(item.month).padStart(2, '0')}`
+  );
+
+  const originKeys = Object.keys(ORIGIN_LABELS);
+  const series = originKeys.map((key) => ({
+    name: ORIGIN_LABELS[key],
+    type: 'bar' as const,
+    stack: 'total',
+    data: data.map((item: any) => item[key] == null ? 0 : +(item[key]).toFixed(2)),
+    itemStyle: { color: ORIGIN_COLORS[key] },
+    emphasis: { focus: 'series' as const },
+  }));
+
+  renderEcharts({
+    animation: false,
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { data: Object.values(ORIGIN_LABELS), bottom: 0, type: 'scroll' },
+    grid: { left: '3%', right: '4%', bottom: '15%', top: '8%', containLabel: true },
+    xAxis: { type: 'category', data: timeLabels },
+    yAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%' } },
+    series,
+  });
 }
 
-onMounted(() => fetchAndRender());
+watch(() => props.data, (val) => render(val), { deep: true, immediate: true });
 </script>
 
 <template>
