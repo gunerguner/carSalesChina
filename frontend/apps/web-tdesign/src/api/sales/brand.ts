@@ -1,35 +1,19 @@
 import { requestClient } from '#/api/request';
 
-export interface BrandRankingParams {
-  year: number;
-  month: number;
-  energy_type?: string;
-  data_type?: 'production' | 'retail' | 'wholesale';
-  top_n?: number;
-}
-
-export interface BrandRankingYearlyParams {
-  year: number;
-  energy_type?: string;
-  data_type?: 'production' | 'retail' | 'wholesale';
-  top_n?: number;
-}
-
-export interface BrandCompareTrendParams {
+export interface BrandTrendAllPeriodsParams {
   brand_names: string;
-  energy_type?: string;
-  data_type?: 'production' | 'retail' | 'wholesale';
-  granularity?: 'monthly' | 'yearly';
+  data_type?: 'production' | 'retail';
 }
 
-export function getBrandRankingApi(params: BrandRankingParams) {
-  return requestClient.get('/v1/brands/ranking', { params });
+export interface BrandMetaItem {
+  brand_id: number;
+  brand_name: string;
 }
 
-export function getBrandRankingYearlyApi(params: BrandRankingYearlyParams) {
-  return requestClient.get('/v1/brands/ranking/yearly', { params });
+export function getBrandMetaAllApi() {
+  return requestClient.get<BrandMetaItem[]>('/v1/brands/meta/all');
 }
 
-export function getBrandCompareTrendApi(params: BrandCompareTrendParams) {
-  return requestClient.get('/v1/brands/compare/trend', { params });
+export function getBrandTrendAllPeriodsApi(params: BrandTrendAllPeriodsParams) {
+  return requestClient.get('/v1/brands/trend-all-periods', { params });
 }

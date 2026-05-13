@@ -1,65 +1,52 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
-
 import { Card } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
 
-import BrandCompareChart from './components/BrandCompareChart.vue';
-import BrandCompareSelect from './components/BrandCompareSelect.vue';
-import BrandCompareTable from './components/BrandCompareTable.vue';
-import BrandRankingChart from './components/BrandRankingChart.vue';
-import BrandRankingTable from './components/BrandRankingTable.vue';
+import BrandSelectBar from './components/BrandSelectBar.vue';
+import BrandTrendChart from './components/BrandTrendChart.vue';
+import BrandTrendTable from './components/BrandTrendTable.vue';
+import { useBrandSalesData } from './useBrandSalesData';
 
-const currentYear = new Date().getFullYear();
-const currentMonth = new Date().getMonth() + 1;
+const {
+  activeSeries,
+  dataType,
+  fetchRawData,
+  granularity,
+  loading,
+  selectedBrands,
+  timeLabels,
+} = useBrandSalesData();
 
-const filterState = ref({
-  granularity: 'monthly' as 'monthly' | 'yearly',
-  dataType: 'retail' as 'production' | 'retail' | 'wholesale',
-  brands: [] as string[],
-});
-
-function onFilterChange(payload: { brands: string[]; dataType: 'production' | 'retail' | 'wholesale'; granularity: 'monthly' | 'yearly'; }) {
-  filterState.value = payload;
+async function onFilterChange(payload: {
+  brands: string[];
+  dataType: 'production' | 'retail';
+  granularity: 'monthly' | 'yearly';
+}) {
+  selectedBrands.value = payload.brands;
+  dataType.value = payload.dataType;
+  granularity.value = payload.granularity;
+  await fetchRawData();
 }
 </script>
 
 <template>
   <div class="p-5">
-    <BrandCompareSelect @change="onFilterChange" />
+    <BrandSelectBar @change="onFilterChange" />
 
-    <Card :title="$t('sales.brand.ranking.chartTitle')" class="mb-4">
-      <BrandRankingChart
-        :year="currentYear"
-        :month="currentMonth"
-        :granularity="filterState.granularity"
-        :data-type="filterState.dataType"
+    <Card :title="$t('sales.brand.trend.chartTitle')" class="mb-4">
+      <BrandTrendChart
+        :data="activeSeries"
+        :loading="loading"
+        :time-labels="timeLabels"
       />
     </Card>
 
-    <Card :title="$t('sales.brand.ranking.title')" class="mb-4">
-      <BrandRankingTable
-        :year="currentYear"
-        :month="currentMonth"
-        :granularity="filterState.granularity"
-        :data-type="filterState.dataType"
-      />
-    </Card>
-
-    <Card :title="$t('sales.brand.compare.title')" class="mb-4">
-      <BrandCompareChart
-        :brands="filterState.brands"
-        :granularity="filterState.granularity"
-        :data-type="filterState.dataType"
-      />
-    </Card>
-
-    <Card :title="$t('sales.brand.compare.title')">
-      <BrandCompareTable
-        :brands="filterState.brands"
-        :granularity="filterState.granularity"
-        :data-type="filterState.dataType"
+    <Card :title="$t('sales.brand.trend.tableTitle')">
+      <BrandTrendTable
+        :data="activeSeries"
+        :loading="loading"
+        :time-labels="timeLabels"
       />
     </Card>
   </div>

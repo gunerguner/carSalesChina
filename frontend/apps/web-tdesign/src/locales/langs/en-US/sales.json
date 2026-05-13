@@ -46,34 +46,20 @@
     }
   },
   "brand": {
-    "title": "Brand Sales",
-    "filter": {
-      "compareBrands": "Brand Compare",
-      "comparePlaceholder": "Select brands (max 2)",
-      "granularity": "Granularity",
-      "granularityMonthly": "Monthly",
-      "granularityYearly": "Yearly",
-      "dataType": "Data Type",
-      "dataTypeRetail": "Retail",
-      "dataTypeWholesale": "Wholesale",
-      "dataTypeProduction": "Production"
-    },
-    "ranking": {
-      "title": "Brand Ranking",
-      "chartTitle": "Brand Sales Top Ranking",
-      "rank": "Rank",
-      "brand": "Brand",
-      "sales": "Sales",
-      "origin": "Origin",
-      "momGrowth": "MoM Growth(%)",
-      "yoyGrowth": "YoY Growth(%)"
-    },
-    "compare": {
-      "title": "Brand Compare",
-      "chartTitle": "Brand Sales Comparison Trend",
+    "title": "Brand sales",
+    "trend": {
+      "selectBrands": "Brands",
+      "selectPlaceholder": "Select up to 3 brands",
+      "granularity": "Period",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "dataType": "Data type",
+      "retail": "Retail",
+      "production": "Production",
+      "chartTitle": "Brand sales trend",
+      "tableTitle": "Brand sales detail",
       "time": "Time",
-      "diff": "Difference",
-      "selectHint": "Please select 2 brands to compare"
+      "noData": "Select at least one brand"
     }
   },
   "analysis": {

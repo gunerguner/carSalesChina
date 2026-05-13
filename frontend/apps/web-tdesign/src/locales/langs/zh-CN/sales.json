@@ -47,33 +47,19 @@
     },
     "brand": {
         "title": "品牌销量",
-        "filter": {
-            "compareBrands": "品牌对比",
-            "comparePlaceholder": "请选择品牌（最多2个）",
+        "trend": {
+            "selectBrands": "选择品牌",
+            "selectPlaceholder": "请选择品牌（最多3个）",
             "granularity": "统计周期",
-            "granularityMonthly": "月度",
-            "granularityYearly": "年度",
+            "monthly": "月度",
+            "yearly": "年度",
             "dataType": "数据类型",
-            "dataTypeRetail": "零售量",
-            "dataTypeWholesale": "批发量",
-            "dataTypeProduction": "产量"
-        },
-        "ranking": {
-            "title": "品牌排名",
-            "chartTitle": "品牌销量Top排行",
-            "rank": "排名",
-            "brand": "品牌",
-            "sales": "销量",
-            "origin": "车系",
-            "momGrowth": "环比增长(%)",
-            "yoyGrowth": "同比增长(%)"
-        },
-        "compare": {
-            "title": "品牌对比",
-            "chartTitle": "品牌销量对比趋势",
+            "retail": "零售量",
+            "production": "产量",
+            "chartTitle": "品牌销量趋势",
+            "tableTitle": "品牌销量明细",
             "time": "时间",
-            "diff": "差值",
-            "selectHint": "请选择2个品牌进行对比"
+            "noData": "请选择至少1个品牌"
         }
     },
     "analysis": {
