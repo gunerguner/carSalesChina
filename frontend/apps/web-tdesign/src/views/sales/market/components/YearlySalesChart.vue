@@ -3,7 +3,7 @@ import type { EchartsUIType } from '@vben/plugins/echarts';
 
 import type { YearlyTrendRecord } from '../useMarketData';
 
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 import { preferences } from '@vben/preferences';
@@ -68,7 +68,8 @@ function render(data: YearlyTrendRecord[]) {
   });
 }
 
-watch(() => props.data, (val) => render(val), { immediate: true });
+watch(() => props.data, (val) => render(val));
+onMounted(() => render(props.data));
 </script>
 
 <template>

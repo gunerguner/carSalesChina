@@ -1,12 +1,11 @@
-from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
-from sqlmodel import Session, select, func
+from sqlmodel import Session
 
 from backend.core.database import get_db
-from backend.models.log import CollectionLog
 from backend.services.import_service import refresh_brand_meta, refresh_origin_data, refresh_sales_data
+from backend.services.admin_service import get_collection_logs
 from backend.schemas.response import success, error
 
 router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
@@ -53,29 +52,11 @@ def collection_logs(
     pageSize: int = Query(20),
     db: Session = Depends(get_db),
 ):
-    query = select(CollectionLog)
-    if task_type:
-        query = query.where(CollectionLog.task_type == task_type)
-    if status:
-        query = query.where(CollectionLog.status == status)
-
-    total = db.execute(select(func.count()).select_from(CollectionLog).where(
-        CollectionLog.task_type == task_type if task_type else True,
-        CollectionLog.status == status if status else True,
-    )).scalar()
-
-    rows = db.exec(query.order_by(CollectionLog.id.desc()).offset((page - 1) * pageSize).limit(pageSize)).all()
-
-    data = []
-    for r in rows:
-        data.append({
-            "id": r.id,
-            "task_type": r.task_type,
-            "status": r.status,
-            "records_count": r.records_count,
-            "error_message": r.error_message,
-            "started_at": r.started_at.isoformat() if r.started_at else None,
-            "finished_at": r.finished_at.isoformat() if r.finished_at else None,
-        })
-
-    return success({"total": total, "page": page, "pageSize": pageSize, "data": data})
+    data = get_collection_logs(
+        db=db,
+        task_type=task_type,
+        status=status,
+        page=page,
+        page_size=pageSize,
+    )
+    return success(data)

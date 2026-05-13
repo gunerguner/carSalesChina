@@ -48,9 +48,12 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+const rawData = ref<RawSalesRecord[]>([]);
+const loading = ref(false);
+let hasFetched = false;
+let pendingFetch: null | Promise<void> = null;
+
 export function useMarketData() {
-  const rawData = ref<RawSalesRecord[]>([]);
-  const loading = ref(false);
   const EMPTY_SERIES_CACHE: SeriesCache = {
     sortedRows: [],
     monthlySalesMap: new Map(),
@@ -125,16 +128,29 @@ export function useMarketData() {
     return maxYear == null ? null : maxYear - years + 1;
   }
 
-  async function fetchAll() {
+  async function fetchAll(force = false) {
+    if (!force && hasFetched) {
+      return;
+    }
+    if (pendingFetch) {
+      return pendingFetch;
+    }
+
+    pendingFetch = (async () => {
     loading.value = true;
     try {
       const data = await getMarketRawApi();
       rawData.value = Array.isArray(data) ? data : [];
+      hasFetched = true;
     } catch {
       rawData.value = [];
     } finally {
       loading.value = false;
+      pendingFetch = null;
     }
+    })();
+
+    return pendingFetch;
   }
 
   /** 月度趋势（近 N 年），供折线图使用 */

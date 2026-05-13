@@ -37,7 +37,7 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
       <Tabs v-model="activeTab">
         <TabPanel
           :label="$t('sales.market.monthly.title')"
-          :destroy-on-hide="false"
+          destroy-on-hide
           value="monthly"
         >
           <Card :title="$t('sales.market.monthly.chartTitle')" class="mb-4">
@@ -49,7 +49,7 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
         </TabPanel>
         <TabPanel
           :label="$t('sales.market.quarterly.title')"
-          :destroy-on-hide="false"
+          destroy-on-hide
           value="quarterly"
         >
           <Card :title="$t('sales.market.quarterly.chartTitle')" class="mb-4">
@@ -61,7 +61,7 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
         </TabPanel>
         <TabPanel
           :label="$t('sales.market.yearly.title')"
-          :destroy-on-hide="false"
+          destroy-on-hide
           value="yearly"
         >
           <Card :title="$t('sales.market.yearly.chartTitle')" class="mb-4">

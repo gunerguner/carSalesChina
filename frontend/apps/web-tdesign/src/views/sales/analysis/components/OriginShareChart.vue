@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { EchartsUIType } from '@vben/plugins/echarts';
 
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 
@@ -69,7 +69,8 @@ function render(data: any[]) {
   });
 }
 
-watch(() => props.data, (val) => render(val), { deep: true, immediate: true });
+watch(() => props.data, (val) => render(val), { deep: true });
+onMounted(() => render(props.data));
 </script>
 
 <template>

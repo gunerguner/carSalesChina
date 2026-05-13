@@ -28,6 +28,7 @@ const selectedBrands = ref<string[]>([...DEFAULT_SELECTED_BRAND_NAMES]);
 const brandOptions = ref<{ label: string; value: string }[]>([]);
 const brandLoading = ref(false);
 const brandOptionsLoaded = ref(false);
+let brandOptionsInitialized = false;
 
 function emitFilterChange() {
   emit('change', {
@@ -38,6 +39,11 @@ function emitFilterChange() {
 }
 
 async function fetchBrandOptions() {
+  if (brandOptionsInitialized) {
+    brandOptionsLoaded.value = true;
+    emitFilterChange();
+    return;
+  }
   brandOptionsLoaded.value = false;
   brandLoading.value = true;
   try {
@@ -59,12 +65,13 @@ async function fetchBrandOptions() {
     if (!unchanged) {
       selectedBrands.value = next;
     }
-  } catch (err) {
+  } catch (error) {
     brandOptions.value = [];
     selectedBrands.value = [];
-    console.error('[BrandSelectBar] fetchBrandOptions failed', err);
+    console.error('[BrandSelectBar] fetchBrandOptions failed', error);
     message.error($t('common.requestFailed'));
   } finally {
+    brandOptionsInitialized = true;
     brandOptionsLoaded.value = true;
     brandLoading.value = false;
     emitFilterChange();

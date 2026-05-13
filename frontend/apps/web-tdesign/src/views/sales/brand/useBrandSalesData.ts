@@ -53,36 +53,63 @@ function getLastNMonthKeysEndingAt(endYear: number, endMonth: number, n: number)
   return keys;
 }
 
-export function useBrandSalesData() {
-  const loading = ref(false);
-  const error = ref<null | string>(null);
-  const selectedBrands = ref<string[]>([]);
-  const granularity = ref<Granularity>('monthly');
-  const dataType = ref<DataType>('retail');
-  const rawData = ref<BrandRawRecord[]>([]);
+const loading = ref(false);
+const error = ref<null | string>(null);
+const selectedBrands = ref<string[]>([]);
+const granularity = ref<Granularity>('monthly');
+const dataType = ref<DataType>('retail');
+const rawData = ref<BrandRawRecord[]>([]);
+const rawDataCache = new Map<string, BrandRawRecord[]>();
+let pendingFetch: null | Promise<void> = null;
 
-  async function fetchRawData() {
+function getCacheKey() {
+  const brandsKey = [...selectedBrands.value].toSorted().join(',');
+  return `${dataType.value}::${brandsKey}`;
+}
+
+export function useBrandSalesData() {
+  async function fetchRawData(force = false) {
     if (selectedBrands.value.length === 0) {
       error.value = null;
       rawData.value = [];
       return;
     }
 
-    loading.value = true;
-    error.value = null;
-    try {
-      const result = await getBrandTrendAllPeriodsApi({
-        brand_names: selectedBrands.value.join(','),
-        data_type: dataType.value,
-      });
-      rawData.value = Array.isArray(result) ? result : [];
-    } catch (err) {
-      error.value = 'failed_to_load_brand_sales_data';
-      console.error('[useBrandSalesData] fetchRawData failed', err);
-      rawData.value = [];
-    } finally {
-      loading.value = false;
+    const cacheKey = getCacheKey();
+    if (!force) {
+      const cached = rawDataCache.get(cacheKey);
+      if (cached) {
+        error.value = null;
+        rawData.value = cached;
+        return;
+      }
+      if (pendingFetch) {
+        return pendingFetch;
+      }
     }
+
+    pendingFetch = (async () => {
+      loading.value = true;
+      error.value = null;
+      try {
+        const result = await getBrandTrendAllPeriodsApi({
+          brand_names: selectedBrands.value.join(','),
+          data_type: dataType.value,
+        });
+        const normalized = Array.isArray(result) ? result : [];
+        rawData.value = normalized;
+        rawDataCache.set(cacheKey, normalized);
+      } catch (error_) {
+        error.value = 'failed_to_load_brand_sales_data';
+        console.error('[useBrandSalesData] fetchRawData failed', error_);
+        rawData.value = [];
+      } finally {
+        loading.value = false;
+        pendingFetch = null;
+      }
+    })();
+
+    return pendingFetch;
   }
 
   const monthlySeries = computed<BrandSeriesRecord[]>(() => {

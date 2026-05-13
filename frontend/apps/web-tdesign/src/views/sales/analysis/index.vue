@@ -26,7 +26,7 @@ onMounted(() => fetchAll());
       <Tabs v-model="activeTab">
         <TabPanel
           :label="$t('sales.analysis.nevTab')"
-          :destroy-on-hide="false"
+          destroy-on-hide
           value="nev"
         >
           <Card :title="$t('sales.analysis.nev.penetrationChartTitle')" class="mb-4">
@@ -44,7 +44,7 @@ onMounted(() => fetchAll());
         </TabPanel>
         <TabPanel
           :label="$t('sales.analysis.originTab')"
-          :destroy-on-hide="false"
+          destroy-on-hide
           value="origin"
         >
           <Card :title="$t('sales.analysis.origin.chartTitle')" class="mb-4">

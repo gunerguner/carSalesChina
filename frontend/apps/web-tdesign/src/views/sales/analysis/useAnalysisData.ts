@@ -1,22 +1,32 @@
 import { ref } from 'vue';
 
 import {
-  type NevBreakdownRecord,
   getNevBreakdownApi,
-  type NevShareTrendRecord,
   getNevShareTrendApi,
-  type OriginShareTrendRecord,
   getOriginShareTrendApi,
+  type NevBreakdownRecord,
+  type NevShareTrendRecord,
+  type OriginShareTrendRecord,
 } from '#/api/sales/analysis';
 
-export function useAnalysisData() {
-  const loading = ref(false);
-  const error = ref<null | string>(null);
-  const nevShareTrend = ref<NevShareTrendRecord[]>([]);
-  const nevBreakdown = ref<NevBreakdownRecord[]>([]);
-  const originShareTrend = ref<OriginShareTrendRecord[]>([]);
+const loading = ref(false);
+const error = ref<null | string>(null);
+const nevShareTrend = ref<NevShareTrendRecord[]>([]);
+const nevBreakdown = ref<NevBreakdownRecord[]>([]);
+const originShareTrend = ref<OriginShareTrendRecord[]>([]);
+let hasFetched = false;
+let pendingFetch: null | Promise<void> = null;
 
-  async function fetchAll() {
+export function useAnalysisData() {
+  async function fetchAll(force = false) {
+    if (!force && hasFetched) {
+      return;
+    }
+    if (pendingFetch) {
+      return pendingFetch;
+    }
+
+    pendingFetch = (async () => {
     loading.value = true;
     error.value = null;
     try {
@@ -28,15 +38,20 @@ export function useAnalysisData() {
       nevShareTrend.value = Array.isArray(share) ? share : [];
       nevBreakdown.value = Array.isArray(breakdown) ? breakdown : [];
       originShareTrend.value = Array.isArray(origin) ? origin : [];
-    } catch (err) {
+      hasFetched = true;
+    } catch (error_) {
       error.value = 'failed_to_load_analysis_data';
-      console.error('[useAnalysisData] fetchAll failed', err);
+      console.error('[useAnalysisData] fetchAll failed', error_);
       nevShareTrend.value = [];
       nevBreakdown.value = [];
       originShareTrend.value = [];
     } finally {
       loading.value = false;
+      pendingFetch = null;
     }
+    })();
+
+    return pendingFetch;
   }
 
   return {
