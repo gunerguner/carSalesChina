@@ -46,6 +46,7 @@
     "pinia": "catalog:",
     "tdesign-vue-next": "catalog:",
     "vue": "catalog:",
-    "vue-router": "catalog:"
+    "vue-router": "catalog:",
+    "yaml": "catalog:"
   }
 }

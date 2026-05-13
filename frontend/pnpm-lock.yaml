@@ -456,6 +456,9 @@ catalogs:
     watermark-js-plus:
       specifier: ^1.6.3
       version: 1.6.3
+    yaml:
+      specifier: ^2.8.0
+      version: 2.8.3
     yaml-eslint-parser:
       specifier: ^2.0.0
       version: 2.0.0
@@ -636,6 +639,9 @@ importers:
       vue-router:
         specifier: 'catalog:'
         version: 5.0.6(@vue/compiler-sfc@3.5.33)(pinia@3.0.4(typescript@6.0.3)(vue@3.5.33(typescript@6.0.3)))(vue@3.5.33(typescript@6.0.3))
+      yaml:
+        specifier: 'catalog:'
+        version: 2.8.3
 
   internal/lint-configs/commitlint-config:
     dependencies:

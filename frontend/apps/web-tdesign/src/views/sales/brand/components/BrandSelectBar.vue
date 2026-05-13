@@ -6,6 +6,8 @@ import { RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
 import { getBrandMetaAllApi } from '#/api/sales/brand';
 import { $t } from '#/locales';
 
+import { DEFAULT_SELECTED_BRAND_NAMES } from '../brand-defaults';
+
 type DataType = 'production' | 'retail';
 type Granularity = 'monthly' | 'yearly';
 
@@ -21,7 +23,7 @@ const emit = defineEmits<{
 
 const granularity = ref<Granularity>('monthly');
 const dataType = ref<DataType>('retail');
-const selectedBrands = ref<string[]>([]);
+const selectedBrands = ref<string[]>([...DEFAULT_SELECTED_BRAND_NAMES]);
 const brandOptions = ref<{ label: string; value: string }[]>([]);
 const brandLoading = ref(false);
 
@@ -35,6 +37,17 @@ async function fetchBrandOptions() {
           value: item.brand_name,
         }))
       : [];
+    const allowed = new Set(brandOptions.value.map((o) => o.value));
+    const matched = DEFAULT_SELECTED_BRAND_NAMES.filter((name) =>
+      allowed.has(name),
+    ).slice(0, 3);
+    const next = matched.length > 0 ? matched : [];
+    const unchanged =
+      next.length === selectedBrands.value.length &&
+      next.every((name, i) => name === selectedBrands.value[i]);
+    if (!unchanged) {
+      selectedBrands.value = next;
+    }
   } finally {
     brandLoading.value = false;
   }

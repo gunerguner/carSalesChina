@@ -1,0 +1,5 @@
+# 品牌销量趋势页：多选下拉的默认勾选（须与接口返回的 brand_name 一致）
+defaultSelectedBrands:
+  - 比亚迪
+  - 大众
+  - 丰田
