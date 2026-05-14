@@ -1,6 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 import yaml
 from sqlalchemy import func
@@ -9,7 +9,9 @@ from sqlmodel import Session, select
 from backend.models.origin import OriginShareData
 from backend.models.overall import SalesData
 
-_ORIGIN_FIELD_MAP_PATH = Path(__file__).resolve().parent.parent / "origin_field_map.yaml"
+_ORIGIN_FIELD_MAP_PATH = (
+    Path(__file__).resolve().parent.parent / "origin_field_map.yaml"
+)
 
 
 def _load_origin_field_map() -> dict[str, str]:
@@ -23,76 +25,92 @@ def _load_origin_field_map() -> dict[str, str]:
 ORIGIN_FIELD_MAP = _load_origin_field_map()
 
 
-def get_nev_share_trend(db: Session, years: int, granularity: str) -> list[dict[str, Any]]:
-    now = datetime.now()
-    start_year = now.year - years + 1
+def _start_year(years: int) -> int:
+    return datetime.now().year - years + 1
 
-    if granularity == "yearly":
-        yearly_rows = db.exec(
-            select(
-                SalesData.year,
-                SalesData.level_type,
-                func.sum(SalesData.sales).label("sales"),
-            )
-            .where(
-                SalesData.year >= start_year,
-                SalesData.data_type == "retail",
-                SalesData.date_type == "monthly",
-                SalesData.level_type.in_(["all", "nev"]),
-            )
-            .group_by(SalesData.year, SalesData.level_type)
-            .order_by(SalesData.year)
-        ).all()
 
-        year_data: dict[int, dict[str, float]] = {}
-        for row in yearly_rows:
-            if row.year not in year_data:
-                year_data[row.year] = {}
-            year_data[row.year][row.level_type] = float(row.sales or 0)
+def _percent(part: float, total: float) -> float:
+    return round(part / total * 100, 2) if total else 0
 
-        data: list[dict[str, Any]] = []
-        for year in sorted(year_data.keys()):
-            total = year_data[year].get("all", 0)
-            nev = year_data[year].get("nev", 0)
-            rate = (nev / total * 100) if total else 0
-            data.append(
-                {
-                    "year": year,
-                    "nev_penetration_rate": round(rate, 2),
-                    "total_sales": total,
-                    "nev_sales": nev,
-                }
-            )
-        return data
 
+def _period_columns(granularity: str):
+    return (
+        (SalesData.year,)
+        if granularity == "yearly"
+        else (SalesData.year, SalesData.month)
+    )
+
+
+def _origin_period_columns(granularity: str):
+    return (
+        (OriginShareData.year,)
+        if granularity == "yearly"
+        else (OriginShareData.year, OriginShareData.month)
+    )
+
+
+def _period_key(row: Any, granularity: str) -> int | tuple[int, int]:
+    return row.year if granularity == "yearly" else (row.year, row.month)
+
+
+def _period_entry(key: int | tuple[int, int]) -> dict[str, int]:
+    if isinstance(key, tuple):
+        year, month = key
+        return {"year": year, "month": month}
+    return {"year": key}
+
+
+def _sales_by_period_and_level(
+    db: Session,
+    *,
+    start_year: int,
+    levels: Iterable[str],
+    granularity: str,
+) -> dict[int | tuple[int, int], dict[str, float]]:
+    period_cols = _period_columns(granularity)
     rows = db.exec(
-        select(SalesData)
+        select(
+            *period_cols,
+            SalesData.level_type,
+            func.sum(SalesData.sales).label("sales"),
+        )
         .where(
             SalesData.year >= start_year,
             SalesData.data_type == "retail",
             SalesData.date_type == "monthly",
-            SalesData.level_type.in_(["all", "nev"]),
+            SalesData.level_type.in_(list(levels)),
         )
-        .order_by(SalesData.year, SalesData.month)
+        .group_by(*period_cols, SalesData.level_type)
+        .order_by(*period_cols)
     ).all()
 
-    month_data: dict[tuple[int, int], dict[str, float]] = {}
+    grouped: dict[int | tuple[int, int], dict[str, float]] = {}
     for row in rows:
-        key = (row.year, row.month)
-        if key not in month_data:
-            month_data[key] = {}
-        month_data[key][row.level_type] = float(row.sales or 0)
+        grouped.setdefault(_period_key(row, granularity), {})[row.level_type] = float(
+            row.sales or 0
+        )
+    return grouped
+
+
+def get_nev_share_trend(
+    db: Session, years: int, granularity: str
+) -> list[dict[str, Any]]:
+    period_data = _sales_by_period_and_level(
+        db,
+        start_year=_start_year(years),
+        levels=("all", "nev"),
+        granularity=granularity,
+    )
 
     data: list[dict[str, Any]] = []
-    for (year, month), levels in sorted(month_data.items()):
+    for key in sorted(period_data):
+        levels = period_data[key]
         total = levels.get("all", 0)
         nev = levels.get("nev", 0)
-        rate = (nev / total * 100) if total else 0
         data.append(
             {
-                "year": year,
-                "month": month,
-                "nev_penetration_rate": round(rate, 2),
+                **_period_entry(key),
+                "nev_penetration_rate": _percent(nev, total),
                 "total_sales": total,
                 "nev_sales": nev,
             }
@@ -100,84 +118,30 @@ def get_nev_share_trend(db: Session, years: int, granularity: str) -> list[dict[
     return data
 
 
-def get_nev_breakdown(db: Session, years: int, granularity: str) -> list[dict[str, Any]]:
-    now = datetime.now()
-    start_year = now.year - years + 1
-
-    if granularity == "yearly":
-        yearly_rows = db.exec(
-            select(
-                SalesData.year,
-                SalesData.level_type,
-                func.sum(SalesData.sales).label("sales"),
-            )
-            .where(
-                SalesData.year >= start_year,
-                SalesData.data_type == "retail",
-                SalesData.date_type == "monthly",
-                SalesData.level_type.in_(["nev", "bev"]),
-            )
-            .group_by(SalesData.year, SalesData.level_type)
-            .order_by(SalesData.year)
-        ).all()
-
-        year_data: dict[int, dict[str, float]] = {}
-        for row in yearly_rows:
-            if row.year not in year_data:
-                year_data[row.year] = {}
-            year_data[row.year][row.level_type] = float(row.sales or 0)
-
-        data: list[dict[str, Any]] = []
-        for year in sorted(year_data.keys()):
-            nev = year_data[year].get("nev", 0)
-            bev = year_data[year].get("bev", 0)
-            other_nev = max(nev - bev, 0)
-            data.append(
-                {
-                    "year": year,
-                    "nev_sales": nev,
-                    "bev_sales": bev,
-                    "bev_ratio": round(bev / nev * 100, 2) if nev else 0,
-                    "phev_sales": other_nev,
-                    "phev_ratio": round(other_nev / nev * 100, 2) if nev else 0,
-                    "hybrid_sales": 0,
-                    "hybrid_ratio": 0,
-                }
-            )
-        return data
-
-    rows = db.exec(
-        select(SalesData)
-        .where(
-            SalesData.year >= start_year,
-            SalesData.data_type == "retail",
-            SalesData.date_type == "monthly",
-            SalesData.level_type.in_(["nev", "bev"]),
-        )
-        .order_by(SalesData.year, SalesData.month)
-    ).all()
-
-    month_data: dict[tuple[int, int], dict[str, float]] = {}
-    for row in rows:
-        key = (row.year, row.month)
-        if key not in month_data:
-            month_data[key] = {}
-        month_data[key][row.level_type] = float(row.sales or 0)
+def get_nev_breakdown(
+    db: Session, years: int, granularity: str
+) -> list[dict[str, Any]]:
+    period_data = _sales_by_period_and_level(
+        db,
+        start_year=_start_year(years),
+        levels=("nev", "bev"),
+        granularity=granularity,
+    )
 
     data: list[dict[str, Any]] = []
-    for (year, month), levels in sorted(month_data.items()):
+    for key in sorted(period_data):
+        levels = period_data[key]
         nev = levels.get("nev", 0)
         bev = levels.get("bev", 0)
-        other_nev = max(nev - bev, 0)
+        phev = max(nev - bev, 0)
         data.append(
             {
-                "year": year,
-                "month": month,
+                **_period_entry(key),
                 "nev_sales": nev,
                 "bev_sales": bev,
-                "bev_ratio": round(bev / nev * 100, 2) if nev else 0,
-                "phev_sales": other_nev,
-                "phev_ratio": round(other_nev / nev * 100, 2) if nev else 0,
+                "bev_ratio": _percent(bev, nev),
+                "phev_sales": phev,
+                "phev_ratio": _percent(phev, nev),
                 "hybrid_sales": 0,
                 "hybrid_ratio": 0,
             }
@@ -191,69 +155,35 @@ def get_origin_share_trend(
     granularity: str,
     data_type: str,
 ) -> list[dict[str, Any]]:
-    now = datetime.now()
-    start_year = now.year - years + 1
-
-    if granularity == "yearly":
-        rows = db.exec(
-            select(
-                OriginShareData.year,
-                OriginShareData.origin,
-                func.sum(OriginShareData.sales_volume).label("sales_volume"),
-            )
-            .where(
-                OriginShareData.year >= start_year,
-                OriginShareData.data_type == data_type,
-            )
-            .group_by(OriginShareData.year, OriginShareData.origin)
-        ).all()
-
-        year_totals: dict[int, float] = {}
-        year_origins: dict[int, dict[str, float]] = {}
-        for row in rows:
-            if row.year not in year_origins:
-                year_origins[row.year] = {}
-                year_totals[row.year] = 0
-            sv = float(row.sales_volume or 0)
-            year_origins[row.year][row.origin] = sv
-            year_totals[row.year] += sv
-
-        data: list[dict[str, Any]] = []
-        for year in sorted(year_origins.keys()):
-            entry: dict[str, Any] = {"year": year}
-            total = year_totals[year]
-            for origin_cn, origin_en in ORIGIN_FIELD_MAP.items():
-                sv = year_origins[year].get(origin_cn, 0)
-                entry[origin_en] = round(sv / total * 100, 2) if total else 0
-            data.append(entry)
-        return data
-
+    period_cols = _origin_period_columns(granularity)
     rows = db.exec(
-        select(OriginShareData)
+        select(
+            *period_cols,
+            OriginShareData.origin,
+            func.sum(OriginShareData.sales_volume).label("sales_volume"),
+        )
         .where(
-            OriginShareData.year >= start_year,
+            OriginShareData.year >= _start_year(years),
             OriginShareData.data_type == data_type,
         )
-        .order_by(OriginShareData.year, OriginShareData.month)
+        .group_by(*period_cols, OriginShareData.origin)
+        .order_by(*period_cols)
     ).all()
 
-    month_totals: dict[tuple[int, int], float] = {}
-    month_origins: dict[tuple[int, int], dict[str, float]] = {}
+    period_totals: dict[int | tuple[int, int], float] = {}
+    period_origins: dict[int | tuple[int, int], dict[str, float]] = {}
     for row in rows:
-        key = (row.year, row.month)
-        if key not in month_origins:
-            month_origins[key] = {}
-            month_totals[key] = 0
-        sv = float(row.sales_volume or 0)
-        month_origins[key][row.origin] = sv
-        month_totals[key] += sv
+        key = _period_key(row, granularity)
+        sales = float(row.sales_volume or 0)
+        period_totals[key] = period_totals.get(key, 0) + sales
+        period_origins.setdefault(key, {})[row.origin] = sales
 
     data: list[dict[str, Any]] = []
-    for (year, month) in sorted(month_origins.keys()):
-        entry: dict[str, Any] = {"year": year, "month": month}
-        total = month_totals[(year, month)]
+    for key in sorted(period_origins):
+        total = period_totals[key]
+        entry: dict[str, Any] = _period_entry(key)
+        origins = period_origins[key]
         for origin_cn, origin_en in ORIGIN_FIELD_MAP.items():
-            sv = month_origins[(year, month)].get(origin_cn, 0)
-            entry[origin_en] = round(sv / total * 100, 2) if total else 0
+            entry[origin_en] = _percent(origins.get(origin_cn, 0), total)
         data.append(entry)
     return data

@@ -19,25 +19,55 @@ cpca_client = CpcaClient()
 yiche_client = YicheClient()
 
 
-def _batch_upsert(db: Session, model: type, records: list[dict], fields: list[str], batch_size: int = 500) -> int:
+def _batch_upsert(
+    db: Session,
+    model: type,
+    records: list[dict],
+    fields: list[str],
+    batch_size: int = 500,
+) -> int:
     if not records:
         return 0
+
     table = model.__tablename__
     cols = ", ".join(fields)
-    updates = ", ".join([f"{f}=VALUES({f})" for f in fields])
-    placeholders = "(" + ", ".join([f":{f}" for f in fields]) + ")"
-    sql_prefix = f"INSERT INTO {table} ({cols}) VALUES "
+    updates = ", ".join(f"{field}=VALUES({field})" for field in fields)
+    placeholders = ", ".join(f":{field}" for field in fields)
+    sql = text(
+        f"INSERT INTO {table} ({cols}) VALUES ({placeholders}) "
+        f"ON DUPLICATE KEY UPDATE {updates}"
+    )
 
     total = 0
     for i in range(0, len(records), batch_size):
         batch = records[i : i + batch_size]
-        sql = sql_prefix + ", ".join([placeholders] * len(batch))
-        sql += f" ON DUPLICATE KEY UPDATE {updates}"
-        params_list = [{f: rec.get(f) for f in fields} for rec in batch]
-        db.execute(text(sql), params_list)
+        db.execute(sql, [{field: rec.get(field) for field in fields} for rec in batch])
         db.commit()
         total += len(batch)
     return total
+
+
+def _create_log(db: Session, task_type: str) -> CollectionLog:
+    log = CollectionLog(
+        task_type=task_type, status="pending", started_at=datetime.now()
+    )
+    db.add(log)
+    db.commit()
+    return log
+
+
+def _finish_log(
+    db: Session,
+    log: CollectionLog,
+    status: str,
+    records_count: int = 0,
+    error_message: str | None = None,
+) -> None:
+    log.status = status
+    log.records_count = records_count
+    log.error_message = _truncate_error(error_message or "") or None
+    log.finished_at = datetime.now()
+    db.commit()
 
 
 def _truncate_error(msg: str, limit: int = 50000) -> str:
@@ -48,13 +78,7 @@ META_DATA_PATH = Path(__file__).resolve().parent.parent / "meta_data.yaml"
 
 
 def refresh_brand_meta(db: Session) -> dict:
-    log = CollectionLog(
-        task_type="refresh_brand_meta",
-        status="pending",
-        started_at=datetime.now(),
-    )
-    db.add(log)
-    db.commit()
+    log = _create_log(db, "refresh_brand_meta")
 
     try:
         if not META_DATA_PATH.exists():
@@ -65,10 +89,7 @@ def refresh_brand_meta(db: Session) -> dict:
 
         brands: dict = data.get("brands", {})
         if not brands:
-            log.status = "success"
-            log.records_count = 0
-            log.finished_at = datetime.now()
-            db.commit()
+            _finish_log(db, log, "success")
             return {"status": "skipped", "reason": "no brands in yaml"}
 
         existing_rows = db.exec(select(BrandMeta)).all()
@@ -93,44 +114,41 @@ def refresh_brand_meta(db: Session) -> dict:
                 if changed:
                     updated += 1
             else:
-                db.add(BrandMeta(brand_name=cn_name, brand_name_en=en_name, master_id=master_id))
+                db.add(
+                    BrandMeta(
+                        brand_name=cn_name, brand_name_en=en_name, master_id=master_id
+                    )
+                )
                 inserted += 1
 
         db.commit()
-        log.status = "success"
-        log.records_count = inserted + updated
-        log.finished_at = datetime.now()
-        db.commit()
+        _finish_log(db, log, "success", inserted + updated)
         logger.info("BrandMeta 刷新完成: 新增 %s, 更新 %s", inserted, updated)
-        return {"inserted": inserted, "updated": updated, "total": len(brands), "status": "success"}
+        return {
+            "inserted": inserted,
+            "updated": updated,
+            "total": len(brands),
+            "status": "success",
+        }
     except Exception as e:
-        log.status = "failed"
-        log.error_message = _truncate_error(str(e))
-        log.finished_at = datetime.now()
-        db.commit()
+        _finish_log(db, log, "failed", error_message=str(e))
         logger.error("BrandMeta 刷新失败: %s", e)
         raise
 
 
 def refresh_sales_data(db: Session) -> dict:
-    log = CollectionLog(
-        task_type="refresh_sales",
-        status="pending",
-        started_at=datetime.now(),
-    )
-    db.add(log)
-    db.commit()
+    log = _create_log(db, "refresh_sales")
 
     try:
         overall_records = yiche_client.fetch_all()
         overall_count = _batch_upsert(
-            db, SalesData, overall_records,
+            db,
+            SalesData,
+            overall_records,
             ["year", "month", "sales", "data_type", "date_type", "level_type"],
         )
 
-        rows = db.exec(
-            select(BrandMeta).where(BrandMeta.master_id.isnot(None))
-        ).all()
+        rows = db.exec(select(BrandMeta).where(BrandMeta.master_id.isnot(None))).all()
         brand_count = 0
         if rows:
             master_id_to_brand_id = {r.master_id: r.id for r in rows}
@@ -145,27 +163,38 @@ def refresh_sales_data(db: Session) -> dict:
                 brand_id = master_id_to_brand_id.get(master_id)
                 if not brand_id:
                     continue
-                normalized.append({
-                    "year": rec["year"],
-                    "month": rec["month"],
-                    "brand_id": brand_id,
-                    "sales_volume": rec.get("sales_volume"),
-                    "data_type": rec.get("data_type", "retail"),
-                    "date_type": rec.get("date_type", "monthly"),
-                    "level_type": rec.get("level_type", "all"),
-                })
+                normalized.append(
+                    {
+                        "year": rec["year"],
+                        "month": rec["month"],
+                        "brand_id": brand_id,
+                        "sales_volume": rec.get("sales_volume"),
+                        "data_type": rec.get("data_type", "retail"),
+                        "date_type": rec.get("date_type", "monthly"),
+                        "level_type": rec.get("level_type", "all"),
+                    }
+                )
 
             brand_count = _batch_upsert(
-                db, BrandSales, normalized,
-                ["year", "month", "brand_id", "sales_volume", "data_type", "date_type", "level_type"],
+                db,
+                BrandSales,
+                normalized,
+                [
+                    "year",
+                    "month",
+                    "brand_id",
+                    "sales_volume",
+                    "data_type",
+                    "date_type",
+                    "level_type",
+                ],
             )
 
         total_count = overall_count + brand_count
-        log.status = "success"
-        log.records_count = total_count
-        log.finished_at = datetime.now()
-        db.commit()
-        logger.info("销量数据刷新完成: 总体 %s 条, 品牌 %s 条", overall_count, brand_count)
+        _finish_log(db, log, "success", total_count)
+        logger.info(
+            "销量数据刷新完成: 总体 %s 条, 品牌 %s 条", overall_count, brand_count
+        )
         return {
             "overall_count": overall_count,
             "brand_count": brand_count,
@@ -173,34 +202,24 @@ def refresh_sales_data(db: Session) -> dict:
             "status": "success",
         }
     except Exception as e:
-        log.status = "failed"
-        log.error_message = _truncate_error(str(e))
-        log.finished_at = datetime.now()
-        db.commit()
+        _finish_log(db, log, "failed", error_message=str(e))
         logger.error("销量数据刷新失败: %s", e)
         raise
 
 
 def refresh_origin_data(db: Session) -> dict:
-    log = CollectionLog(
-        task_type="refresh_origin",
-        status="pending",
-        started_at=datetime.now(),
-    )
-    db.add(log)
-    db.commit()
+    log = _create_log(db, "refresh_origin")
 
     try:
         origin_records = cpca_client.get_country_data()
         origin_count = _batch_upsert(
-            db, OriginShareData, origin_records,
+            db,
+            OriginShareData,
+            origin_records,
             ["year", "month", "origin", "sales_volume", "data_type"],
         )
 
-        log.status = "success"
-        log.records_count = origin_count
-        log.finished_at = datetime.now()
-        db.commit()
+        _finish_log(db, log, "success", origin_count)
         logger.info("国别数据刷新完成: %s 条", origin_count)
         return {
             "origin_count": origin_count,
@@ -208,9 +227,6 @@ def refresh_origin_data(db: Session) -> dict:
             "status": "success",
         }
     except Exception as e:
-        log.status = "failed"
-        log.error_message = str(e)
-        log.finished_at = datetime.now()
-        db.commit()
+        _finish_log(db, log, "failed", error_message=str(e))
         logger.error("国别数据刷新失败: %s", e)
         raise
