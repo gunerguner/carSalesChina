@@ -1,8 +1,7 @@
-from datetime import datetime
 from typing import Optional
 
 from sqlmodel import SQLModel, Field
-from sqlalchemy import UniqueConstraint, Index, Column, Numeric, String, DateTime, Enum as SAEnum, func
+from sqlalchemy import UniqueConstraint, Index, Column, Numeric, String, Enum as SAEnum
 
 
 class BrandMeta(SQLModel, table=True):
@@ -15,8 +14,6 @@ class BrandMeta(SQLModel, table=True):
     brand_name: str = Field(sa_column=Column(String(100), nullable=False))
     brand_name_en: Optional[str] = Field(default=None, sa_column=Column(String(100)))
     master_id: Optional[int] = Field(default=None)
-    created_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, server_default=func.now()))
-
 
 class BrandSales(SQLModel, table=True):
     __tablename__ = "brand_sales"
@@ -33,13 +30,12 @@ class BrandSales(SQLModel, table=True):
     month: int
     brand_id: int = Field(foreign_key="brand_meta.id")
     sales_volume: Optional[float] = Field(default=None, sa_column=Column(Numeric(15, 2)))
-    data_type: Optional[str] = Field(default="retail", sa_column=Column(SAEnum("retail", "production"), default="retail"))
-    date_type: Optional[str] = Field(
+    data_type: str = Field(default="retail", sa_column=Column(SAEnum("retail", "production"), default="retail"))
+    date_type: str = Field(
         default="monthly",
         sa_column=Column(SAEnum("monthly", "quarterly", "yearly"), default="monthly"),
     )
-    level_type: Optional[str] = Field(
+    level_type: str = Field(
         default="all",
         sa_column=Column(SAEnum("all", "nev", "bev"), default="all"),
     )
-    created_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime, server_default=func.now()))

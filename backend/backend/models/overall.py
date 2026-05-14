@@ -1,8 +1,7 @@
-from datetime import datetime
 from typing import Optional
 
 from sqlmodel import SQLModel, Field
-from sqlalchemy import UniqueConstraint, Column, Numeric, DateTime, Enum as SAEnum, func
+from sqlalchemy import UniqueConstraint, Column, Numeric, Enum as SAEnum
 
 
 class SalesData(SQLModel, table=True):
@@ -29,7 +28,4 @@ class SalesData(SQLModel, table=True):
     level_type: Optional[str] = Field(
         default="all",
         sa_column=Column(SAEnum("all", "nev", "bev"), default="all"),
-    )
-    created_at: Optional[datetime] = Field(
-        default=None, sa_column=Column(DateTime, server_default=func.now())
     )

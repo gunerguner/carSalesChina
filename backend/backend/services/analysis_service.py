@@ -153,7 +153,6 @@ def get_origin_share_trend(
     db: Session,
     years: int,
     granularity: str,
-    data_type: str,
 ) -> list[dict[str, Any]]:
     period_cols = _origin_period_columns(granularity)
     rows = db.exec(
@@ -164,7 +163,6 @@ def get_origin_share_trend(
         )
         .where(
             OriginShareData.year >= _start_year(years),
-            OriginShareData.data_type == data_type,
         )
         .group_by(*period_cols, OriginShareData.origin)
         .order_by(*period_cols)

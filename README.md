@@ -7,7 +7,7 @@
 - **市场销量看板**：查看总体汽车市场按月度、季度、年度维度的销量数据，支持零售/产量口径以及全部/新能源/纯电等级别。
 - **品牌销量看板**：维护品牌元数据，并按品牌查看全周期销量趋势。
 - **数据分析看板**：提供新能源渗透率、新能源结构拆分、国别/车系占比趋势等分析能力。
-- **数据采集管理**：通过管理接口触发销量、品牌元数据、国别占比数据刷新，并查询采集日志。
+- **数据采集管理**：通过管理接口触发销量、品牌元数据、国别占比数据刷新。
 - **本地开发代理**：前端开发环境将 `/api` 请求代理到本地 FastAPI 服务。
 
 ## 技术栈
@@ -40,7 +40,6 @@
 | 品牌销量 | 易车品牌销量历史接口 | `YicheClient.fetch_brand_sales()` 按品牌 `master_id` 分批拉取 | `brand_sales` | 当前入库时过滤批发口径，保留品牌维度下的零售、产量及新能源/纯电等月度记录。 |
 | 品牌元数据 | 仓库内置 YAML | 读取 `backend/backend/meta_data.yaml` | `brand_meta` | 维护品牌中文名、英文标识与易车 `master_id` 映射，是品牌销量采集的基础数据。 |
 | 国别/车系占比 | 乘联会数据（通过 AkShare） | `CpcaClient.get_country_data()` 调用 `ak.car_market_country_cpca()` | `origin_share_data` | 用于自主、德系、日系、美系、欧系、韩系等车系/国别占比分析。 |
-| 采集日志 | 系统运行生成 | 每次刷新任务写入 | `data_collection_log` | 记录任务类型、状态、入库记录数、错误信息、开始与结束时间。 |
 
 > 注意：外部数据源接口可能调整参数、签名、字段结构或访问限制；若刷新数据失败，请优先查看采集日志和后端日志，并检查网络连通性与数据源可用性。
 
@@ -173,9 +172,6 @@ curl -X POST http://localhost:8001/api/v1/admin/data/refresh/sales
 
 # 国别/车系占比
 curl -X POST http://localhost:8001/api/v1/admin/data/refresh/origin
-
-# 查看采集日志
-curl 'http://localhost:8001/api/v1/admin/collection/logs?page=1&pageSize=20'
 ```
 
 > 数据刷新会访问外部数据源，耗时与成功率取决于网络环境、外部接口稳定性和数据源可用性。
@@ -193,7 +189,6 @@ curl 'http://localhost:8001/api/v1/admin/collection/logs?page=1&pageSize=20'
 | 管理 | POST | `/api/v1/admin/data/refresh/sales` | 刷新总体销量与品牌销量 |
 | 管理 | POST | `/api/v1/admin/data/refresh/brand-meta` | 刷新品牌元数据 |
 | 管理 | POST | `/api/v1/admin/data/refresh/origin` | 刷新国别/车系占比数据 |
-| 管理 | GET | `/api/v1/admin/collection/logs` | 查询数据采集日志 |
 
 ## 前端页面
 
@@ -243,7 +238,7 @@ curl 'http://localhost:8001/api/v1/admin/collection/logs?page=1&pageSize=20'
 
 - **数据库连接失败**：检查 MySQL 是否启动、账号密码是否正确，以及 `.env` 是否位于 `backend/` 目录。
 - **前端请求 404 或代理失败**：确认后端运行在 `http://localhost:8001`，并检查 Vite 代理配置。
-- **数据刷新为空或失败**：检查外部网络连通性、外部数据源接口是否可用，并查看 `/api/v1/admin/collection/logs` 或日志文件。
+- **数据刷新为空或失败**：检查外部网络连通性、外部数据源接口是否可用，并查看日志文件。
 - **前端依赖安装失败**：确认 Node.js 与 pnpm 版本符合要求，并检查 npm registry 网络可用性。
 
 ## 许可证

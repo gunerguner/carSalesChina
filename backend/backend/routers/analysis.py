@@ -48,6 +48,5 @@ def origin_share_trend(
         db=db,
         years=query.years,
         granularity=query.granularity,
-        data_type=query.data_type,
     )
     return success(data)

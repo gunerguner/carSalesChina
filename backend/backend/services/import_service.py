@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 from pathlib import Path
 
 import yaml
@@ -7,7 +6,6 @@ from sqlmodel import Session, select
 from sqlalchemy import text
 
 from backend.models.brand import BrandMeta, BrandSales
-from backend.models.log import CollectionLog
 from backend.models.origin import OriginShareData
 from backend.models.overall import SalesData
 from backend.sources.cpca_client import CpcaClient
@@ -47,39 +45,10 @@ def _batch_upsert(
     return total
 
 
-def _create_log(db: Session, task_type: str) -> CollectionLog:
-    log = CollectionLog(
-        task_type=task_type, status="pending", started_at=datetime.now()
-    )
-    db.add(log)
-    db.commit()
-    return log
-
-
-def _finish_log(
-    db: Session,
-    log: CollectionLog,
-    status: str,
-    records_count: int = 0,
-    error_message: str | None = None,
-) -> None:
-    log.status = status
-    log.records_count = records_count
-    log.error_message = _truncate_error(error_message or "") or None
-    log.finished_at = datetime.now()
-    db.commit()
-
-
-def _truncate_error(msg: str, limit: int = 50000) -> str:
-    return msg[:limit] if msg else ""
-
-
 META_DATA_PATH = Path(__file__).resolve().parent.parent / "meta_data.yaml"
 
 
 def refresh_brand_meta(db: Session) -> dict:
-    log = _create_log(db, "refresh_brand_meta")
-
     try:
         if not META_DATA_PATH.exists():
             raise FileNotFoundError(f"meta_data.yaml 不存在: {META_DATA_PATH}")
@@ -89,7 +58,6 @@ def refresh_brand_meta(db: Session) -> dict:
 
         brands: dict = data.get("brands", {})
         if not brands:
-            _finish_log(db, log, "success")
             return {"status": "skipped", "reason": "no brands in yaml"}
 
         existing_rows = db.exec(select(BrandMeta)).all()
@@ -122,7 +90,6 @@ def refresh_brand_meta(db: Session) -> dict:
                 inserted += 1
 
         db.commit()
-        _finish_log(db, log, "success", inserted + updated)
         logger.info("BrandMeta 刷新完成: 新增 %s, 更新 %s", inserted, updated)
         return {
             "inserted": inserted,
@@ -131,14 +98,11 @@ def refresh_brand_meta(db: Session) -> dict:
             "status": "success",
         }
     except Exception as e:
-        _finish_log(db, log, "failed", error_message=str(e))
         logger.error("BrandMeta 刷新失败: %s", e)
         raise
 
 
 def refresh_sales_data(db: Session) -> dict:
-    log = _create_log(db, "refresh_sales")
-
     try:
         overall_records = yiche_client.fetch_all()
         overall_count = _batch_upsert(
@@ -191,7 +155,6 @@ def refresh_sales_data(db: Session) -> dict:
             )
 
         total_count = overall_count + brand_count
-        _finish_log(db, log, "success", total_count)
         logger.info(
             "销量数据刷新完成: 总体 %s 条, 品牌 %s 条", overall_count, brand_count
         )
@@ -202,24 +165,25 @@ def refresh_sales_data(db: Session) -> dict:
             "status": "success",
         }
     except Exception as e:
-        _finish_log(db, log, "failed", error_message=str(e))
         logger.error("销量数据刷新失败: %s", e)
         raise
 
 
 def refresh_origin_data(db: Session) -> dict:
-    log = _create_log(db, "refresh_origin")
-
     try:
         origin_records = cpca_client.get_country_data()
+        
+        # Remove data_type from origin_records if it exists, since we removed it from model
+        for rec in origin_records:
+            rec.pop("data_type", None)
+            
         origin_count = _batch_upsert(
             db,
             OriginShareData,
             origin_records,
-            ["year", "month", "origin", "sales_volume", "data_type"],
+            ["year", "month", "origin", "sales_volume"],
         )
 
-        _finish_log(db, log, "success", origin_count)
         logger.info("国别数据刷新完成: %s 条", origin_count)
         return {
             "origin_count": origin_count,
@@ -227,6 +191,5 @@ def refresh_origin_data(db: Session) -> dict:
             "status": "success",
         }
     except Exception as e:
-        _finish_log(db, log, "failed", error_message=str(e))
         logger.error("国别数据刷新失败: %s", e)
         raise
