@@ -3,6 +3,7 @@ import json
 import logging
 import time
 import uuid
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Any, Optional
@@ -108,39 +109,48 @@ class BrandDim:
         return p
 
 
+@dataclass(frozen=True)
+class BrandFetchPlan:
+    dim: BrandDim
+    data_type: str
+    level_type: str
+
+    def label(self) -> str:
+        return self.dim.label()
+
+
 BRAND_FETCH_DIMS = [
-    (
-        BrandDim(sale_type_val=SaleType.RETAIL, energy_val=BrandIsNewEnergy.ALL),
-        "retail",
-        "all",
+    BrandFetchPlan(
+        dim=BrandDim(sale_type_val=SaleType.RETAIL, energy_val=BrandIsNewEnergy.ALL),
+        data_type="retail",
+        level_type="all",
     ),
-    (
-        BrandDim(sale_type_val=SaleType.RETAIL, energy_val=BrandIsNewEnergy.NEW_ENERGY),
-        "retail",
-        "nev",
+    BrandFetchPlan(
+        dim=BrandDim(sale_type_val=SaleType.RETAIL, energy_val=BrandIsNewEnergy.NEW_ENERGY),
+        data_type="retail",
+        level_type="nev",
     ),
-    (
-        BrandDim(sale_type_val=SaleType.RETAIL, energy_val=BrandIsNewEnergy.BEV),
-        "retail",
-        "bev",
+    BrandFetchPlan(
+        dim=BrandDim(sale_type_val=SaleType.RETAIL, energy_val=BrandIsNewEnergy.BEV),
+        data_type="retail",
+        level_type="bev",
     ),
-    (
-        BrandDim(sale_type_val=SaleType.WHOLESALE, energy_val=BrandIsNewEnergy.ALL),
-        "wholesale",
-        "all",
+    BrandFetchPlan(
+        dim=BrandDim(sale_type_val=SaleType.WHOLESALE, energy_val=BrandIsNewEnergy.ALL),
+        data_type="wholesale",
+        level_type="all",
     ),
-    (
-        BrandDim(sale_type_val=SaleType.PRODUCTION, energy_val=BrandIsNewEnergy.ALL),
-        "production",
-        "all",
+    BrandFetchPlan(
+        dim=BrandDim(sale_type_val=SaleType.PRODUCTION, energy_val=BrandIsNewEnergy.ALL),
+        data_type="production",
+        level_type="all",
     ),
 ]
 
 
 class YicheClient:
 
-    def _sign(self, param: dict, ts: int) -> str:
-        param_json = json.dumps(param, separators=(",", ":"), ensure_ascii=False)
+    def _sign(self, param_json: str, ts: int) -> str:
         raw = f"cid={_CID}&param={param_json}{_SECRET}{ts}"
         return hashlib.md5(raw.encode()).hexdigest()
 
@@ -213,7 +223,7 @@ class YicheClient:
     def _request_brand(self, param: dict) -> dict:
         ts = int(time.time() * 1000)
         param_json = json.dumps(param, separators=(",", ":"), ensure_ascii=False)
-        sign = self._sign(param, ts)
+        sign = self._sign(param_json, ts)
         headers = {
             "x-timestamp": str(ts),
             "x-sign": sign,
@@ -253,8 +263,38 @@ class YicheClient:
                 master_ids[i]: series_list[i]
                 for i in range(min(len(master_ids), len(series_list)))
             }
-        except Exception:
+        except Exception as e:
+            logger.warning("品牌销量批量拉取失败: dim=%s, batch=%s, err=%s", dim.label(), master_ids, e)
             return {}
+
+    @staticmethod
+    def _chunked_ids(master_ids: list[int], batch_size: int) -> list[list[int]]:
+        return [
+            master_ids[i: i + batch_size]
+            for i in range(0, len(master_ids), batch_size)
+        ]
+
+    @staticmethod
+    def _normalize_brand_row(
+        row: dict,
+        master_id: int,
+        data_type: str,
+        level_type: str,
+    ) -> Optional[dict]:
+        year = row.get("year")
+        month = row.get("month")
+        num = row.get("num")
+        if year is None or month is None or num is None:
+            return None
+        return {
+            "year": year,
+            "month": month,
+            "master_id": master_id,
+            "sales_volume": float(num),
+            "data_type": data_type,
+            "date_type": "monthly",
+            "level_type": level_type,
+        }
 
     def fetch_brand_sales(
         self,
@@ -264,48 +304,37 @@ class YicheClient:
         if not master_ids:
             return []
 
-        batches = [
-            master_ids[i: i + _API_BATCH]
-            for i in range(0, len(master_ids), _API_BATCH)
-        ]
+        batches = self._chunked_ids(master_ids, _API_BATCH)
 
-        aggregated: dict[str, dict[int, list[dict]]] = {}
+        aggregated: dict[str, dict[int, list[dict]]] = defaultdict(dict)
 
-        def _run(dim: BrandDim, batch: list[int]) -> tuple[str, dict[int, list[dict]]]:
-            return dim.label(), self._fetch_brand_batch(batch, dim, last_sale_time)
+        def _run(plan: BrandFetchPlan, batch: list[int]) -> tuple[str, dict[int, list[dict]]]:
+            return plan.label(), self._fetch_brand_batch(batch, plan.dim, last_sale_time)
 
         with ThreadPoolExecutor(max_workers=_WORKERS) as executor:
             futures = {
-                executor.submit(_run, dim, batch): (dim, batch)
-                for dim, _, _ in BRAND_FETCH_DIMS
+                executor.submit(_run, plan, batch): (plan, batch)
+                for plan in BRAND_FETCH_DIMS
                 for batch in batches
             }
             for future in as_completed(futures):
                 label, partial = future.result()
-                if label not in aggregated:
-                    aggregated[label] = {}
                 aggregated[label].update(partial)
 
         records = []
-        for dim, data_type, level_type in BRAND_FETCH_DIMS:
-            label = dim.label()
+        for plan in BRAND_FETCH_DIMS:
+            label = plan.label()
             brand_map = aggregated.get(label, {})
             for master_id, series in brand_map.items():
                 for row in series:
-                    year = row.get("year")
-                    month = row.get("month")
-                    num = row.get("num")
-                    if year is None or month is None or num is None:
-                        continue
-                    records.append({
-                        "year": year,
-                        "month": month,
-                        "master_id": master_id,
-                        "sales_volume": float(num),
-                        "data_type": data_type,
-                        "date_type": "monthly",
-                        "level_type": level_type,
-                    })
+                    normalized = self._normalize_brand_row(
+                        row=row,
+                        master_id=master_id,
+                        data_type=plan.data_type,
+                        level_type=plan.level_type,
+                    )
+                    if normalized:
+                        records.append(normalized)
 
         logger.info(
             "品牌销量拉取完成: 品牌数=%s, 维度数=%s, 总记录数=%s",

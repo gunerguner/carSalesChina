@@ -30,7 +30,7 @@ defineOptions({
   name: 'PreferenceLayout',
 });
 
-const modelValue = defineModel<LayoutType>({ default: 'sidebar-nav' });
+const modelValue = defineModel<LayoutType>({ default: 'header-nav' });
 
 const components: Record<LayoutType, Component> = {
   'full-content': FullContent,

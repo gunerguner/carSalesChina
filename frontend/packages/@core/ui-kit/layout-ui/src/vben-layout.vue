@@ -48,7 +48,7 @@ const props = withDefaults(defineProps<Props>(), {
   headerToggleSidebarButton: true,
   headerVisible: true,
   isMobile: false,
-  layout: 'sidebar-nav',
+  layout: 'header-nav',
   sidebarCollapsedButton: true,
   sidebarCollapseShowTitle: false,
   sidebarExtraCollapsedWidth: 60,

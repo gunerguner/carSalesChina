@@ -25,7 +25,7 @@ const defaultPreferences: Preferences = {
     enableRefreshToken: false,
     enableStickyPreferencesNavigationBar: true,
     isMobile: false,
-    layout: 'sidebar-nav',
+    layout: 'header-nav',
     locale: 'zh-CN',
     loginExpiredMode: 'page',
     name: 'Vben Admin',
@@ -125,10 +125,10 @@ const defaultPreferences: Preferences = {
     semiDarkSidebarSub: false,
   },
   transition: {
-    enable: true,
-    loading: true,
+    enable: false,
+    loading: false,
     name: 'fade-slide',
-    progress: true,
+    progress: false,
   },
   widget: {
     fullscreen: false,
