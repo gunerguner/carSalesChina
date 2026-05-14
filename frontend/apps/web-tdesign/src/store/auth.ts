@@ -53,7 +53,7 @@ export const useAuthStore = defineStore('auth', () => {
           accessStore.setLoginExpired(false);
         } else {
           onSuccess
-            ? await onSuccess?.()
+            ? await onSuccess()
             : await router.push(
                 userInfo.homePath || preferences.app.defaultHomePath,
               );
@@ -102,12 +102,7 @@ export const useAuthStore = defineStore('auth', () => {
     return userInfo;
   }
 
-  function $reset() {
-    loginLoading.value = false;
-  }
-
   return {
-    $reset,
     authLogin,
     fetchUserInfo,
     loginLoading,

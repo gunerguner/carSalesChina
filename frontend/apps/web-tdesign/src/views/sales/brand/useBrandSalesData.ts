@@ -4,6 +4,7 @@ import {
   type BrandTrendAllPeriodsRecord,
   getBrandTrendAllPeriodsApi,
 } from '#/api/sales/brand';
+import { toMonthKey } from '#/views/sales/utils/period-utils';
 
 type DataType = 'production' | 'retail';
 type Granularity = 'monthly' | 'yearly';
@@ -18,10 +19,6 @@ interface BrandSeriesPoint {
 interface BrandSeriesRecord {
   brand_name: string;
   points: BrandSeriesPoint[];
-}
-
-function toMonthKey(year: number, month: number) {
-  return `${year}-${String(month).padStart(2, '0')}`;
 }
 
 /** 当前接口返回的所有品牌中，有数据的最晚一个年月（不跟系统日历对齐，避免多出库里没有的月份） */
@@ -60,7 +57,7 @@ const granularity = ref<Granularity>('monthly');
 const dataType = ref<DataType>('retail');
 const rawData = ref<BrandRawRecord[]>([]);
 const rawDataCache = new Map<string, BrandRawRecord[]>();
-let pendingFetch: null | Promise<void> = null;
+let fetchGeneration = 0;
 
 function getCacheKey() {
   const brandsKey = [...selectedBrands.value].toSorted().join(',');
@@ -70,46 +67,56 @@ function getCacheKey() {
 export function useBrandSalesData() {
   async function fetchRawData(force = false) {
     if (selectedBrands.value.length === 0) {
+      fetchGeneration += 1;
       error.value = null;
       rawData.value = [];
+      loading.value = false;
       return;
     }
 
-    const cacheKey = getCacheKey();
+    const requestKey = getCacheKey();
     if (!force) {
-      const cached = rawDataCache.get(cacheKey);
+      const cached = rawDataCache.get(requestKey);
       if (cached) {
         error.value = null;
         rawData.value = cached;
         return;
       }
-      if (pendingFetch) {
-        return pendingFetch;
-      }
     }
 
-    pendingFetch = (async () => {
+    const requestGeneration = ++fetchGeneration;
+    const requestBrandNames = selectedBrands.value.join(',');
+    const requestDataType = dataType.value;
+    return (async () => {
       loading.value = true;
       error.value = null;
       try {
         const result = await getBrandTrendAllPeriodsApi({
-          brand_names: selectedBrands.value.join(','),
-          data_type: dataType.value,
+          brand_names: requestBrandNames,
+          data_type: requestDataType,
         });
         const normalized = Array.isArray(result) ? result : [];
+        if (
+          requestGeneration !== fetchGeneration ||
+          requestKey !== getCacheKey()
+        ) {
+          return;
+        }
         rawData.value = normalized;
-        rawDataCache.set(cacheKey, normalized);
+        rawDataCache.set(requestKey, normalized);
       } catch (error_) {
+        if (requestGeneration !== fetchGeneration) {
+          return;
+        }
         error.value = 'failed_to_load_brand_sales_data';
         console.error('[useBrandSalesData] fetchRawData failed', error_);
         rawData.value = [];
       } finally {
-        loading.value = false;
-        pendingFetch = null;
+        if (requestGeneration === fetchGeneration) {
+          loading.value = false;
+        }
       }
     })();
-
-    return pendingFetch;
   }
 
   const monthlySeries = computed<BrandSeriesRecord[]>(() => {

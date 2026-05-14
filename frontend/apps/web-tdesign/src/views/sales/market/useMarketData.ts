@@ -222,7 +222,7 @@ export function useMarketData() {
     const cache = getSeriesCache(levelType, dataType);
     return cache.sortedYears.map((year, i) => {
       const sales = Math.round(cache.yearSalesMap.get(year) ?? 0);
-      const prevYear = cache.sortedYears.at(i - 1);
+      const prevYear = i > 0 ? cache.sortedYears[i - 1] : undefined;
       const prevSales = prevYear == null ? 0 : Math.round(cache.yearSalesMap.get(prevYear) ?? 0);
       const yoyGrowth = prevSales ? round2((sales - prevSales) / prevSales * 100) : null;
       return { key: `${year}-${i}`, year, sales, yoyGrowth };
@@ -231,7 +231,6 @@ export function useMarketData() {
 
   return {
     loading,
-    rawData,
     fetchAll,
     getMonthlyDetail,
     getMonthlyTrend,

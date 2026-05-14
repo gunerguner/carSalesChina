@@ -1,5 +1,5 @@
 import logging
-from pathlib import Path
+from importlib.resources import files
 
 import yaml
 from sqlmodel import Session, select
@@ -9,12 +9,13 @@ from backend.models.brand import BrandMeta, BrandSales
 from backend.models.origin import OriginShareData
 from backend.models.overall import SalesData
 from backend.sources.cpca_client import CpcaClient
-from backend.sources.yiche_client import YicheClient
+from backend.sources.yiche_client import YicheOverallClient, YicheBrandClient
 
 logger = logging.getLogger(__name__)
 
 cpca_client = CpcaClient()
-yiche_client = YicheClient()
+yiche_overall_client = YicheOverallClient()
+yiche_brand_client = YicheBrandClient()
 
 
 def _batch_upsert(
@@ -39,13 +40,13 @@ def _batch_upsert(
     total = 0
     for i in range(0, len(records), batch_size):
         batch = records[i : i + batch_size]
-        db.execute(sql, [{field: rec.get(field) for field in fields} for rec in batch])
+        db.exec(sql, [{field: rec.get(field) for field in fields} for rec in batch])
         db.commit()
         total += len(batch)
     return total
 
 
-META_DATA_PATH = Path(__file__).resolve().parent.parent / "meta_data.yaml"
+META_DATA_PATH = files("backend") / "meta_data.yaml"
 
 
 def refresh_brand_meta(db: Session) -> dict:
@@ -104,7 +105,7 @@ def refresh_brand_meta(db: Session) -> dict:
 
 def refresh_sales_data(db: Session) -> dict:
     try:
-        overall_records = yiche_client.fetch_all()
+        overall_records = yiche_overall_client.fetch_overall_sales()
         overall_count = _batch_upsert(
             db,
             SalesData,
@@ -117,7 +118,7 @@ def refresh_sales_data(db: Session) -> dict:
         if rows:
             master_id_to_brand_id = {r.master_id: r.id for r in rows}
             master_ids = list(master_id_to_brand_id.keys())
-            raw_records = yiche_client.fetch_brand_sales(master_ids)
+            raw_records = yiche_brand_client.fetch_brand_sales(master_ids)
 
             normalized = []
             for rec in raw_records:

@@ -74,6 +74,7 @@
             "totalSales": "总销量",
             "nevSales": "新能源销量",
             "penetrationRate": "NEV渗透率(%)",
+            "penetrationRateLabel": "NEV渗透率",
             "bevSales": "纯电销量",
             "bevRatioInNev": "纯电占新能源比例(%)",
             "bevShare": "BEV占比(%)",
@@ -89,7 +90,14 @@
             "american": "美系(%)",
             "european": "欧系(%)",
             "korean": "韩系(%)",
-            "french": "法系(%)"
+            "french": "法系(%)",
+            "domesticLabel": "自主",
+            "germanLabel": "德系",
+            "japaneseLabel": "日系",
+            "americanLabel": "美系",
+            "europeanLabel": "欧系",
+            "koreanLabel": "韩系",
+            "frenchLabel": "法系"
         }
     },
     "common": {

@@ -1,5 +1,5 @@
 from datetime import datetime
-from pathlib import Path
+from importlib.resources import files
 from typing import Any, Iterable
 
 import yaml
@@ -9,9 +9,7 @@ from sqlmodel import Session, select
 from backend.models.origin import OriginShareData
 from backend.models.overall import SalesData
 
-_ORIGIN_FIELD_MAP_PATH = (
-    Path(__file__).resolve().parent.parent / "origin_field_map.yaml"
-)
+_ORIGIN_FIELD_MAP_PATH = files("backend") / "origin_field_map.yaml"
 
 
 def _load_origin_field_map() -> dict[str, str]:

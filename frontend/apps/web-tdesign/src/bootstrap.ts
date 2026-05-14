@@ -55,13 +55,14 @@ async function bootstrap(namespace: string) {
   const { MotionPlugin } = await import('@vben/plugins/motion');
   app.use(MotionPlugin);
 
+  const title = useTitle();
   watchEffect(() => {
     if (preferences.app.dynamicTitle) {
       const routeTitle = router.currentRoute.value.meta?.title;
-      const pageTitle =
-        (routeTitle ? `${$t(routeTitle)} - ` : '') + preferences.app.name;
-      useTitle(pageTitle);
+      title.value = (routeTitle ? `${$t(routeTitle)} - ` : '') + preferences.app.name;
+      return;
     }
+    title.value = preferences.app.name;
   });
 
   app.mount('#app');

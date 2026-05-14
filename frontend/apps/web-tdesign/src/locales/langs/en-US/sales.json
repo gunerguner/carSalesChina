@@ -74,6 +74,7 @@
       "totalSales": "Total Sales",
       "nevSales": "NEV Sales",
       "penetrationRate": "NEV Penetration(%)",
+      "penetrationRateLabel": "NEV Penetration",
       "bevSales": "BEV Sales",
       "bevRatioInNev": "BEV Share in NEV(%)",
       "bevShare": "BEV Share(%)",
@@ -89,7 +90,14 @@
       "american": "American(%)",
       "european": "European(%)",
       "korean": "Korean(%)",
-      "other": "Other(%)"
+      "french": "French(%)",
+      "domesticLabel": "Domestic",
+      "germanLabel": "German",
+      "japaneseLabel": "Japanese",
+      "americanLabel": "American",
+      "europeanLabel": "European",
+      "koreanLabel": "Korean",
+      "frenchLabel": "French"
     }
   },
   "common": {

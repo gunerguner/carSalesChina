@@ -16,6 +16,7 @@ _LOG_FORMAT = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
 _LOG_DATEFMT = "%Y-%m-%d %H:%M:%S"
 _MAX_BYTES = 10 * 1024 * 1024
 _BACKUP_COUNT = 5
+_FALLBACK_LOG_DIR = "logs"  # 相对于进程 cwd，可通过 LOG_DIR 环境变量覆盖
 
 
 class _BelowErrorFilter(logging.Filter):
@@ -23,11 +24,6 @@ class _BelowErrorFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord) -> bool:
         return record.levelno < logging.ERROR
-
-
-def _default_log_dir() -> Path:
-    # backend/backend/core/logging_config.py -> 仓库根目录
-    return Path(__file__).resolve().parents[3] / "logs"
 
 
 def _parse_root_level() -> int:
@@ -42,8 +38,9 @@ def setup_logging() -> None:
     - 控制台：按 LOG_LEVEL（默认 INFO）输出全量级别。
     - app.log：普通业务日志（INFO、WARNING），按大小轮转。
     - error.log：仅 ERROR、CRITICAL，按大小轮转。
+    日志目录优先读取 LOG_DIR 环境变量，未设置则默认 ./logs（相对进程启动目录）。
     """
-    log_dir = Path(os.getenv("LOG_DIR", str(_default_log_dir())))
+    log_dir = Path(os.getenv("LOG_DIR", _FALLBACK_LOG_DIR))
     log_dir.mkdir(parents=True, exist_ok=True)
 
     root = logging.getLogger()

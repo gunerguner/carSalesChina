@@ -33,7 +33,12 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
   <div class="p-5">
     <SalesFilterBar v-model:level-type="levelType" v-model:data-type="dataType" />
 
-    <Loading :loading="loading" size="medium" text="数据加载中..." style="min-height: 200px">
+    <Loading
+      :loading="loading"
+      size="medium"
+      :text="$t('sales.common.loading')"
+      style="min-height: 200px"
+    >
       <Tabs v-model="activeTab">
         <TabPanel
           :label="$t('sales.market.monthly.title')"

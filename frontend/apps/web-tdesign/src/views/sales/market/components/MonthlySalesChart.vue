@@ -6,6 +6,15 @@ import type { MonthlyTrendRecord } from '../useMarketData';
 import { onMounted, ref, watch } from 'vue';
 
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
+import { preferences } from '@vben/preferences';
+
+import { $t } from '#/locales';
+
+import {
+  formatSalesAxisLabel,
+  getEmptyChartOption,
+} from '#/views/sales/utils/chart-utils';
+import { getLocalizedMonthLabels } from '#/views/sales/utils/period-utils';
 
 const props = defineProps<{
   data: MonthlyTrendRecord[];
@@ -18,13 +27,7 @@ const { renderEcharts } = useEcharts(chartRef);
 
 function render(data: MonthlyTrendRecord[]) {
   if (!data || data.length === 0) {
-    renderEcharts({
-      animation: false,
-      title: { text: '暂无数据', left: 'center', top: 'center', textStyle: { color: '#999', fontSize: 14 } },
-      xAxis: { type: 'category', data: [] },
-      yAxis: { type: 'value' },
-      series: [],
-    });
+    renderEcharts(getEmptyChartOption($t('sales.common.noData')));
     return;
   }
 
@@ -37,7 +40,7 @@ function render(data: MonthlyTrendRecord[]) {
   }
 
   const years = [...yearDataMap.keys()].toSorted((a, b) => a - b);
-  const months = Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
+  const months = getLocalizedMonthLabels(preferences.app.locale);
 
   renderEcharts({
     animation: false,
@@ -48,7 +51,8 @@ function render(data: MonthlyTrendRecord[]) {
     yAxis: {
       type: 'value',
       axisLabel: {
-        formatter: (val: number) => val >= 10_000 ? `${(val / 10_000).toFixed(0)}万` : String(val),
+        formatter: (val: number) =>
+          formatSalesAxisLabel(val, preferences.app.locale),
       },
     },
     series: years.map((year, index) => ({
@@ -61,7 +65,7 @@ function render(data: MonthlyTrendRecord[]) {
   });
 }
 
-watch(() => props.data, (val) => render(val));
+watch(() => props.data, render);
 onMounted(() => render(props.data));
 </script>
 

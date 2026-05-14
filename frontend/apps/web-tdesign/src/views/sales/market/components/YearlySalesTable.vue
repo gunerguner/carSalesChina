@@ -9,18 +9,22 @@ import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
 
+import { growthColor, growthPercentText } from '#/views/sales/utils/growth-utils';
+import { formatYearPeriod } from '#/views/sales/utils/period-utils';
+import { sortByNumberAsc } from '#/views/sales/utils/sort-utils';
+
 const props = defineProps<{
   data: YearlyTrendRecord[];
 }>();
 
 function periodText(r: YearlyTrendRecord): string {
-  return preferences.app.locale === 'zh-CN' ? `${r.year}年` : String(r.year);
+  return formatYearPeriod(r.year, preferences.app.locale);
 }
 
 function sortByYear(a: unknown, b: unknown): number {
   const ra = a as YearlyTrendRecord;
   const rb = b as YearlyTrendRecord;
-  return ra.year - rb.year;
+  return sortByNumberAsc(ra.year, rb.year);
 }
 
 const columns = [
@@ -34,20 +38,13 @@ const columns = [
   { colKey: 'yoyGrowth', title: $t('sales.market.yearly.yoyGrowth'), width: 140 },
 ];
 
-function growthColor(val: null | number | undefined): string {
-  if (val == null) return '#999';
-  if (val > 0) return '#ef4444';
-  if (val < 0) return '#22c55e';
-  return '#666';
-}
-
 const tableData = computed(() =>
   props.data
     .map((r) => ({
       ...r,
       periodText: periodText(r),
       salesText: r.sales == null ? '-' : Math.round(r.sales).toLocaleString(),
-      yoyGrowthText: r.yoyGrowth == null ? '-' : `${r.yoyGrowth.toFixed(2)}%`,
+      yoyGrowthText: growthPercentText(r.yoyGrowth),
       yoyGrowthColor: growthColor(r.yoyGrowth),
     }))
     .toReversed(),

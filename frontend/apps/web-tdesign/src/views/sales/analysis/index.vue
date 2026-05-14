@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 import { Card, Loading, TabPanel, Tabs } from 'tdesign-vue-next';
 
+import { message } from '#/adapter/tdesign';
 import { $t } from '#/locales';
 
 import NevBreakdownChart from './components/NevBreakdownChart.vue';
@@ -14,15 +15,26 @@ import { useAnalysisData } from './useAnalysisData';
 
 const activeTab = ref('nev');
 
-const { loading, fetchAll, nevShareTrend, nevBreakdown, originShareTrend } =
+const { error, loading, fetchAll, nevShareTrend, nevBreakdown, originShareTrend } =
   useAnalysisData();
 
 onMounted(() => fetchAll());
+
+watch(error, (value) => {
+  if (value) {
+    message.error($t('common.requestFailed'));
+  }
+});
 </script>
 
 <template>
   <div class="p-5">
-    <Loading :loading="loading" size="medium" text="数据加载中..." style="min-height: 200px">
+    <Loading
+      :loading="loading"
+      size="medium"
+      :text="$t('sales.common.loading')"
+      style="min-height: 200px"
+    >
       <Tabs v-model="activeTab">
         <TabPanel
           :label="$t('sales.analysis.nevTab')"

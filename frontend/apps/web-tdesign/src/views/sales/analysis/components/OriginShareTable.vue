@@ -1,36 +1,35 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import type { OriginShareTrendRecord } from '#/api/sales/analysis';
+
+import { computed } from 'vue';
 
 import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
+import { toMonthKey } from '#/views/sales/utils/period-utils';
+import { toYearMonthSortKey } from '#/views/sales/utils/sort-utils';
+import { formatPercentCell } from '#/views/sales/utils/table-cell-formatters';
 
 const props = defineProps<{
-  data: any[];
+  data: OriginShareTrendRecord[];
 }>();
-
-const tableData = ref<any[]>([]);
 
 const columns = [
   { colKey: 'time', title: $t('sales.analysis.origin.time'), width: 120 },
-  { colKey: 'domestic', title: $t('sales.analysis.origin.domestic'), width: 100, cell: (_h: any, { row }: any) => row.domestic == null ? '-' : `${row.domestic.toFixed(2)}%` },
-  { colKey: 'german', title: $t('sales.analysis.origin.german'), width: 100, cell: (_h: any, { row }: any) => row.german == null ? '-' : `${row.german.toFixed(2)}%` },
-  { colKey: 'japanese', title: $t('sales.analysis.origin.japanese'), width: 100, cell: (_h: any, { row }: any) => row.japanese == null ? '-' : `${row.japanese.toFixed(2)}%` },
-  { colKey: 'american', title: $t('sales.analysis.origin.american'), width: 100, cell: (_h: any, { row }: any) => row.american == null ? '-' : `${row.american.toFixed(2)}%` },
-  { colKey: 'european', title: $t('sales.analysis.origin.european'), width: 100, cell: (_h: any, { row }: any) => row.european == null ? '-' : `${row.european.toFixed(2)}%` },
-  { colKey: 'korean', title: $t('sales.analysis.origin.korean'), width: 100, cell: (_h: any, { row }: any) => row.korean == null ? '-' : `${row.korean.toFixed(2)}%` },
-  { colKey: 'french', title: $t('sales.analysis.origin.french'), width: 100, cell: (_h: any, { row }: any) => row.french == null ? '-' : `${row.french.toFixed(2)}%` },
+  { colKey: 'domestic', title: $t('sales.analysis.origin.domestic'), width: 100, cell: (_h: any, { row }: any) => formatPercentCell(row.domestic) },
+  { colKey: 'german', title: $t('sales.analysis.origin.german'), width: 100, cell: (_h: any, { row }: any) => formatPercentCell(row.german) },
+  { colKey: 'japanese', title: $t('sales.analysis.origin.japanese'), width: 100, cell: (_h: any, { row }: any) => formatPercentCell(row.japanese) },
+  { colKey: 'american', title: $t('sales.analysis.origin.american'), width: 100, cell: (_h: any, { row }: any) => formatPercentCell(row.american) },
+  { colKey: 'european', title: $t('sales.analysis.origin.european'), width: 100, cell: (_h: any, { row }: any) => formatPercentCell(row.european) },
+  { colKey: 'korean', title: $t('sales.analysis.origin.korean'), width: 100, cell: (_h: any, { row }: any) => formatPercentCell(row.korean) },
+  { colKey: 'french', title: $t('sales.analysis.origin.french'), width: 100, cell: (_h: any, { row }: any) => formatPercentCell(row.french) },
 ];
 
-function buildRows(data: any[]) {
-  if (!data || !Array.isArray(data)) {
-    tableData.value = [];
-    return;
-  }
-
-  tableData.value = data.map((item: any, index: number) => ({
+const tableData = computed(() => {
+  return props.data.map((item, index) => ({
     key: index,
-    time: `${item.year}-${String(item.month).padStart(2, '0')}`,
+    time: toMonthKey(item.year, item.month),
+    sortKey: toYearMonthSortKey(item.year, item.month),
     domestic: item.domestic ?? null,
     german: item.german ?? null,
     japanese: item.japanese ?? null,
@@ -38,10 +37,8 @@ function buildRows(data: any[]) {
     european: item.european ?? null,
     korean: item.korean ?? null,
     french: item.french ?? null,
-  })).toSorted((a: any, b: any) => b.time.localeCompare(a.time));
-}
-
-watch(() => props.data, (val) => buildRows(val), { deep: true, immediate: true });
+  })).toSorted((a: any, b: any) => b.sortKey - a.sortKey);
+});
 </script>
 
 <template>

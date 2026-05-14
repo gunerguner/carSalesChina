@@ -21,6 +21,8 @@ const menus = computed(() => []);
 const avatar = computed(() => {
   return userStore.userInfo?.avatar ?? preferences.app.defaultAvatar;
 });
+const userDescription = computed(() => userStore.userInfo?.username ?? '');
+const userTagText = computed(() => userStore.userInfo?.roles?.[0] ?? '');
 
 async function handleLogout() {
   await authStore.logout(false);
@@ -73,8 +75,8 @@ watch(
         :avatar
         :menus
         :text="userStore.userInfo?.realName"
-        description="ann.vben@gmail.com"
-        tag-text="Pro"
+        :description="userDescription"
+        :tag-text="userTagText"
         @logout="handleLogout"
       />
     </template>

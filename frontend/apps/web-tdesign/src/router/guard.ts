@@ -10,6 +10,17 @@ import { useAuthStore } from '#/store';
 
 import { generateAccess } from './access';
 
+function decodeRedirectSafely(
+  redirectPath: string,
+  fallback: string,
+): string {
+  try {
+    return decodeURIComponent(redirectPath);
+  } catch {
+    return fallback;
+  }
+}
+
 /**
  * 通用守卫配置
  * @param router
@@ -53,10 +64,11 @@ function setupAccessGuard(router: Router) {
     // 基本路由，这些路由不需要进入权限拦截
     if (coreRouteNames.includes(to.name as string)) {
       if (to.path === LOGIN_PATH && accessStore.accessToken) {
-        return decodeURIComponent(
-          (to.query?.redirect as string) ||
-            userStore.userInfo?.homePath ||
+        return decodeRedirectSafely(
+          (to.query?.redirect as string) ??
+            userStore.userInfo?.homePath ??
             preferences.app.defaultHomePath,
+          userStore.userInfo?.homePath ?? preferences.app.defaultHomePath,
         );
       }
       return true;
@@ -111,9 +123,13 @@ function setupAccessGuard(router: Router) {
       (to.path === preferences.app.defaultHomePath
         ? userInfo.homePath || preferences.app.defaultHomePath
         : to.fullPath)) as string;
+    const resolvedRedirect = decodeRedirectSafely(
+      redirectPath,
+      userInfo.homePath || preferences.app.defaultHomePath,
+    );
 
     return {
-      ...router.resolve(decodeURIComponent(redirectPath)),
+      ...router.resolve(resolvedRedirect),
       replace: true,
     };
   });

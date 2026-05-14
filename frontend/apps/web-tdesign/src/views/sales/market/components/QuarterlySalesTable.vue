@@ -9,20 +9,23 @@ import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
 
+import { growthColor, growthPercentText } from '#/views/sales/utils/growth-utils';
+import { formatQuarterPeriod } from '#/views/sales/utils/period-utils';
+import { toYearQuarterSortKey } from '#/views/sales/utils/sort-utils';
+
 const props = defineProps<{
   data: QuarterlyTrendRecord[];
 }>();
 
 function periodText(r: QuarterlyTrendRecord): string {
-  return preferences.app.locale === 'zh-CN'
-    ? `${r.year}年Q${r.quarter}`
-    : `${r.year} Q${r.quarter}`;
+  return formatQuarterPeriod(r.year, r.quarter, preferences.app.locale);
 }
 
 function sortByYearQuarter(a: unknown, b: unknown): number {
   const ra = a as QuarterlyTrendRecord;
   const rb = b as QuarterlyTrendRecord;
-  return ra.year * 10 + ra.quarter - (rb.year * 10 + rb.quarter);
+  return toYearQuarterSortKey(ra.year, ra.quarter) -
+    toYearQuarterSortKey(rb.year, rb.quarter);
 }
 
 const columns = [
@@ -37,22 +40,15 @@ const columns = [
   { colKey: 'qoqGrowth', title: $t('sales.market.quarterly.qoqGrowth'), width: 140 },
 ];
 
-function growthColor(val: null | number | undefined): string {
-  if (val == null) return '#999';
-  if (val > 0) return '#ef4444';
-  if (val < 0) return '#22c55e';
-  return '#666';
-}
-
 const tableData = computed(() =>
   props.data
     .map((r) => ({
       ...r,
       periodText: periodText(r),
       salesText: Math.round(r.sales).toLocaleString(),
-      qoqGrowthText: r.qoqGrowth == null ? '-' : `${r.qoqGrowth.toFixed(2)}%`,
+      qoqGrowthText: growthPercentText(r.qoqGrowth),
       qoqGrowthColor: growthColor(r.qoqGrowth),
-      yoyGrowthText: r.yoyGrowth == null ? '-' : `${r.yoyGrowth.toFixed(2)}%`,
+      yoyGrowthText: growthPercentText(r.yoyGrowth),
       yoyGrowthColor: growthColor(r.yoyGrowth),
     }))
     .toReversed(),

@@ -4,8 +4,13 @@ import type { EchartsUIType } from '@vben/plugins/echarts';
 import { computed, onMounted, ref, watch } from 'vue';
 
 import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
+import { preferences } from '@vben/preferences';
 
 import { $t } from '#/locales';
+import {
+  formatSalesAxisLabel,
+  getEmptyChartOption,
+} from '#/views/sales/utils/chart-utils';
 
 interface BrandSeriesPoint {
   sales: number;
@@ -46,34 +51,12 @@ const chartSeries = computed(() =>
 
 function render() {
   if (props.loading) {
-    renderEcharts({
-      animation: false,
-      title: {
-        left: 'center',
-        text: $t('common.loading'),
-        textStyle: { color: '#999', fontSize: 14 },
-        top: 'center',
-      },
-      series: [],
-      xAxis: { data: [], type: 'category' },
-      yAxis: { type: 'value' },
-    });
+    renderEcharts(getEmptyChartOption($t('common.loading')));
     return;
   }
 
   if (props.data.length === 0 || props.timeLabels.length === 0) {
-    renderEcharts({
-      animation: false,
-      title: {
-        left: 'center',
-        text: $t('sales.brand.trend.noData'),
-        textStyle: { color: '#999', fontSize: 14 },
-        top: 'center',
-      },
-      series: [],
-      xAxis: { data: [], type: 'category' },
-      yAxis: { type: 'value' },
-    });
+    renderEcharts(getEmptyChartOption($t('sales.brand.trend.noData')));
     return;
   }
 
@@ -87,7 +70,7 @@ function render() {
     yAxis: {
       axisLabel: {
         formatter: (val: number) =>
-          val >= 10_000 ? `${(val / 10_000).toFixed(0)}万` : String(val),
+          formatSalesAxisLabel(val, preferences.app.locale),
       },
       type: 'value',
     },

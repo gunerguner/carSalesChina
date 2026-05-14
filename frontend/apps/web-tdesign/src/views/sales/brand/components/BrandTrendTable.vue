@@ -6,6 +6,7 @@ import { computed } from 'vue';
 import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
+import { formatNumberCell } from '#/views/sales/utils/table-cell-formatters';
 
 interface BrandSeriesPoint {
   sales: number;
@@ -34,7 +35,7 @@ const columns = computed<PrimaryTableCol[]>(() => {
   for (const brand of props.data) {
     base.push({
       cell: (_h: any, { row }: any) =>
-        row[`brand_${brand.brand_name}`]?.toLocaleString() ?? '-',
+        formatNumberCell(row[`brand_${brand.brand_name}`]),
       colKey: `brand_${brand.brand_name}`,
       title: brand.brand_name,
       width: 160,
