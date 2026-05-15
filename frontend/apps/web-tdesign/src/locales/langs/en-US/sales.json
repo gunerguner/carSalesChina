@@ -51,7 +51,8 @@
       "selectBrands": "Brands",
       "selectPlaceholder": "Select up to 3 brands",
       "granularity": "Period",
-      "monthly": "Monthly",
+      "recentYear": "Last 12 months",
+      "recentTwoYears": "Last 24 months",
       "yearly": "Yearly",
       "dataType": "Data type",
       "retail": "Retail",
@@ -69,17 +70,15 @@
     "nev": {
       "penetrationTitle": "NEV Penetration Trend",
       "penetrationChartTitle": "NEV Penetration Trend Chart",
-      "breakdownChartTitle": "NEV Breakdown Share",
+      "breakdownChartTitle": "BEV Share within NEV Trend",
+      "bevInNevTrendLabel": "BEV share within NEV",
       "time": "Time",
       "totalSales": "Total Sales",
       "nevSales": "NEV Sales",
       "penetrationRate": "NEV Penetration(%)",
       "penetrationRateLabel": "NEV Penetration",
       "bevSales": "BEV Sales",
-      "bevRatioInNev": "BEV Share in NEV(%)",
-      "bevShare": "BEV Share(%)",
-      "phevShare": "PHEV Share(%)",
-      "hevShare": "HEV Share(%)"
+      "bevRatioInNev": "BEV Share in NEV(%)"
     },
     "origin": {
       "chartTitle": "Origin Share Trend",

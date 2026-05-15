@@ -126,6 +126,7 @@ def get_nev_share_trend(
 def get_nev_breakdown(
     db: Session, years: int, granularity: str
 ) -> list[dict[str, Any]]:
+    """同期纯电占新能源比例：bev / nev；nev、bev 为易车口径下的新能源、纯电级别销量。"""
     period_data = _sales_by_period_and_level(
         db,
         start_year=_start_year(years),

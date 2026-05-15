@@ -6,7 +6,7 @@
 
 - **市场销量看板**：查看总体汽车市场按月度、季度、年度维度的销量数据，支持零售/产量口径以及全部/新能源/纯电等级别。
 - **品牌销量看板**：维护品牌元数据，并按品牌查看全周期销量趋势。
-- **数据分析看板**：提供新能源渗透率、新能源结构拆分、国别/车系占比趋势等分析能力。
+- **数据分析看板**：提供新能源渗透率、纯电在新能源中的占比趋势、国别/车系占比趋势等分析能力。
 - **数据采集管理**：通过管理接口触发销量、品牌元数据、国别占比数据刷新。
 - **本地开发代理**：前端开发环境将 `/api` 请求代理到本地 FastAPI 服务。
 
@@ -184,7 +184,7 @@ curl -X POST http://localhost:8001/api/v1/admin/data/refresh/origin
 | 品牌 | GET | `/api/v1/brands/meta/all` | 返回全部品牌元数据 |
 | 品牌 | GET | `/api/v1/brands/trend-all-periods` | 返回指定品牌的全周期销量趋势 |
 | 分析 | GET | `/api/v1/analysis/nev-share/trend` | 新能源渗透率趋势 |
-| 分析 | GET | `/api/v1/analysis/nev-breakdown` | 新能源结构拆分 |
+| 分析 | GET | `/api/v1/analysis/nev-breakdown` | 纯电在新能源中占比（按同期纯电、新能源销量计算） |
 | 分析 | GET | `/api/v1/analysis/origin-share/trend` | 国别/车系占比趋势 |
 | 管理 | POST | `/api/v1/admin/data/refresh/sales` | 刷新总体销量与品牌销量 |
 | 管理 | POST | `/api/v1/admin/data/refresh/brand-meta` | 刷新品牌元数据 |
@@ -196,7 +196,7 @@ curl -X POST http://localhost:8001/api/v1/admin/data/refresh/origin
 | --- | --- | --- |
 | `/market-sales` | 市场销量 | 总体销量趋势、表格与多维筛选 |
 | `/brand-sales` | 品牌销量 | 品牌选择、销量趋势图与明细表 |
-| `/data-analysis` | 数据分析 | 新能源渗透率、能源结构、国别/车系占比分析 |
+| `/data-analysis` | 数据分析 | 新能源渗透率、纯电在新能源中占比、国别/车系占比分析 |
 
 ## 配置说明
 

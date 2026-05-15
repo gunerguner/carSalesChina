@@ -21,13 +21,20 @@ interface BrandSeriesRecord {
 const props = defineProps<{
   data: BrandSeriesRecord[];
   loading?: boolean;
+  /** 最多展示多少条时间行；null 表示与 timeLabels 一致（如年度全部年份） */
+  timeLabelMaxCount?: null | number;
   timeLabels: string[];
 }>();
 
-/** 表格：按时间倒序，仅展示最新 12 条（图表仍用升序 timeLabels） */
+/** 表格：按时间倒序；条数由 timeLabelMaxCount 控制，与图表当前周期对齐 */
 const tableTimeLabels = computed(() => {
   const sorted = [...props.timeLabels].toSorted((a, b) => b.localeCompare(a));
-  return sorted.slice(0, 12);
+  const max = props.timeLabelMaxCount;
+  if (max === null) {
+    return sorted;
+  }
+  const limit = max ?? 12;
+  return sorted.slice(0, limit);
 });
 
 const columns = computed<PrimaryTableCol[]>(() => {

@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import type { BrandTrendGranularity } from '../useBrandSalesData';
+
 import { ref, watch } from 'vue';
 
 import { RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
@@ -10,19 +12,18 @@ import { $t } from '#/locales';
 import { DEFAULT_SELECTED_BRAND_NAMES } from '../brand-defaults';
 
 type DataType = 'production' | 'retail';
-type Granularity = 'monthly' | 'yearly';
 
 const emit = defineEmits<{
   change: [
     payload: {
       brands: string[];
       dataType: DataType;
-      granularity: Granularity;
+      granularity: BrandTrendGranularity;
     },
   ];
 }>();
 
-const granularity = ref<Granularity>('monthly');
+const granularity = ref<BrandTrendGranularity>('recentYear');
 const dataType = ref<DataType>('retail');
 const selectedBrands = ref<string[]>([...DEFAULT_SELECTED_BRAND_NAMES]);
 const brandOptions = ref<{ label: string; value: string }[]>([]);
@@ -121,7 +122,8 @@ fetchBrandOptions();
     <div class="flex items-center gap-2">
       <span class="text-sm text-gray-600">{{ $t('sales.brand.trend.granularity') }}</span>
       <RadioGroup v-model="granularity" variant="default-filled">
-        <RadioButton value="monthly">{{ $t('sales.brand.trend.monthly') }}</RadioButton>
+        <RadioButton value="recentYear">{{ $t('sales.brand.trend.recentYear') }}</RadioButton>
+        <RadioButton value="recentTwoYears">{{ $t('sales.brand.trend.recentTwoYears') }}</RadioButton>
         <RadioButton value="yearly">{{ $t('sales.brand.trend.yearly') }}</RadioButton>
       </RadioGroup>
     </div>

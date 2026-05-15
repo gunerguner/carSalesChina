@@ -28,36 +28,24 @@ export interface OriginShareTrendRecord extends AnalysisPeriodRecord {
   korean: null | number;
 }
 
-export interface NevShareTrendParams {
-  energy_type?: string;
-  data_type?: 'production' | 'retail';
+export interface AnalysisTrendParams {
   granularity?: 'monthly' | 'yearly';
+  years?: number;
 }
 
-export interface NevBreakdownParams {
-  energy_type?: string;
-  data_type?: 'production' | 'retail';
-  granularity?: 'monthly' | 'yearly';
-}
-
-export interface OriginShareTrendParams {
-  data_type?: 'production' | 'retail';
-  granularity?: 'monthly' | 'yearly';
-}
-
-export function getNevShareTrendApi(params?: NevShareTrendParams) {
+export function getNevShareTrendApi(params?: AnalysisTrendParams) {
   return requestClient.get<NevShareTrendRecord[]>('/v1/analysis/nev-share/trend', {
     params,
   });
 }
 
-export function getNevBreakdownApi(params?: NevBreakdownParams) {
+export function getNevBreakdownApi(params?: AnalysisTrendParams) {
   return requestClient.get<NevBreakdownRecord[]>('/v1/analysis/nev-breakdown', {
     params,
   });
 }
 
-export function getOriginShareTrendApi(params?: OriginShareTrendParams) {
+export function getOriginShareTrendApi(params?: AnalysisTrendParams) {
   return requestClient.get<OriginShareTrendRecord[]>(
     '/v1/analysis/origin-share/trend',
     { params },

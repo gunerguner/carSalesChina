@@ -51,7 +51,8 @@
             "selectBrands": "选择品牌",
             "selectPlaceholder": "请选择品牌（最多3个）",
             "granularity": "统计周期",
-            "monthly": "月度",
+            "recentYear": "近一年",
+            "recentTwoYears": "近两年",
             "yearly": "年度",
             "dataType": "数据类型",
             "retail": "零售量",
@@ -68,18 +69,16 @@
         "originTab": "车系占比",
         "nev": {
             "penetrationTitle": "NEV渗透率趋势",
-            "penetrationChartTitle": "NEV渗透率趋势图",
-            "breakdownChartTitle": "NEV细分占比",
+            "penetrationChartTitle": "NEV渗透率",
+            "breakdownChartTitle": "BEV在NEV中占比",
+            "bevInNevTrendLabel": "纯电在新能源中占比",
             "time": "时间",
             "totalSales": "总销量",
             "nevSales": "新能源销量",
             "penetrationRate": "NEV渗透率(%)",
             "penetrationRateLabel": "NEV渗透率",
             "bevSales": "纯电销量",
-            "bevRatioInNev": "纯电占新能源比例(%)",
-            "bevShare": "BEV占比(%)",
-            "phevShare": "PHEV占比(%)",
-            "hevShare": "HEV占比(%)"
+            "bevRatioInNev": "纯电占新能源比例(%)"
         },
         "origin": {
             "chartTitle": "车系占比趋势",

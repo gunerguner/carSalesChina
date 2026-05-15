@@ -9,7 +9,7 @@ import { $t } from '#/locales';
 import BrandSelectBar from './components/BrandSelectBar.vue';
 import BrandTrendChart from './components/BrandTrendChart.vue';
 import BrandTrendTable from './components/BrandTrendTable.vue';
-import { useBrandSalesData } from './useBrandSalesData';
+import { type BrandTrendGranularity, useBrandSalesData } from './useBrandSalesData';
 
 const {
   activeSeries,
@@ -19,6 +19,7 @@ const {
   granularity,
   loading,
   selectedBrands,
+  tableTimeLabelMaxCount,
   timeLabels,
 } = useBrandSalesData();
 
@@ -31,7 +32,7 @@ watch(error, (value) => {
 async function onFilterChange(payload: {
   brands: string[];
   dataType: 'production' | 'retail';
-  granularity: 'monthly' | 'yearly';
+  granularity: BrandTrendGranularity;
 }) {
   selectedBrands.value = payload.brands;
   dataType.value = payload.dataType;
@@ -56,6 +57,7 @@ async function onFilterChange(payload: {
       <BrandTrendTable
         :data="activeSeries"
         :loading="loading"
+        :time-label-max-count="tableTimeLabelMaxCount"
         :time-labels="timeLabels"
       />
     </Card>

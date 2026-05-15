@@ -7,7 +7,9 @@ import {
 import { toMonthKey } from '#/views/sales/utils/period-utils';
 
 type DataType = 'production' | 'retail';
-type Granularity = 'monthly' | 'yearly';
+
+/** 品牌趋势统计周期：近一年/近两年（按月）与年度汇总 */
+export type BrandTrendGranularity = 'recentTwoYears' | 'recentYear' | 'yearly';
 
 type BrandRawRecord = BrandTrendAllPeriodsRecord;
 
@@ -53,7 +55,7 @@ function getLastNMonthKeysEndingAt(endYear: number, endMonth: number, n: number)
 const loading = ref(false);
 const error = ref<null | string>(null);
 const selectedBrands = ref<string[]>([]);
-const granularity = ref<Granularity>('monthly');
+const granularity = ref<BrandTrendGranularity>('recentYear');
 const dataType = ref<DataType>('retail');
 const rawData = ref<BrandRawRecord[]>([]);
 const rawDataCache = new Map<string, BrandRawRecord[]>();
@@ -120,11 +122,15 @@ export function useBrandSalesData() {
   }
 
   const monthlySeries = computed<BrandSeriesRecord[]>(() => {
+    if (granularity.value === 'yearly') {
+      return [];
+    }
+    const nMonths = granularity.value === 'recentTwoYears' ? 24 : 12;
     const latest = getLatestMonthFromRawData(rawData.value);
-    const recent12 =
+    const recentKeys =
       latest == null
         ? []
-        : getLastNMonthKeysEndingAt(latest.year, latest.month, 12);
+        : getLastNMonthKeysEndingAt(latest.year, latest.month, nMonths);
     return rawData.value.map((brand) => {
       const pointMap = new Map<string, number>();
       for (const point of brand.monthly_data ?? []) {
@@ -133,7 +139,7 @@ export function useBrandSalesData() {
       }
       return {
         brand_name: brand.brand_name,
-        points: recent12.map((time) => ({
+        points: recentKeys.map((time) => ({
           time,
           sales: pointMap.get(time) ?? 0,
         })),
@@ -161,7 +167,15 @@ export function useBrandSalesData() {
   });
 
   const activeSeries = computed<BrandSeriesRecord[]>(() => {
-    return granularity.value === 'monthly' ? monthlySeries.value : yearlySeries.value;
+    return granularity.value === 'yearly' ? yearlySeries.value : monthlySeries.value;
+  });
+
+  /** 表格时间列数量：null 表示与图表一致展示全部（年度为全部年份） */
+  const tableTimeLabelMaxCount = computed<null | number>(() => {
+    if (granularity.value === 'yearly') {
+      return null;
+    }
+    return granularity.value === 'recentTwoYears' ? 24 : 12;
   });
 
   const timeLabels = computed<string[]>(() => {
@@ -183,6 +197,7 @@ export function useBrandSalesData() {
     loading,
     rawData,
     selectedBrands,
+    tableTimeLabelMaxCount,
     timeLabels,
   };
 }
