@@ -5,13 +5,9 @@ import { Card, Loading, TabPanel, Tabs } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
 
-import MonthlySalesChart from './components/MonthlySalesChart.vue';
-import MonthlySalesTable from './components/MonthlySalesTable.vue';
-import QuarterlySalesChart from './components/QuarterlySalesChart.vue';
-import QuarterlySalesTable from './components/QuarterlySalesTable.vue';
+import MarketSalesTable from './components/MarketSalesTable.vue';
+import MarketTrendChart from './components/MarketTrendChart.vue';
 import SalesFilterBar from './components/SalesFilterBar.vue';
-import YearlySalesChart from './components/YearlySalesChart.vue';
-import YearlySalesTable from './components/YearlySalesTable.vue';
 import { useMarketData } from './useMarketData';
 
 const levelType = ref('all');
@@ -46,10 +42,10 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
           value="monthly"
         >
           <Card :title="$t('sales.market.monthly.chartTitle')" class="mb-4">
-            <MonthlySalesChart :data="monthlyTrendData" />
+            <MarketTrendChart :data="monthlyTrendData" kind="monthly" />
           </Card>
           <Card :title="$t('sales.market.monthly.title')">
-            <MonthlySalesTable :data="monthlyDetailData" />
+            <MarketSalesTable :data="monthlyDetailData" kind="monthly" />
           </Card>
         </TabPanel>
         <TabPanel
@@ -58,10 +54,10 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
           value="quarterly"
         >
           <Card :title="$t('sales.market.quarterly.chartTitle')" class="mb-4">
-            <QuarterlySalesChart :data="quarterlyTrendData" />
+            <MarketTrendChart :data="quarterlyTrendData" kind="quarterly" />
           </Card>
           <Card :title="$t('sales.market.quarterly.title')">
-            <QuarterlySalesTable :data="quarterlyTrendData" />
+            <MarketSalesTable :data="quarterlyTrendData" kind="quarterly" />
           </Card>
         </TabPanel>
         <TabPanel
@@ -70,10 +66,10 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
           value="yearly"
         >
           <Card :title="$t('sales.market.yearly.chartTitle')" class="mb-4">
-            <YearlySalesChart :data="yearlyTrendData" />
+            <MarketTrendChart :data="yearlyTrendData" kind="yearly" />
           </Card>
           <Card :title="$t('sales.market.yearly.title')">
-            <YearlySalesTable :data="yearlyTrendData" />
+            <MarketSalesTable :data="yearlyTrendData" kind="yearly" />
           </Card>
         </TabPanel>
       </Tabs>
