@@ -8,7 +8,6 @@ import { preferences } from '@vben/preferences';
 import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
-
 import { growthColor, growthPercentText } from '#/views/sales/utils/growth-utils';
 import { formatMonthPeriod } from '#/views/sales/utils/period-utils';
 import { toYearMonthSortKey } from '#/views/sales/utils/sort-utils';

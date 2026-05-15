@@ -3,7 +3,7 @@ import { createApp, watchEffect } from 'vue';
 import { registerAccessDirective } from '@vben/access';
 import { registerLoadingDirective } from '@vben/common-ui/es/loading';
 import { preferences } from '@vben/preferences';
-import { initStores, useAccessStore, useUserStore } from '@vben/stores';
+import { initStores } from '@vben/stores';
 import '@vben/styles';
 
 import { useTitle } from '@vueuse/core';
@@ -31,19 +31,6 @@ async function bootstrap(namespace: string) {
   await setupI18n(app);
 
   await initStores(app, { namespace });
-
-  const accessStore = useAccessStore();
-  const userStore = useUserStore();
-  accessStore.setAccessToken('mock-token-for-dev');
-  accessStore.setAccessCodes(['*']);
-  userStore.setUserInfo({
-    userId: '1',
-    username: 'admin',
-    realName: '管理员',
-    roles: ['admin'],
-    homePath: '/market-sales',
-    avatar: '',
-  });
 
   registerAccessDirective(app);
 

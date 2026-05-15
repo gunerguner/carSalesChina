@@ -1,97 +1,46 @@
 <script lang="ts" setup>
-import { computed, watch } from 'vue';
+import { ref } from 'vue';
 
-import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
-import { useWatermark } from '@vben/hooks';
-import { BasicLayout, LockScreen, UserDropdown } from '@vben/layouts';
-import { preferences, usePreferences } from '@vben/preferences';
-import { useAccessStore, useUserStore } from '@vben/stores';
+import { VbenIconButton } from '@vben/common-ui';
+import { RotateCw } from '@vben/icons';
+import { BasicLayout } from '@vben/layouts';
 
-import { useAuthStore } from '#/store';
-import LoginForm from '#/views/_core/authentication/login.vue';
+import { notification } from '#/adapter/tdesign';
+import { refreshBrandMetaApi, refreshOriginApi, refreshSalesApi } from '#/api/admin';
+import { $t } from '#/locales';
 
-const userStore = useUserStore();
-const authStore = useAuthStore();
-const accessStore = useAccessStore();
-const { destroyWatermark, updateWatermark } = useWatermark();
-const { isDark } = usePreferences();
+const refreshing = ref(false);
 
-const menus = computed(() => []);
+async function handleRefreshData() {
+  if (refreshing.value) return;
+  refreshing.value = true;
 
-const avatar = computed(() => {
-  return userStore.userInfo?.avatar ?? preferences.app.defaultAvatar;
-});
-const userDescription = computed(() => userStore.userInfo?.username ?? '');
-const userTagText = computed(() => userStore.userInfo?.roles?.[0] ?? '');
+  try {
+    await refreshBrandMetaApi();
+    await refreshSalesApi();
+    await refreshOriginApi();
 
-async function handleLogout() {
-  await authStore.logout(false);
+    notification.success({
+      title: $t('sales.admin.refreshSuccess'),
+      duration: 3000,
+    });
+  } catch {
+    notification.error({
+      title: $t('sales.admin.refreshFailed'),
+      duration: 3000,
+    });
+  } finally {
+    refreshing.value = false;
+  }
 }
-
-watch(
-  () => ({
-    enable: preferences.app.watermark,
-    content: preferences.app.watermarkContent,
-    isDark: isDark.value,
-  }),
-  async ({ enable, content, isDark: isDarkValue }) => {
-    if (enable) {
-      const watermarkColor = isDarkValue
-        ? 'rgba(255, 255, 255, 0.12)'
-        : 'rgba(0, 0, 0, 0.12)';
-
-      await updateWatermark({
-        advancedStyle: {
-          colorStops: [
-            {
-              color: watermarkColor,
-              offset: 0,
-            },
-            {
-              color: watermarkColor,
-              offset: 1,
-            },
-          ],
-          type: 'linear',
-        },
-        content:
-          content ||
-          `${userStore.userInfo?.username} - ${userStore.userInfo?.realName}`,
-      });
-    } else {
-      destroyWatermark();
-    }
-  },
-  {
-    immediate: true,
-  },
-);
 </script>
 
 <template>
-  <BasicLayout @clear-preferences-and-logout="handleLogout">
-    <template #user-dropdown>
-      <UserDropdown
-        :avatar
-        :menus
-        :text="userStore.userInfo?.realName"
-        :description="userDescription"
-        :tag-text="userTagText"
-        @logout="handleLogout"
-      />
-    </template>
-    <template #extra>
-      <AuthenticationLoginExpiredModal
-        v-model:open="accessStore.loginExpired"
-        :avatar
-      >
-        <LoginForm />
-      </AuthenticationLoginExpiredModal>
-    </template>
-    <template #lock-screen>
-      <LockScreen :avatar>
-        <LoginForm />
-      </LockScreen>
+  <BasicLayout>
+    <template #header-right-40>
+      <VbenIconButton class="my-0 mr-1 rounded-md" :disabled="refreshing" @click="handleRefreshData">
+        <RotateCw class="size-4" :class="{ 'animate-spin': refreshing }" />
+      </VbenIconButton>
     </template>
   </BasicLayout>
 </template>

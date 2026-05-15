@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.config import FASTAPI_PORT
+from backend.core.csrf import CSRF_HEADER_NAME, CSRFCookieMiddleware
 from backend.core.logging_config import setup_logging
 
 setup_logging()
@@ -25,8 +26,11 @@ app.add_middleware(
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*", CSRF_HEADER_NAME],
+    expose_headers=[],
 )
+
+app.add_middleware(CSRFCookieMiddleware)
 
 app.include_router(market.router)
 app.include_router(brand.router)

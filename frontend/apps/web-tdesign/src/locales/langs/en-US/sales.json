@@ -105,5 +105,14 @@
     "loading": "Loading...",
     "year": "Year",
     "month": "Month"
+  },
+  "admin": {
+    "refreshData": "Refresh Data",
+    "refreshing": "Refreshing...",
+    "refreshBrandMeta": "Refreshing brand metadata...",
+    "refreshSales": "Refreshing sales data...",
+    "refreshOrigin": "Refreshing origin data...",
+    "refreshSuccess": "Data refresh completed",
+    "refreshFailed": "Data refresh failed"
   }
 }

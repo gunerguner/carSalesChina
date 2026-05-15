@@ -105,5 +105,14 @@
         "loading": "加载中...",
         "year": "年",
         "month": "月"
+    },
+    "admin": {
+        "refreshData": "刷新数据",
+        "refreshing": "正在刷新...",
+        "refreshBrandMeta": "正在刷新品牌元数据...",
+        "refreshSales": "正在刷新销量数据...",
+        "refreshOrigin": "正在刷新国别数据...",
+        "refreshSuccess": "数据刷新完成",
+        "refreshFailed": "数据刷新失败"
     }
 }

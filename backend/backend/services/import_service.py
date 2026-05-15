@@ -40,7 +40,7 @@ def _batch_upsert(
     total = 0
     for i in range(0, len(records), batch_size):
         batch = records[i : i + batch_size]
-        db.exec(sql, [{field: rec.get(field) for field in fields} for rec in batch])
+        db.execute(sql, [{field: rec.get(field) for field in fields} for rec in batch])
         db.commit()
         total += len(batch)
     return total
