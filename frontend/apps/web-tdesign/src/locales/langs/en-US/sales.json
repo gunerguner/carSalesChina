@@ -113,6 +113,10 @@
     "refreshSales": "Refreshing sales data...",
     "refreshOrigin": "Refreshing origin data...",
     "refreshSuccess": "Data refresh completed",
-    "refreshFailed": "Data refresh failed"
+    "refreshFailed": "Data refresh failed",
+    "refreshPartial": "Data refresh completed with errors",
+    "sourceOverall": "Yiche overall",
+    "sourceBrand": "Yiche brand",
+    "sourceOrigin": "CPCA origin"
   }
 }

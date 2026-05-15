@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS brand_sales (
     month INT NOT NULL,
     brand_id BIGINT NOT NULL COMMENT '品牌ID(外键)',
     sales_volume DECIMAL(15,2) COMMENT '销量',
-    data_type ENUM('retail','wholesale','production') DEFAULT 'retail' COMMENT '零售/批发/产量口径',
+    data_type ENUM('retail','production') DEFAULT 'retail' COMMENT '零售/产量口径',
     date_type ENUM('monthly','quarterly','yearly') DEFAULT 'monthly' COMMENT '时间维度',
     level_type ENUM('all','nev','bev') DEFAULT 'all' COMMENT '车型级别',
     UNIQUE KEY uk_brand_sales_unique (year, month, brand_id, data_type, date_type, level_type),

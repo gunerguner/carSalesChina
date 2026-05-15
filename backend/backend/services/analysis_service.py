@@ -6,6 +6,7 @@ import yaml
 from sqlalchemy import func
 from sqlmodel import Session, select
 
+from backend.core.exceptions import AppError, ValidationAppError
 from backend.models.origin import OriginShareData
 from backend.models.overall import SalesData
 
@@ -24,6 +25,8 @@ ORIGIN_FIELD_MAP = _load_origin_field_map()
 
 
 def _start_year(years: int) -> int:
+    if years <= 0:
+        raise ValidationAppError("years 必须大于 0")
     return datetime.now().year - years + 1
 
 
@@ -32,6 +35,8 @@ def _percent(part: float, total: float) -> float:
 
 
 def _period_columns(granularity: str):
+    if granularity not in {"monthly", "yearly"}:
+        raise ValidationAppError("granularity 仅支持 monthly 或 yearly")
     return (
         (SalesData.year,)
         if granularity == "yearly"
@@ -40,6 +45,8 @@ def _period_columns(granularity: str):
 
 
 def _origin_period_columns(granularity: str):
+    if granularity not in {"monthly", "yearly"}:
+        raise ValidationAppError("granularity 仅支持 monthly 或 yearly")
     return (
         (OriginShareData.year,)
         if granularity == "yearly"
@@ -152,6 +159,9 @@ def get_origin_share_trend(
     years: int,
     granularity: str,
 ) -> list[dict[str, Any]]:
+    if not ORIGIN_FIELD_MAP:
+        raise AppError(message="origin_field_map 配置为空或格式错误")
+
     period_cols = _origin_period_columns(granularity)
     rows = db.exec(
         select(

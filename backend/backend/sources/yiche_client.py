@@ -6,9 +6,12 @@ import uuid
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
+from datetime import date
 from typing import Any, Optional
 
 import httpx
+
+from backend.sources.fetch_result import SourceFetchResult
 
 logger = logging.getLogger(__name__)
 
@@ -61,9 +64,9 @@ class OverallLevelType:
 
 class BrandSaleType:
     """get_master_sales_history 接口 saleType 参数。
-    注意：3=出口，4=产量；与总体接口顺序不同。"""
+    注意：3=出口，4=产量；与总体接口顺序不同。
+    易车 0 为批发口径，本业务不采集、不入库。"""
 
-    WHOLESALE = 0
     RETAIL = 1
     TERMINAL = 2
     EXPORT = 3      # 出口（brand 接口 3=出口，对应总体接口的 4）
@@ -170,11 +173,6 @@ BRAND_FETCH_DIMS = [
         level_label="bev",
     ),
     BrandFetchDim(
-        query_param=BrandQueryParam(sale_type=BrandSaleType.WHOLESALE, energy_type=BrandEnergyType.ALL),
-        data_type="wholesale",
-        level_label="all",
-    ),
-    BrandFetchDim(
         query_param=BrandQueryParam(sale_type=BrandSaleType.PRODUCTION, energy_type=BrandEnergyType.ALL),
         data_type="production",
         level_label="all",
@@ -188,27 +186,32 @@ BRAND_FETCH_DIMS = [
 class YicheOverallClient:
     """易车总体销量客户端（carserialsalestrend 接口）。"""
 
-    def _fetch_overall(self, sale_type: int, time_type: int, level_type: int) -> list[dict]:
+    def _fetch_overall(
+        self, sale_type: int, time_type: int, level_type: int
+    ) -> tuple[list[dict], str | None]:
         params = {
             "app_ver": "",
             "levelType": level_type,
             "timeType": time_type,
             "salesType": sale_type,
         }
+        dim_tag = f"saleType={sale_type},timeType={time_type},levelType={level_type}"
         try:
             resp = httpx.get(_OVERALL_API_URL, params=params, timeout=30)
             resp.raise_for_status()
             body = resp.json()
             if body.get("status") != 1:
-                logger.warning("易车总体 API 返回异常: %s", body.get("message"))
-                return []
-            return body.get("data", [])
+                msg = str(body.get("message") or "status!=1")
+                logger.warning("易车总体 API 返回异常 (%s): %s", dim_tag, msg)
+                return [], f"{dim_tag}: {msg}"
+            return body.get("data") or [], None
         except Exception as e:
             logger.error(
-                "易车总体 API 请求失败 (saleType=%s, timeType=%s, levelType=%s): %s",
-                sale_type, time_type, level_type, e,
+                "易车总体 API 请求失败 (%s): %s",
+                dim_tag,
+                e,
             )
-            return []
+            return [], f"{dim_tag}: {e}"
 
     @staticmethod
     def _normalize_overall_row(raw: dict, dim: OverallFetchDim) -> Optional[dict]:
@@ -233,11 +236,14 @@ class YicheOverallClient:
             "level_type": dim.level_label,
         }
 
-    def fetch_overall_sales(self) -> list[dict]:
-        """拉取总体销量，返回标准化记录列表。"""
-        records = []
+    def fetch_overall_sales(self) -> SourceFetchResult:
+        """拉取总体销量；任一维度接口失败则 ok=False（仍合并已成功维度的数据）。"""
+        records: list[dict] = []
+        errors: list[str] = []
         for dim in OVERALL_FETCH_DIMS:
-            raw_data = self._fetch_overall(dim.sale_type, dim.time_type, dim.level_type)
+            raw_data, err = self._fetch_overall(dim.sale_type, dim.time_type, dim.level_type)
+            if err:
+                errors.append(err)
             for raw in raw_data:
                 normalized = self._normalize_overall_row(raw, dim)
                 if normalized:
@@ -247,7 +253,8 @@ class YicheOverallClient:
                 dim.sale_type, dim.time_type, dim.level_type, len(raw_data),
             )
             time.sleep(0.5)
-        return records
+        ok = len(errors) == 0
+        return SourceFetchResult(records=records, ok=ok, errors=errors)
 
 
 class YicheBrandClient:
@@ -286,23 +293,27 @@ class YicheBrandClient:
         master_ids: list[int],
         dim: BrandFetchDim,
         last_sale_time: str,
-    ) -> dict[int, list[dict]]:
+    ) -> tuple[dict[int, list[dict]], str | None]:
+        tag = f"{dim.label()} batch={master_ids!r}"
         try:
             result = self._request_brand(
                 dim.query_param.to_request_param(master_ids, last_sale_time)
             )
             if str(result.get("status")) != "1":
-                return {}
+                msg = str(result.get("message") or "status!=1")
+                logger.warning("品牌销量 API 异常 (%s): %s", tag, msg)
+                return {}, f"{tag}: {msg}"
             series_list: list[list[dict]] = result.get("data") or []
-            return {
-                master_ids[i]: series_list[i]
-                for i in range(min(len(master_ids), len(series_list)))
-            }
-        except Exception as e:
-            logger.warning(
-                "品牌销量批量拉取失败: dim=%s, batch=%s, err=%s", dim.label(), master_ids, e
+            return (
+                {
+                    master_ids[i]: series_list[i]
+                    for i in range(min(len(master_ids), len(series_list)))
+                },
+                None,
             )
-            return {}
+        except Exception as e:
+            logger.warning("品牌销量批量拉取失败 (%s): %s", tag, e)
+            return {}, f"{tag}: {e}"
 
     @staticmethod
     def _chunked_ids(master_ids: list[int], batch_size: int) -> list[list[int]]:
@@ -333,17 +344,24 @@ class YicheBrandClient:
     def fetch_brand_sales(
         self,
         master_ids: list[int],
-        last_sale_time: str = "2026-05-01",
-    ) -> list[dict]:
-        """并发拉取所有品牌的各维度销量数据。"""
+        last_sale_time: str = "",
+    ) -> SourceFetchResult:
+        """并发拉取所有品牌的各维度销量数据；任一批次接口失败则 ok=False。"""
         if not master_ids:
-            return []
+            return SourceFetchResult()
+
+        if not last_sale_time:
+            last_sale_time = date.today().isoformat()
 
         batches = self._chunked_ids(master_ids, _BRAND_BATCH_SIZE)
         aggregated: dict[str, dict[int, list[dict]]] = defaultdict(dict)
+        errors: list[str] = []
 
-        def _run(dim: BrandFetchDim, batch: list[int]) -> tuple[str, dict[int, list[dict]]]:
-            return dim.label(), self._fetch_brand_batch(batch, dim, last_sale_time)
+        def _run(
+            dim: BrandFetchDim, batch: list[int]
+        ) -> tuple[str, dict[int, list[dict]], str | None]:
+            partial, err = self._fetch_brand_batch(batch, dim, last_sale_time)
+            return dim.label(), partial, err
 
         with ThreadPoolExecutor(max_workers=_BRAND_WORKERS) as executor:
             futures = {
@@ -352,7 +370,9 @@ class YicheBrandClient:
                 for batch in batches
             }
             for future in as_completed(futures):
-                label, partial = future.result()
+                label, partial, err = future.result()
+                if err:
+                    errors.append(err)
                 aggregated[label].update(partial)
 
         records = []
@@ -370,15 +390,16 @@ class YicheBrandClient:
                     if normalized:
                         records.append(normalized)
 
+        ok = len(errors) == 0
         logger.info(
-            "品牌销量拉取完成: 品牌数=%s, 维度数=%s, 总记录数=%s",
-            len(master_ids), len(BRAND_FETCH_DIMS), len(records),
+            "品牌销量拉取完成: 品牌数=%s, 维度数=%s, 总记录数=%s, ok=%s",
+            len(master_ids), len(BRAND_FETCH_DIMS), len(records), ok,
         )
-        return records
+        return SourceFetchResult(records=records, ok=ok, errors=errors)
 
 
 class YicheClient(YicheOverallClient, YicheBrandClient):
     """易车 API 聚合客户端，向后兼容原有调用方式。"""
 
-    def fetch_all(self) -> list[dict]:
+    def fetch_all(self) -> SourceFetchResult:
         return self.fetch_overall_sales()

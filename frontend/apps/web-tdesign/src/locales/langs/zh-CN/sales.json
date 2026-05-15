@@ -113,6 +113,10 @@
         "refreshSales": "正在刷新销量数据...",
         "refreshOrigin": "正在刷新国别数据...",
         "refreshSuccess": "数据刷新完成",
-        "refreshFailed": "数据刷新失败"
+        "refreshFailed": "数据刷新失败",
+        "refreshPartial": "数据刷新未完全成功",
+        "sourceOverall": "易车总体",
+        "sourceBrand": "易车品牌",
+        "sourceOrigin": "乘联会国别"
     }
 }

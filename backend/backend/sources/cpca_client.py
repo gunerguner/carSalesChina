@@ -5,6 +5,8 @@ from typing import Any
 import akshare as ak
 import pandas as pd
 
+from backend.sources.fetch_result import SourceFetchResult
+
 logger = logging.getLogger(__name__)
 
 
@@ -51,23 +53,24 @@ def _transform_country(df: pd.DataFrame) -> list[dict[str, Any]]:
 
 
 class CpcaClient:
-    def get_country_data(self, data_type: str = "retail") -> list[dict[str, Any]]:
+    def get_country_data(self) -> SourceFetchResult:
         try:
             df = ak.car_market_country_cpca()
             records = _transform_country(df)
 
             result = []
             for r in records:
-                result.append({
-                    "year": r["year"],
-                    "month": r["month"],
-                    "origin": r["国别"],
-                    "sales_volume": r["销量"],
-                    "data_type": data_type,
-                })
+                result.append(
+                    {
+                        "year": r["year"],
+                        "month": r["month"],
+                        "origin": r["国别"],
+                        "sales_volume": r["销量"],
+                    }
+                )
 
-            logger.info("获取国别数据成功, data_type=%s, 记录数=%s", data_type, len(result))
-            return result
+            logger.info("获取国别数据成功, 记录数=%s", len(result))
+            return SourceFetchResult(records=result, ok=True)
         except Exception as e:
             logger.error("获取国别数据失败: %s", e)
-            return []
+            return SourceFetchResult(records=[], ok=False, errors=[str(e)])

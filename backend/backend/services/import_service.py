@@ -2,9 +2,10 @@ import logging
 from importlib.resources import files
 
 import yaml
-from sqlmodel import Session, select
 from sqlalchemy import text
+from sqlmodel import Session, select
 
+from backend.core.exceptions import AppError, ExternalSourceAppError
 from backend.models.brand import BrandMeta, BrandSales
 from backend.models.origin import OriginShareData
 from backend.models.overall import SalesData
@@ -52,10 +53,13 @@ META_DATA_PATH = files("backend") / "meta_data.yaml"
 def refresh_brand_meta(db: Session) -> dict:
     try:
         if not META_DATA_PATH.exists():
-            raise FileNotFoundError(f"meta_data.yaml 不存在: {META_DATA_PATH}")
+            raise AppError(message=f"meta_data.yaml 不存在: {META_DATA_PATH}")
 
         with open(META_DATA_PATH, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
+
+        if not isinstance(data, dict):
+            raise AppError(message="meta_data.yaml 格式错误，根节点必须是对象")
 
         brands: dict = data.get("brands", {})
         if not brands:
@@ -98,32 +102,31 @@ def refresh_brand_meta(db: Session) -> dict:
             "total": len(brands),
             "status": "success",
         }
-    except Exception as e:
-        logger.error("BrandMeta 刷新失败: %s", e)
+    except Exception:
+        logger.exception("BrandMeta 刷新失败")
         raise
 
 
 def refresh_sales_data(db: Session) -> dict:
     try:
-        overall_records = yiche_overall_client.fetch_overall_sales()
+        overall_fr = yiche_overall_client.fetch_overall_sales()
         overall_count = _batch_upsert(
             db,
             SalesData,
-            overall_records,
+            overall_fr.records,
             ["year", "month", "sales", "data_type", "date_type", "level_type"],
         )
 
         rows = db.exec(select(BrandMeta).where(BrandMeta.master_id.isnot(None))).all()
         brand_count = 0
+        brand_fr = None
         if rows:
             master_id_to_brand_id = {r.master_id: r.id for r in rows}
             master_ids = list(master_id_to_brand_id.keys())
-            raw_records = yiche_brand_client.fetch_brand_sales(master_ids)
+            brand_fr = yiche_brand_client.fetch_brand_sales(master_ids)
 
             normalized = []
-            for rec in raw_records:
-                if rec.get("data_type") == "wholesale":
-                    continue
+            for rec in brand_fr.records:
                 master_id = rec.get("master_id")
                 brand_id = master_id_to_brand_id.get(master_id)
                 if not brand_id:
@@ -156,41 +159,70 @@ def refresh_sales_data(db: Session) -> dict:
             )
 
         total_count = overall_count + brand_count
+
+        has_brand_job = bool(rows)
+        overall_ok = overall_fr.ok
+        brand_ok = True if not has_brand_job else (brand_fr is not None and brand_fr.ok)
+
+        if overall_ok and brand_ok:
+            refresh_status = "success"
+        elif not overall_ok and not brand_ok:
+            refresh_status = "failed"
+        else:
+            refresh_status = "partial_failure"
+
+        source_errors: dict[str, str | None] = {
+            "overall": overall_fr.error_summary(),
+            "brand": brand_fr.error_summary() if brand_fr else None,
+        }
+
         logger.info(
-            "销量数据刷新完成: 总体 %s 条, 品牌 %s 条", overall_count, brand_count
+            "销量数据刷新完成: 总体 %s 条, 品牌 %s 条, status=%s",
+            overall_count,
+            brand_count,
+            refresh_status,
         )
+        if refresh_status == "failed":
+            raise ExternalSourceAppError(
+                f"外部源全部失败: overall={source_errors['overall']}; brand={source_errors['brand']}"
+            )
         return {
             "overall_count": overall_count,
             "brand_count": brand_count,
             "records_count": total_count,
-            "status": "success",
+            "status": refresh_status,
+            "source_errors": source_errors,
         }
-    except Exception as e:
-        logger.error("销量数据刷新失败: %s", e)
+    except Exception:
+        logger.exception("销量数据刷新失败")
         raise
 
 
 def refresh_origin_data(db: Session) -> dict:
     try:
-        origin_records = cpca_client.get_country_data()
-        
-        # Remove data_type from origin_records if it exists, since we removed it from model
-        for rec in origin_records:
-            rec.pop("data_type", None)
-            
+        origin_fr = cpca_client.get_country_data()
+
         origin_count = _batch_upsert(
             db,
             OriginShareData,
-            origin_records,
+            origin_fr.records,
             ["year", "month", "origin", "sales_volume"],
         )
 
-        logger.info("国别数据刷新完成: %s 条", origin_count)
+        refresh_status = "success" if origin_fr.ok else "failed"
+        logger.info(
+            "国别数据刷新完成: %s 条, status=%s", origin_count, refresh_status
+        )
+        if refresh_status == "failed":
+            raise ExternalSourceAppError(
+                f"外部源失败: origin={origin_fr.error_summary()}"
+            )
         return {
             "origin_count": origin_count,
             "records_count": origin_count,
-            "status": "success",
+            "status": refresh_status,
+            "source_errors": {"origin": origin_fr.error_summary()},
         }
-    except Exception as e:
-        logger.error("国别数据刷新失败: %s", e)
+    except Exception:
+        logger.exception("国别数据刷新失败")
         raise

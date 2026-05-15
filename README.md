@@ -37,7 +37,7 @@
 | 数据类型 | 来源 | 采集方式 | 入库表 | 说明 |
 | --- | --- | --- | --- | --- |
 | 总体销量 | 易车销量趋势接口 | `YicheClient.fetch_all()` 拉取月度数据 | `sales_data` | 覆盖零售、产量口径，以及全部、新能源、纯电级别；字段会标准化为 `year`、`month`、`sales`、`data_type`、`date_type`、`level_type`。 |
-| 品牌销量 | 易车品牌销量历史接口 | `YicheClient.fetch_brand_sales()` 按品牌 `master_id` 分批拉取 | `brand_sales` | 当前入库时过滤批发口径，保留品牌维度下的零售、产量及新能源/纯电等月度记录。 |
+| 品牌销量 | 易车品牌销量历史接口 | `YicheClient.fetch_brand_sales()` 按品牌 `master_id` 分批拉取 | `brand_sales` | 仅零售、产量口径及新能源/纯电等月度记录（不采集批发口径）。 |
 | 品牌元数据 | 仓库内置 YAML | 读取 `backend/backend/meta_data.yaml` | `brand_meta` | 维护品牌中文名、英文标识与易车 `master_id` 映射，是品牌销量采集的基础数据。 |
 | 国别/车系占比 | 乘联会数据（通过 AkShare） | `CpcaClient.get_country_data()` 调用 `ak.car_market_country_cpca()` | `origin_share_data` | 用于自主、德系、日系、美系、欧系、韩系等车系/国别占比分析。 |
 

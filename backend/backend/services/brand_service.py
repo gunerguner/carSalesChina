@@ -1,5 +1,6 @@
 from sqlmodel import Session, select
 
+from backend.core.exceptions import NotFoundAppError, ValidationAppError
 from backend.models.brand import BrandMeta, BrandSales
 
 
@@ -22,13 +23,19 @@ def get_brand_trend_all_periods(
 ) -> list[dict]:
     names = [name.strip() for name in brand_names if name.strip()][:3]
     if not names:
-        return []
+        raise ValidationAppError("brand_names 不能为空")
+
+    if data_type not in {"retail", "production"}:
+        raise ValidationAppError("data_type 仅支持 retail 或 production")
 
     metas = db.exec(select(BrandMeta).where(BrandMeta.brand_name.in_(names))).all()
+    found_names = {meta.brand_name for meta in metas if meta.brand_name}
+    missing = [name for name in names if name not in found_names]
+    if missing:
+        raise NotFoundAppError(f"品牌不存在: {', '.join(missing)}")
+
     id_to_name = {meta.id: meta.brand_name for meta in metas}
     ids = list(id_to_name.keys())
-    if not ids:
-        return []
 
     rows = db.exec(
         select(BrandSales).where(

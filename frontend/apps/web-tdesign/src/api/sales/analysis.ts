@@ -30,18 +30,18 @@ export interface OriginShareTrendRecord extends AnalysisPeriodRecord {
 
 export interface NevShareTrendParams {
   energy_type?: string;
-  data_type?: 'production' | 'retail' | 'wholesale';
+  data_type?: 'production' | 'retail';
   granularity?: 'monthly' | 'yearly';
 }
 
 export interface NevBreakdownParams {
   energy_type?: string;
-  data_type?: 'production' | 'retail' | 'wholesale';
+  data_type?: 'production' | 'retail';
   granularity?: 'monthly' | 'yearly';
 }
 
 export interface OriginShareTrendParams {
-  data_type?: 'production' | 'retail' | 'wholesale';
+  data_type?: 'production' | 'retail';
   granularity?: 'monthly' | 'yearly';
 }
 
