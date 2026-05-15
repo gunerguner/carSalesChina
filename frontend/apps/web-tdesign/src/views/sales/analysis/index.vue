@@ -6,9 +6,8 @@ import { Card, Loading, TabPanel, Tabs } from 'tdesign-vue-next';
 import { message } from '#/adapter/tdesign';
 import { $t } from '#/locales';
 
-import NevBreakdownChart from './components/NevBreakdownChart.vue';
-import NevPenetrationChart from './components/NevPenetrationChart.vue';
 import NevPenetrationTable from './components/NevPenetrationTable.vue';
+import NevTrendLineChart from './components/NevTrendLineChart.vue';
 import OriginShareChart from './components/OriginShareChart.vue';
 import OriginShareTable from './components/OriginShareTable.vue';
 import { useAnalysisData } from './useAnalysisData';
@@ -41,12 +40,24 @@ watch(error, (value) => {
           destroy-on-hide
           value="nev"
         >
-          <Card :title="$t('sales.analysis.nev.penetrationChartTitle')" class="mb-4">
-            <NevPenetrationChart :data="nevShareTrend" />
-          </Card>
-          <Card :title="$t('sales.analysis.nev.breakdownChartTitle')" class="mb-4">
-            <NevBreakdownChart :data="nevBreakdown" />
-          </Card>
+          <div class="mb-4 flex gap-4">
+            <Card :title="$t('sales.analysis.nev.penetrationChartTitle')" class="flex-1">
+              <NevTrendLineChart
+                :data="nevShareTrend as any"
+                :label="$t('sales.analysis.nev.penetrationRateLabel')"
+                color="#5470c6"
+                value-key="nev_penetration_rate"
+              />
+            </Card>
+            <Card :title="$t('sales.analysis.nev.breakdownChartTitle')" class="flex-1">
+              <NevTrendLineChart
+                :data="nevBreakdown as any"
+                :label="$t('sales.analysis.nev.bevInNevTrendLabel')"
+                color="#91cc75"
+                value-key="bev_ratio"
+              />
+            </Card>
+          </div>
           <Card :title="$t('sales.analysis.nev.penetrationTitle')" class="mb-4">
             <NevPenetrationTable
               :breakdown-trend="nevBreakdown"

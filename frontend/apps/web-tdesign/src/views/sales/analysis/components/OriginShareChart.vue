@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { EchartsUIType } from '@vben/plugins/echarts';
+
 import type { OriginShareTrendRecord } from '#/api/sales/analysis';
 
 import { onMounted, ref, watch } from 'vue';
