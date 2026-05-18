@@ -1,0 +1,29 @@
+# 构建 context 为仓库根目录（docker compose -f docker/docker-compose.yml 使用 `context: ..`）时生效。
+# 缩小构建上下文、避免把本地依赖打进镜像。
+
+.git
+**/.git
+**/.DS_Store
+
+**/node_modules
+**/dist
+**/.turbo
+**/.cache
+**/.vite
+**/.output
+
+**/__pycache__
+**/*.py[cod]
+**/.venv
+**/venv
+**/.pytest_cache
+**/.mypy_cache
+
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+frontend/playground
+**/coverage
+**/*.log
