@@ -6,16 +6,15 @@ import type {
 
 import {
   formatSalesAxisLabel,
+  getChartPaletteColor,
   getEmptyChartOption,
   lineSeriesTooltipFormatter,
-} from '#/views/sales/utils/chart-utils';
+} from '#/utils/chart';
 import {
   formatQuarterPeriod,
   formatYearPeriod,
   getLocalizedMonthLabels,
-} from '#/views/sales/utils/period-utils';
-
-const COLORS = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de'];
+} from '#/utils/period';
 
 export type MarketTrendChartInput =
   | { data: MonthlyTrendRecord[]; kind: 'monthly' }
@@ -55,7 +54,7 @@ function buildMonthlyOption(data: MonthlyTrendRecord[], locale: string, t: Trans
       type: 'line' as const,
       data: yearDataMap.get(year),
       smooth: true,
-      itemStyle: { color: COLORS[i % COLORS.length] },
+      itemStyle: { color: getChartPaletteColor(i) },
     })),
   };
 }
@@ -88,7 +87,7 @@ function buildLineTrendOption(
         type: 'line' as const,
         smooth: true,
         data: seriesData,
-        itemStyle: { color: '#5470c6' },
+        itemStyle: { color: getChartPaletteColor(0) },
       },
     ],
   };

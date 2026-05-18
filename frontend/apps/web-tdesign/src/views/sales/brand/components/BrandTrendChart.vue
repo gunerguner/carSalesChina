@@ -1,26 +1,18 @@
 <script lang="ts" setup>
-import type { EchartsUIType } from '@vben/plugins/echarts';
+import type { BrandSeriesRecord } from '../types';
 
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed } from 'vue';
 
-import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
 import { preferences } from '@vben/preferences';
 
+import ChartCard from '#/components/ChartCard.vue';
 import { $t } from '#/locales';
 import {
+  BRAND_LINE_PALETTE_INDICES,
   formatSalesAxisLabel,
+  getChartPaletteColor,
   getEmptyChartOption,
-} from '#/views/sales/utils/chart-utils';
-
-interface BrandSeriesPoint {
-  sales: number;
-  time: string;
-}
-
-interface BrandSeriesRecord {
-  brand_name: string;
-  points: BrandSeriesPoint[];
-}
+} from '#/utils/chart';
 
 const props = defineProps<{
   data: BrandSeriesRecord[];
@@ -28,20 +20,17 @@ const props = defineProps<{
   timeLabels: string[];
 }>();
 
-const chartRef = ref<EchartsUIType>();
-const { renderEcharts } = useEcharts(chartRef);
-
-const COLORS = ['#5470c6', '#ee6666', '#73c0de'];
-
 const chartSeries = computed(() =>
   props.data.map((brand, index) => {
     const map = new Map<string, number>();
     for (const point of brand.points ?? []) {
       map.set(point.time, point.sales ?? 0);
     }
+    const paletteIndex =
+      BRAND_LINE_PALETTE_INDICES[index % BRAND_LINE_PALETTE_INDICES.length]!;
     return {
       data: props.timeLabels.map((time) => map.get(time) ?? 0),
-      itemStyle: { color: COLORS[index % COLORS.length] },
+      itemStyle: { color: getChartPaletteColor(paletteIndex) },
       name: brand.brand_name,
       smooth: true,
       type: 'line' as const,
@@ -49,18 +38,16 @@ const chartSeries = computed(() =>
   }),
 );
 
-function render() {
+const chartOption = computed(() => {
   if (props.loading) {
-    renderEcharts(getEmptyChartOption($t('common.loading')));
-    return;
+    return getEmptyChartOption($t('common.loading'));
   }
 
   if (props.data.length === 0 || props.timeLabels.length === 0) {
-    renderEcharts(getEmptyChartOption($t('sales.brand.trend.noData')));
-    return;
+    return getEmptyChartOption($t('sales.brand.trend.noData'));
   }
 
-  renderEcharts({
+  return {
     animation: false,
     grid: { bottom: '14%', containLabel: true, left: '3%', right: '4%', top: '8%' },
     legend: { bottom: 0, data: props.data.map((item) => item.brand_name) },
@@ -74,19 +61,10 @@ function render() {
       },
       type: 'value',
     },
-  });
-}
-
-watch(
-  [() => props.data, () => props.timeLabels, () => props.loading],
-  () => render(),
-  { deep: true },
-);
-onMounted(() => render());
+  };
+});
 </script>
 
 <template>
-  <div class="h-80 w-full">
-    <EchartsUI ref="chartRef" />
-  </div>
+  <ChartCard :option="chartOption" />
 </template>

@@ -1,51 +1,29 @@
 <script lang="ts" setup>
-import type { EchartsUIType } from '@vben/plugins/echarts';
-
 import type { OriginShareTrendRecord } from '#/api/sales/analysis';
 
-import { onMounted, ref, watch } from 'vue';
+import { computed } from 'vue';
 
-import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
-
+import ChartCard from '#/components/ChartCard.vue';
 import { $t } from '#/locales';
-import { getEmptyChartOption } from '#/views/sales/utils/chart-utils';
+import {
+  getEmptyChartOption,
+  ORIGIN_COLORS,
+  ORIGIN_KEYS,
+  type OriginShareKey,
+} from '#/utils/chart';
+import { toMonthKey } from '#/utils/period';
 
 const props = defineProps<{
   data: OriginShareTrendRecord[];
 }>();
 
-const chartRef = ref<EchartsUIType>();
-const { renderEcharts } = useEcharts(chartRef);
-
-const ORIGIN_KEYS = [
-  'domestic',
-  'german',
-  'japanese',
-  'american',
-  'european',
-  'korean',
-  'french',
-] as const;
-
-const ORIGIN_COLORS: Record<string, string> = {
-  domestic: '#5470c6',
-  german: '#91cc75',
-  japanese: '#fac858',
-  american: '#ee6666',
-  european: '#73c0de',
-  korean: '#3ba272',
-  french: '#9a6bef',
-};
-
-function render(data: OriginShareTrendRecord[]) {
+const chartOption = computed(() => {
+  const data = props.data;
   if (!data || data.length === 0) {
-    renderEcharts(getEmptyChartOption($t('sales.common.noData')));
-    return;
+    return getEmptyChartOption($t('sales.common.noData'));
   }
 
-  const timeLabels = data.map((item) =>
-    `${item.year}-${String(item.month).padStart(2, '0')}`
-  );
+  const timeLabels = data.map((item) => toMonthKey(item.year, item.month));
 
   const labels = {
     domestic: $t('sales.analysis.origin.domesticLabel'),
@@ -56,7 +34,7 @@ function render(data: OriginShareTrendRecord[]) {
     korean: $t('sales.analysis.origin.koreanLabel'),
     french: $t('sales.analysis.origin.frenchLabel'),
   };
-  const series = ORIGIN_KEYS.map((key) => ({
+  const series = ORIGIN_KEYS.map((key: OriginShareKey) => ({
     name: labels[key],
     type: 'bar' as const,
     stack: 'total',
@@ -65,7 +43,7 @@ function render(data: OriginShareTrendRecord[]) {
     emphasis: { focus: 'series' as const },
   }));
 
-  renderEcharts({
+  return {
     animation: false,
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { data: Object.values(labels), bottom: 0, type: 'scroll' },
@@ -73,15 +51,10 @@ function render(data: OriginShareTrendRecord[]) {
     xAxis: { type: 'category', data: timeLabels },
     yAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%' } },
     series,
-  });
-}
-
-watch(() => props.data, render);
-onMounted(() => render(props.data));
+  };
+});
 </script>
 
 <template>
-  <div class="h-80 w-full">
-    <EchartsUI ref="chartRef" />
-  </div>
+  <ChartCard :option="chartOption" />
 </template>

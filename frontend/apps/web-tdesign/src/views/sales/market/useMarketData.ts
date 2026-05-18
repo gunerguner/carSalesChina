@@ -2,6 +2,8 @@ import type { RawSalesRecord } from '#/api/sales/market';
 
 import { computed, ref } from 'vue';
 
+import { createFetchOnceController } from '#/composables/useFetchOnce';
+
 import {
   buildMarketSeriesCache,
   calcMonthlyDetail,
@@ -20,9 +22,7 @@ import {
 export type { MonthlyDetailRecord, MonthlyTrendRecord, QuarterlyTrendRecord, YearlyTrendRecord };
 
 const rawData = ref<RawSalesRecord[]>([]);
-const loading = ref(false);
-let hasFetched = false;
-let pendingFetch: null | Promise<void> = null;
+const { execute, loading } = createFetchOnceController();
 
 export function useMarketData() {
   const seriesCacheIndex = computed(() => {
@@ -30,27 +30,14 @@ export function useMarketData() {
   });
 
   async function fetchAll(force = false) {
-    if (!force && hasFetched) {
-      return;
-    }
-    if (pendingFetch) {
-      return pendingFetch;
-    }
-
-    pendingFetch = (async () => {
-    loading.value = true;
-    try {
-      rawData.value = await fetchMarketRawData();
-      hasFetched = true;
-    } catch {
-      rawData.value = [];
-    } finally {
-      loading.value = false;
-      pendingFetch = null;
-    }
-    })();
-
-    return pendingFetch;
+    return execute(force, async () => {
+      try {
+        rawData.value = await fetchMarketRawData();
+      } catch {
+        rawData.value = [];
+        throw new Error('market_fetch_failed');
+      }
+    });
   }
 
   /** 月度趋势（近 N 年），供折线图使用 */

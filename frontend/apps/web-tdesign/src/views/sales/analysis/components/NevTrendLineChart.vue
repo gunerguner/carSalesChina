@@ -1,42 +1,33 @@
 <script lang="ts" setup>
-import type { EchartsUIType } from '@vben/plugins/echarts';
-
 import type { AnalysisPeriodRecord } from '#/api/sales/analysis';
 
-import { onMounted, ref, watch } from 'vue';
+import { computed } from 'vue';
 
-import { EchartsUI, useEcharts } from '@vben/plugins/echarts';
-
+import ChartCard from '#/components/ChartCard.vue';
 import { $t } from '#/locales';
-import { getEmptyChartOption } from '#/views/sales/utils/chart-utils';
-
-type DataRecord = AnalysisPeriodRecord & Record<string, null | number>;
+import { getEmptyChartOption } from '#/utils/chart';
+import { toMonthKey } from '#/utils/period';
 
 const props = defineProps<{
   color: string;
-  data: DataRecord[];
+  data: AnalysisPeriodRecord[];
   label: string;
   valueKey: string;
 }>();
 
-const chartRef = ref<EchartsUIType>();
-const { renderEcharts } = useEcharts(chartRef);
-
-function render(data: DataRecord[]) {
+const chartOption = computed(() => {
+  const data = props.data;
   if (!data || data.length === 0) {
-    renderEcharts(getEmptyChartOption($t('sales.common.noData')));
-    return;
+    return getEmptyChartOption($t('sales.common.noData'));
   }
 
-  const timeLabels = data.map(
-    (item) => `${item.year}-${String(item.month).padStart(2, '0')}`,
-  );
+  const timeLabels = data.map((item) => toMonthKey(item.year, item.month));
   const values = data.map((item) => {
-    const v = item[props.valueKey];
+    const v = (item as unknown as Record<string, null | number>)[props.valueKey];
     return v == null ? 0 : +v.toFixed(2);
   });
 
-  renderEcharts({
+  return {
     animation: false,
     tooltip: {
       trigger: 'axis',
@@ -63,15 +54,10 @@ function render(data: DataRecord[]) {
         itemStyle: { color: props.color },
       },
     ],
-  });
-}
-
-watch(() => props.data, render);
-onMounted(() => render(props.data));
+  };
+});
 </script>
 
 <template>
-  <div class="h-72 w-full">
-    <EchartsUI ref="chartRef" />
-  </div>
+  <ChartCard height-class="h-72" :option="chartOption" />
 </template>

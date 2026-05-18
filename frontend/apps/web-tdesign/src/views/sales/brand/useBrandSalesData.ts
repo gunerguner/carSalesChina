@@ -1,10 +1,13 @@
+import type { BrandSeriesRecord } from './types';
+
 import { computed, ref } from 'vue';
 
 import {
   type BrandTrendAllPeriodsRecord,
   getBrandTrendAllPeriodsApi,
 } from '#/api/sales/brand';
-import { toMonthKey } from '#/views/sales/utils/period-utils';
+import { createGenerationTracker } from '#/composables/useFetchOnce';
+import { toMonthKey } from '#/utils/period';
 
 type DataType = 'production' | 'retail';
 
@@ -12,16 +15,6 @@ type DataType = 'production' | 'retail';
 export type BrandTrendGranularity = 'recentTwoYears' | 'recentYear' | 'yearly';
 
 type BrandRawRecord = BrandTrendAllPeriodsRecord;
-
-interface BrandSeriesPoint {
-  sales: number;
-  time: string;
-}
-
-interface BrandSeriesRecord {
-  brand_name: string;
-  points: BrandSeriesPoint[];
-}
 
 /** 当前接口返回的所有品牌中，有数据的最晚一个年月（不跟系统日历对齐，避免多出库里没有的月份） */
 function getLatestMonthFromRawData(data: BrandRawRecord[]): null | { month: number; year: number } {
@@ -59,7 +52,7 @@ const granularity = ref<BrandTrendGranularity>('recentYear');
 const dataType = ref<DataType>('retail');
 const rawData = ref<BrandRawRecord[]>([]);
 const rawDataCache = new Map<string, BrandRawRecord[]>();
-let fetchGeneration = 0;
+const requestGen = createGenerationTracker();
 
 function getCacheKey() {
   const brandsKey = [...selectedBrands.value].toSorted().join(',');
@@ -69,7 +62,7 @@ function getCacheKey() {
 export function useBrandSalesData() {
   async function fetchRawData(force = false) {
     if (selectedBrands.value.length === 0) {
-      fetchGeneration += 1;
+      requestGen.next();
       error.value = null;
       rawData.value = [];
       loading.value = false;
@@ -86,7 +79,7 @@ export function useBrandSalesData() {
       }
     }
 
-    const requestGeneration = ++fetchGeneration;
+    const requestId = requestGen.next();
     const requestBrandNames = selectedBrands.value.join(',');
     const requestDataType = dataType.value;
     return (async () => {
@@ -99,7 +92,7 @@ export function useBrandSalesData() {
         });
         const normalized = Array.isArray(result) ? result : [];
         if (
-          requestGeneration !== fetchGeneration ||
+          !requestGen.matches(requestId) ||
           requestKey !== getCacheKey()
         ) {
           return;
@@ -107,14 +100,14 @@ export function useBrandSalesData() {
         rawData.value = normalized;
         rawDataCache.set(requestKey, normalized);
       } catch (error_) {
-        if (requestGeneration !== fetchGeneration) {
+        if (!requestGen.matches(requestId)) {
           return;
         }
         error.value = 'failed_to_load_brand_sales_data';
         console.error('[useBrandSalesData] fetchRawData failed', error_);
         rawData.value = [];
       } finally {
-        if (requestGeneration === fetchGeneration) {
+        if (requestGen.matches(requestId)) {
           loading.value = false;
         }
       }

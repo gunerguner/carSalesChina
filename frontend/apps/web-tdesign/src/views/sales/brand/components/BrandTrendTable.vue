@@ -1,22 +1,14 @@
 <script lang="ts" setup>
 import type { PrimaryTableCol } from 'tdesign-vue-next';
 
+import type { BrandSeriesRecord } from '../types';
+
 import { computed } from 'vue';
 
 import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
-import { formatNumberCell } from '#/views/sales/utils/table-cell-formatters';
-
-interface BrandSeriesPoint {
-  sales: number;
-  time: string;
-}
-
-interface BrandSeriesRecord {
-  brand_name: string;
-  points: BrandSeriesPoint[];
-}
+import { formatNumberCell } from '#/utils/format';
 
 const props = defineProps<{
   data: BrandSeriesRecord[];

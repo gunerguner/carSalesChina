@@ -6,9 +6,8 @@ import { computed } from 'vue';
 import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
-import { toMonthKey } from '#/views/sales/utils/period-utils';
-import { toYearMonthSortKey } from '#/views/sales/utils/sort-utils';
-import { formatPercentCell } from '#/views/sales/utils/table-cell-formatters';
+import { formatPercentCell } from '#/utils/format';
+import { toMonthKey, toYearMonthSortKey } from '#/utils/period';
 
 const props = defineProps<{
   data: OriginShareTrendRecord[];

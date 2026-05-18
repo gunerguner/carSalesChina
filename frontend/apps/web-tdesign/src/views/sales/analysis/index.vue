@@ -5,6 +5,7 @@ import { Card, Loading, TabPanel, Tabs } from 'tdesign-vue-next';
 
 import { message } from '#/adapter/tdesign';
 import { $t } from '#/locales';
+import { getChartPaletteColor } from '#/utils/chart';
 
 import NevPenetrationTable from './components/NevPenetrationTable.vue';
 import NevTrendLineChart from './components/NevTrendLineChart.vue';
@@ -43,17 +44,17 @@ watch(error, (value) => {
           <div class="mb-4 flex gap-4">
             <Card :title="$t('sales.analysis.nev.penetrationChartTitle')" class="flex-1">
               <NevTrendLineChart
-                :data="nevShareTrend as any"
+                :data="nevShareTrend"
                 :label="$t('sales.analysis.nev.penetrationRateLabel')"
-                color="#5470c6"
+                :color="getChartPaletteColor(0)"
                 value-key="nev_penetration_rate"
               />
             </Card>
             <Card :title="$t('sales.analysis.nev.breakdownChartTitle')" class="flex-1">
               <NevTrendLineChart
-                :data="nevBreakdown as any"
+                :data="nevBreakdown"
                 :label="$t('sales.analysis.nev.bevInNevTrendLabel')"
-                color="#91cc75"
+                :color="getChartPaletteColor(1)"
                 value-key="bev_ratio"
               />
             </Card>

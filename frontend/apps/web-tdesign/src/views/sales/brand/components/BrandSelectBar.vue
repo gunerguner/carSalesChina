@@ -6,10 +6,10 @@ import { ref, watch } from 'vue';
 import { RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
 
 import { message } from '#/adapter/tdesign';
-import { type BrandMetaItem, getBrandMetaAllApi } from '#/api/sales/brand';
 import { $t } from '#/locales';
 
 import { DEFAULT_SELECTED_BRAND_NAMES } from '../brand-defaults';
+import { useBrandMetaAll } from '../useBrandMetaAll';
 
 type DataType = 'production' | 'retail';
 
@@ -26,10 +26,9 @@ const emit = defineEmits<{
 const granularity = ref<BrandTrendGranularity>('recentYear');
 const dataType = ref<DataType>('retail');
 const selectedBrands = ref<string[]>([...DEFAULT_SELECTED_BRAND_NAMES]);
-const brandOptions = ref<{ label: string; value: string }[]>([]);
-const brandLoading = ref(false);
 const brandOptionsLoaded = ref(false);
-let brandOptionsInitialized = false;
+
+const { brandOptions, brandMetaLoading, ensureLoaded } = useBrandMetaAll();
 
 function emitFilterChange() {
   emit('change', {
@@ -39,22 +38,10 @@ function emitFilterChange() {
   });
 }
 
-async function fetchBrandOptions() {
-  if (brandOptionsInitialized) {
-    brandOptionsLoaded.value = true;
-    emitFilterChange();
-    return;
-  }
+async function initializeFromMeta() {
   brandOptionsLoaded.value = false;
-  brandLoading.value = true;
   try {
-    const list = await getBrandMetaAllApi();
-    brandOptions.value = Array.isArray(list)
-      ? list.map((item: BrandMetaItem) => ({
-          label: item.brand_name,
-          value: item.brand_name,
-        }))
-      : [];
+    await ensureLoaded();
     const allowed = new Set(brandOptions.value.map((o) => o.value));
     const matched = DEFAULT_SELECTED_BRAND_NAMES.filter((name) =>
       allowed.has(name),
@@ -67,14 +54,11 @@ async function fetchBrandOptions() {
       selectedBrands.value = next;
     }
   } catch (error) {
-    brandOptions.value = [];
     selectedBrands.value = [];
-    console.error('[BrandSelectBar] fetchBrandOptions failed', error);
+    console.error('[BrandSelectBar] ensureLoaded failed', error);
     message.error($t('common.requestFailed'));
   } finally {
-    brandOptionsInitialized = true;
     brandOptionsLoaded.value = true;
-    brandLoading.value = false;
     emitFilterChange();
   }
 }
@@ -100,7 +84,7 @@ watch(
   { deep: true },
 );
 
-fetchBrandOptions();
+initializeFromMeta();
 </script>
 
 <template>
@@ -110,7 +94,7 @@ fetchBrandOptions();
       <Select
         :value="selectedBrands"
         :options="brandOptions"
-        :loading="brandLoading"
+        :loading="brandMetaLoading"
         :placeholder="$t('sales.brand.trend.selectPlaceholder')"
         multiple
         :max="3"
