@@ -80,11 +80,9 @@ Thumbs.db
 # Claude IDE
 .claude/
 
-# Design docs
-design/
-
-# Documentation
-docs/
+# 仓库根目录的设计文档 / 说明文档（勿写 design/、docs/，会误伤 frontend 里的 @vben-core/design 等包）
+/design/
+/docs/
 
 # Logs
 *.log
