@@ -51,6 +51,7 @@ cd carSales
 
 2. 编辑 `docker/.env`，至少设置：
 
+   - **`COMPOSE_PROJECT_NAME`**：默认 `carsales`（`.env.example` 已给出）。与 **stockManager** 等同机部署时**勿删**；与 stockManager 的 `stockmanager` 区分开，避免两套栈互相顶替。
    - `MYSQL_ROOT_PASSWORD`
    - `DB_PASSWORD`（与 `MYSQL_USER` / `MYSQL_DATABASE` 对应的应用用户密码）
 
