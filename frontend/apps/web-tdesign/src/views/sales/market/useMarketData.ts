@@ -52,10 +52,10 @@ export function useMarketData() {
 
   /**
    * 季度聚合（环比：上一季度，同比：去年同期季度）。
-   * 先用全量原始数据汇总，再按年过滤展示（与月度趋势相同的近 N 年窗口）。
+   * 先用全量原始数据汇总，再取最近 N 个季度展示（默认 12）。
    */
-  function getQuarterlyTrend(levelType: string, dataType: string, years = 3): QuarterlyTrendRecord[] {
-    return calcQuarterlyTrend(getSeriesCache(seriesCacheIndex, levelType, dataType), years);
+  function getQuarterlyTrend(levelType: string, dataType: string, quarters = 12): QuarterlyTrendRecord[] {
+    return calcQuarterlyTrend(getSeriesCache(seriesCacheIndex, levelType, dataType), quarters);
   }
 
   /** 年度聚合（含同比），供年度柱状图和年度汇总表使用 */

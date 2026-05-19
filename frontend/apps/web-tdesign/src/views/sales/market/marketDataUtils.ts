@@ -153,10 +153,8 @@ export function calcMonthlyDetail(cache: SeriesCache): MonthlyDetailRecord[] {
     .toReversed();
 }
 
-export function calcQuarterlyTrend(cache: SeriesCache, years = 3): QuarterlyTrendRecord[] {
-  const startYear = getWindowStartYear(cache.maxYear, years);
-  if (startYear == null) return [];
-  const keys = cache.sortedQuarterKeys.filter((k) => Number(k.split('-')[0]) >= startYear);
+export function calcQuarterlyTrend(cache: SeriesCache, quarters = 12): QuarterlyTrendRecord[] {
+  const keys = cache.sortedQuarterKeys.slice(-quarters);
 
   const getQuarterSales = (year: number, quarter: number): null | number => {
     const key = `${year}-${quarter}`;
