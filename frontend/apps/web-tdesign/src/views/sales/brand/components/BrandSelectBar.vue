@@ -5,7 +5,6 @@ import { ref, watch } from 'vue';
 
 import { RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
 
-import { message } from '#/adapter/tdesign';
 import { $t } from '#/locales';
 
 import { DEFAULT_SELECTED_BRAND_NAMES } from '../brand-defaults';
@@ -56,7 +55,6 @@ async function initializeFromMeta() {
   } catch (error) {
     selectedBrands.value = [];
     console.error('[BrandSelectBar] ensureLoaded failed', error);
-    message.error($t('common.requestFailed'));
   } finally {
     brandOptionsLoaded.value = true;
     emitFilterChange();

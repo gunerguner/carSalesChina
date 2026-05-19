@@ -1,9 +1,6 @@
 <script lang="ts" setup>
-import { watch } from 'vue';
-
 import { Card } from 'tdesign-vue-next';
 
-import { message } from '#/adapter/tdesign';
 import { $t } from '#/locales';
 
 import BrandSelectBar from './components/BrandSelectBar.vue';
@@ -14,7 +11,6 @@ import { type BrandTrendGranularity, useBrandSalesData } from './useBrandSalesDa
 const {
   activeSeries,
   dataType,
-  error,
   fetchRawData,
   granularity,
   loading,
@@ -22,12 +18,6 @@ const {
   tableTimeLabelMaxCount,
   timeLabels,
 } = useBrandSalesData();
-
-watch(error, (value) => {
-  if (value) {
-    message.error($t('common.requestFailed'));
-  }
-});
 
 async function onFilterChange(payload: {
   brands: string[];

@@ -38,7 +38,7 @@ async function loadEnv<T = Record<string, string>>(
   match = 'VITE_GLOB_',
   confFiles = getConfFiles(),
 ) {
-  let envConfig = {};
+  let envConfig: Record<string, string> = {};
 
   for (const confFile of confFiles) {
     try {
@@ -58,6 +58,12 @@ async function loadEnv<T = Record<string, string>>(
   Object.keys(envConfig).forEach((key) => {
     if (!reg.test(key)) {
       Reflect.deleteProperty(envConfig, key);
+    }
+  });
+  // Docker/CI：.env 可能未打进构建上下文，以 process.env 为准（与 Vite 行为一致）
+  Object.keys(process.env).forEach((key) => {
+    if (reg.test(key) && process.env[key] !== undefined) {
+      envConfig[key] = process.env[key] as string;
     }
   });
   return envConfig as T;

@@ -1,9 +1,8 @@
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 
 import { Card, Loading, TabPanel, Tabs } from 'tdesign-vue-next';
 
-import { message } from '#/adapter/tdesign';
 import { $t } from '#/locales';
 import { getChartPaletteColor } from '#/utils/chart';
 
@@ -15,16 +14,10 @@ import { useAnalysisData } from './useAnalysisData';
 
 const activeTab = ref('nev');
 
-const { error, loading, fetchAll, nevShareTrend, nevBreakdown, originShareTrend } =
+const { loading, fetchAll, nevShareTrend, nevBreakdown, originShareTrend } =
   useAnalysisData();
 
 onMounted(() => fetchAll());
-
-watch(error, (value) => {
-  if (value) {
-    message.error($t('common.requestFailed'));
-  }
-});
 </script>
 
 <template>

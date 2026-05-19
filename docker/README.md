@@ -210,9 +210,32 @@ location / {
 }
 ```
 
-## 前端 API 基址
+## 环境变量：用哪一份？
 
-默认通过构建参数 `VITE_GLOB_API_URL=/api` 注入（可在 `docker/.env` 中覆盖），与容器内 `nginx.conf` 的 `/api` 反代一致。
+| 文件 | 谁读 | 说明 |
+|------|------|------|
+| **`docker/.env`** | `docker compose` | MySQL 密码、端口、`VITE_*` 构建参数等。**部署以它为准。** |
+| **`backend/.env`** | 本机 `uvicorn`/IDE 直跑后端 | **容器内 backend 不用此文件**，由 compose 注入 `DB_HOST=mysql` 等。 |
+| **`frontend/apps/web-tdesign/.env*`** | 本地 `pnpm dev` / 非 Docker 构建 | Docker 构建时根目录 `.dockerignore` 会排除 `**/.env*`，前端配置靠 **`docker/.env` 的 `VITE_*` + 镜像 build-arg**。 |
+
+改 `docker/.env` 里的 `VITE_*` 后必须 **重新 build frontend**（仅 `up -d` 不会改已打进 JS 的配置）。
+
+## 前端 API 基址与标题
+
+默认 `VITE_GLOB_API_URL=/api`，与容器内 `nginx.conf` 反代一致。标题等见 `docker/.env.example` 中的 `VITE_APP_TITLE`。
+
+**自检（浏览器 F12 → Console）：**
+
+```js
+window._VBEN_ADMIN_PRO_APP_CONF_
+// 期望含 VITE_GLOB_API_URL: "/api"，勿为 mock 域名或空对象
+```
+
+**自检（服务器）：**
+
+```bash
+docker exec car-sales-frontend grep -o 'VITE_GLOB_API_URL[^,]*' /usr/share/nginx/html/_app.config.js | head -1
+```
 
 ## Gunicorn 调优（可选）
 
@@ -227,3 +250,4 @@ location / {
 - **MySQL 健康检查失败**：确认 `MYSQL_ROOT_PASSWORD` 与 `docker/.env` 一致，且首次初始化未因权限/脚本错误中断；可查看 `docker compose logs mysql`。
 - **后端连不上库**：确认 `DB_USER` / `DB_PASSWORD` / `DB_NAME` 与 MySQL 服务环境变量一致，且非 `root` 作为 `MYSQL_USER`（镜像限制）。
 - **前端接口 404**：确认请求路径以 `/api` 开头，与后端路由前缀一致。
+- **页面能开但接口全错、标题为空、反复弹「请求失败」**：多为 Docker 构建未注入 `VITE_*`（`.env` 未打进镜像）。确认 `docker/.env` 含 `VITE_GLOB_API_URL=/api`、`VITE_APP_TITLE`，执行 `build --no-cache frontend` 后 `up -d`；浏览器检查 `window._VBEN_ADMIN_PRO_APP_CONF_`。接口恢复后若仍双份弹窗，拉取最新前端（已去掉与全局拦截器重复的页面级 `message.error`）。
