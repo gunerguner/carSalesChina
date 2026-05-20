@@ -15,9 +15,9 @@ export function useAppConfig(
   const runtime = isProduction
     ? {
         ...envVars,
-        ...(typeof window !== 'undefined'
-          ? window._VBEN_ADMIN_PRO_APP_CONF_
-          : undefined),
+        ...(typeof window === 'undefined'
+          ? undefined
+          : window._VBEN_ADMIN_PRO_APP_CONF_),
       }
     : envVars;
 
