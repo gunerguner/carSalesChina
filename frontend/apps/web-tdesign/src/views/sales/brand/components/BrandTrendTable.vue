@@ -8,7 +8,7 @@ import { computed } from 'vue';
 import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
-import { formatNumberCell } from '#/utils/format';
+import { salesYoyTableCell } from '#/utils/format';
 
 const props = defineProps<{
   data: BrandSeriesRecord[];
@@ -31,24 +31,32 @@ const tableTimeLabels = computed(() => {
 
 const columns = computed<PrimaryTableCol[]>(() => {
   const base: PrimaryTableCol[] = [{ colKey: 'time', title: $t('sales.brand.trend.time'), width: 120 }];
+  const salesWithYoySuffix = $t('sales.brand.trend.salesWithYoy');
   for (const brand of props.data) {
+    const salesKey = `brand_${brand.brand_name}_sales`;
+    const yoyKey = `brand_${brand.brand_name}_yoy`;
     base.push({
-      cell: (_h: any, { row }: any) =>
-        formatNumberCell(row[`brand_${brand.brand_name}`]),
-      colKey: `brand_${brand.brand_name}`,
-      title: brand.brand_name,
-      width: 160,
+      cell: salesYoyTableCell(salesKey, yoyKey),
+      colKey: salesKey,
+      title: `${brand.brand_name}${salesWithYoySuffix}`,
+      width: 200,
     });
   }
   return base;
 });
 
 const tableData = computed(() => {
-  const brandMap = new Map<string, Map<string, number>>();
+  const brandMap = new Map<
+    string,
+    Map<string, { sales: number; yoyGrowth: null | number }>
+  >();
   for (const brand of props.data) {
-    const pointMap = new Map<string, number>();
+    const pointMap = new Map<string, { sales: number; yoyGrowth: null | number }>();
     for (const point of brand.points ?? []) {
-      pointMap.set(point.time, point.sales ?? 0);
+      pointMap.set(point.time, {
+        sales: point.sales ?? 0,
+        yoyGrowth: point.yoyGrowth ?? null,
+      });
     }
     brandMap.set(brand.brand_name, pointMap);
   }
@@ -56,9 +64,10 @@ const tableData = computed(() => {
   return tableTimeLabels.value.map((time) => {
     const row: Record<string, any> = { key: time, time };
     for (const brand of props.data) {
-      const sales = brandMap.get(brand.brand_name)?.get(time);
-      if (sales != null) {
-        row[`brand_${brand.brand_name}`] = sales;
+      const point = brandMap.get(brand.brand_name)?.get(time);
+      if (point != null) {
+        row[`brand_${brand.brand_name}_sales`] = point.sales;
+        row[`brand_${brand.brand_name}_yoy`] = point.yoyGrowth;
       }
     }
     return row;

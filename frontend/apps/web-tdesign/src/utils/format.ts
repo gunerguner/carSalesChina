@@ -48,6 +48,37 @@ export function growthPercentText(val: null | number | undefined): string {
   return formatPercentOrDash(val, 2);
 }
 
+export function formatSignedGrowthPercent(
+  val: null | number | undefined,
+  digits = 2,
+): string {
+  if (val == null) {
+    return '-';
+  }
+  const sign = val > 0 ? '+' : '';
+  return `${sign}${val.toFixed(digits)}%`;
+}
+
+/** TDesign table `cell`: "149,985（+10.38%）" with colored YoY from row `${salesKey}` / `${yoyKey}`. */
+export function salesYoyTableCell(salesKey: string, yoyKey: string) {
+  return (_: unknown, { row }: { row: Record<string, null | number | undefined> }) => {
+    const sales = row[salesKey];
+    const yoy = row[yoyKey];
+    const salesText = sales == null ? '-' : Number(sales).toLocaleString();
+    if (yoy == null) {
+      return salesText;
+    }
+    return h('span', [
+      salesText,
+      h(
+        'span',
+        { style: { color: growthColor(yoy), fontWeight: 500 } },
+        `（${formatSignedGrowthPercent(yoy)}）`,
+      ),
+    ]);
+  };
+}
+
 /** TDesign table `cell`: colored growth % from row `${key}Color` / `${key}Text` (see `growthTableRowFields`). */
 export function growthTableCell(key: string) {
   return (_: unknown, { row }: { row: Record<string, string> }) =>

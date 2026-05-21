@@ -59,6 +59,7 @@
             "production": "产量",
             "chartTitle": "品牌销量趋势",
             "tableTitle": "品牌销量明细",
+            "salesWithYoy": "（销量+同比）",
             "time": "时间",
             "noData": "请选择至少1个品牌"
         }

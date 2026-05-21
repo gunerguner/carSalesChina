@@ -59,6 +59,7 @@
       "production": "Production",
       "chartTitle": "Brand sales trend",
       "tableTitle": "Brand sales detail",
+      "salesWithYoy": " (Sales, YoY)",
       "time": "Time",
       "noData": "Select at least one brand"
     }

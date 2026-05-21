@@ -16,6 +16,22 @@ export type BrandTrendGranularity = 'recentTwoYears' | 'recentYear' | 'yearly';
 
 type BrandRawRecord = BrandTrendAllPeriodsRecord;
 
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+function calcYoyGrowth(sales: number, base: null | number | undefined): null | number {
+  if (base == null || base <= 0) {
+    return null;
+  }
+  return round2(((sales - base) / base) * 100);
+}
+
+function priorYearMonthKey(monthKey: string): string {
+  const [yearText, monthText] = monthKey.split('-');
+  return toMonthKey(Number(yearText) - 1, Number(monthText));
+}
+
 /** 当前接口返回的所有品牌中，有数据的最晚一个年月（不跟系统日历对齐，避免多出库里没有的月份） */
 function getLatestMonthFromRawData(data: BrandRawRecord[]): null | { month: number; year: number } {
   let maxYear = 0;
@@ -132,10 +148,14 @@ export function useBrandSalesData() {
       }
       return {
         brand_name: brand.brand_name,
-        points: recentKeys.map((time) => ({
-          time,
-          sales: pointMap.get(time) ?? 0,
-        })),
+        points: recentKeys.map((time) => {
+          const sales = pointMap.get(time) ?? 0;
+          return {
+            time,
+            sales,
+            yoyGrowth: calcYoyGrowth(sales, pointMap.get(priorYearMonthKey(time))),
+          };
+        }),
       };
     });
   });
@@ -151,10 +171,14 @@ export function useBrandSalesData() {
       const sortedYears = [...yearMap.keys()].toSorted((a, b) => a - b);
       return {
         brand_name: brand.brand_name,
-        points: sortedYears.map((year) => ({
-          time: String(year),
-          sales: yearMap.get(year) ?? 0,
-        })),
+        points: sortedYears.map((year) => {
+          const sales = yearMap.get(year) ?? 0;
+          return {
+            time: String(year),
+            sales,
+            yoyGrowth: calcYoyGrowth(sales, yearMap.get(year - 1)),
+          };
+        }),
       };
     });
   });
