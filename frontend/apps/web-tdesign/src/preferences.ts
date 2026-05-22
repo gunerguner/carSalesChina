@@ -12,6 +12,7 @@ export const overridesPreferences = defineOverridesPreferences({
     mode: 'auto',
   },
   widget: {
+    lockScreen: false,
     refresh: false,
     themeToggle: false,
   },

@@ -40,7 +40,7 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
       isBuild,
       license: true,
       mode,
-      nitroMock: !isBuild,
+      nitroMock: false,
       nitroMockOptions: {},
       print: !isBuild,
       printInfoMap: {
@@ -48,7 +48,7 @@ function defineApplicationConfig(userConfigPromise?: DefineApplicationOptions) {
       },
       pwa: true,
       pwaOptions: getDefaultPwaOptions(appTitle),
-      vxeTableLazyImport: true,
+      vxeTableLazyImport: false,
       ...envConfig,
       ...application,
     });

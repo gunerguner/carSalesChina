@@ -1,6 +1,6 @@
 # carSales Docker 部署
 
-所有 Compose 与镜像定义集中在 **`docker/`** 目录（在 Cursor 中可用 `@docker` 引用）。正式部署以本目录为准；`frontend/scripts/deploy/` 仅作历史/本地参考。
+所有 Compose 与镜像定义集中在 **`docker/`** 目录（在 Cursor 中可用 `@docker` 引用）。正式部署以本目录为准。
 
 ## 运行时版本
 

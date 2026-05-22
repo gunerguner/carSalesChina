@@ -69,7 +69,6 @@
 │   ├── internal/             # 构建、配置、脚手架内部包
 │   ├── package.json          # 前端根脚本
 │   └── pnpm-workspace.yaml   # pnpm workspace 配置
-├── lefthook.yml
 └── README.md
 ```
 
