@@ -26,6 +26,18 @@
         ".vitepress/dist/**"
       ]
     },
+    "@vben/web-tdesign#build": {
+      "dependsOn": [],
+      "outputs": [
+        "dist/**"
+      ]
+    },
+    "@vben/web-tdesign#build:analyze": {
+      "dependsOn": [],
+      "outputs": [
+        "dist/**"
+      ]
+    },
     "preview": {
       "dependsOn": [
         "^build"

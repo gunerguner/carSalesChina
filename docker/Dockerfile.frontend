@@ -24,7 +24,7 @@ ENV VITE_GLOB_API_URL=${VITE_GLOB_API_URL} \
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile \
-    && pnpm run build:tdesign
+    && pnpm run build
 
 FROM nginx:stable-alpine
 

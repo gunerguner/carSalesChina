@@ -62,7 +62,7 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 
 - 业务仅 **`apps/web-tdesign`**；`packages/`、`internal/` 为 Vben 模板公共层，非业务优先改动
 - 路径别名 `#/*` → `apps/web-tdesign/src/*`
-- 常用脚本（在 `frontend/`）：`pnpm dev:tdesign`、`pnpm build:tdesign`、`pnpm check:type`、`pnpm check`
+- 常用脚本（在 `frontend/`）：`pnpm dev:tdesign`、`pnpm build`（=`build:tdesign`）、`pnpm build:workspace`（全仓 Turbo）、`pnpm check:type`、`pnpm check`；构建说明见 `frontend/docs/build-performance.md`
 
 ## Dev vs Prod
 

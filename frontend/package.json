@@ -26,9 +26,10 @@
   "type": "module",
   "scripts": {
     "bootstrap": "pnpm install",
-    "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 turbo build",
-    "build:analyze": "turbo build:analyze",
-    "build:tdesign": "pnpm run build --filter=@vben/web-tdesign",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 pnpm -F @vben/web-tdesign run build",
+    "build:analyze": "cross-env NODE_OPTIONS=--max-old-space-size=8192 pnpm -F @vben/web-tdesign run build:analyze",
+    "build:tdesign": "pnpm run build",
+    "build:workspace": "cross-env NODE_OPTIONS=--max-old-space-size=8192 turbo build",
     "check": "pnpm run check:circular && pnpm run check:dep && pnpm run check:type && pnpm check:cspell",
     "check:circular": "vsh check-circular",
     "check:cspell": "cspell lint \"**/*.ts\" \"**/README.md\" \".changeset/*.md\" --no-progress",

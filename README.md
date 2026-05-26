@@ -148,7 +148,10 @@ pnpm dev:tdesign
 # 启动 TDesign 前端应用
 pnpm dev:tdesign
 
-# 构建 TDesign 前端应用
+# 构建业务前端（直打 Vite，约 5s；见 frontend/docs/build-performance.md）
+pnpm build
+
+# 与 pnpm build 相同（兼容旧命令）
 pnpm build:tdesign
 
 # 类型检查
@@ -257,6 +260,9 @@ curl -b /tmp/car-sales-cookies.txt \
 | `VITE_GLOB_API_URL` | `/api` | 接口基础地址 |
 | `VITE_NITRO_MOCK` | `false` | 是否开启 Nitro Mock |
 | `VITE_DEVTOOLS` | `false` | 是否开启 devtools |
+| `VITE_ARCHIVER` | `false` | 是否生成 `dist.zip`（建议关闭以加快构建） |
+| `VITE_COMPRESS` | `none` | 构建期 gzip/brotli（生产由 Nginx gzip，保持 none） |
+| `VITE_PWA` | `false` | 是否开启 PWA |
 | `VITE_INJECT_APP_LOADING` | `true` | 是否注入全局 loading |
 | `VITE_APP_TITLE` | `中国市场汽车销量` | 应用标题 |
 
