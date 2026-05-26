@@ -30,11 +30,15 @@ WORKDIR /app
 # 依赖层：仅 lock / workspace 清单变化时失效（turbo prune 的 out/json）
 COPY --from=pruner /app/out/json/ ./
 
+# out/json 仅有 package.json，无 stub 脚本；跳过 postinstall，待拷贝源码后再 stub
 RUN --mount=type=cache,id=carsales-pnpm-store,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --ignore-scripts
 
-# 源码层：业务代码变化时复用 node_modules，只重跑 build
+# 源码层：业务代码变化时复用 node_modules，只重跑 stub + build
 COPY --from=pruner /app/out/full/ ./
+
+RUN --mount=type=cache,id=carsales-pnpm-store,target=/pnpm/store \
+    pnpm -r run stub --if-present
 
 ARG VITE_GLOB_API_URL=/api
 ARG VITE_APP_TITLE=中国市场汽车销量

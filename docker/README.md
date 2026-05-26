@@ -250,8 +250,8 @@ docker exec car-sales-frontend grep -o 'VITE_GLOB_API_URL[^,]*' /usr/share/nginx
 `Dockerfile.frontend` 使用 **BuildKit**（Compose 默认开启）：
 
 1. **`turbo prune @vben/web-tdesign --docker`**：生成 `out/json`（仅 lock + 各 workspace 的 `package.json`）与 `out/full`（裁剪后的源码）。
-2. **依赖层**：`out/json` + `pnpm install`；仅当 `pnpm-lock.yaml` 或 workspace 依赖关系变化时失效（约数十秒）。
-3. **源码层**：`out/full` + `pnpm run build`；**只改 Vue/TS 业务代码**时通常只重跑 Vite 构建（约数秒～十几秒，见 `frontend/docs/build-performance.md`）。
+2. **依赖层**：`out/json` + `pnpm install --ignore-scripts`（避免仅有 `package.json` 时 postinstall `stub` 找不到 `scripts/`）；仅当 lock 变化时失效。
+3. **源码层**：`out/full` + `pnpm -r run stub` + `pnpm run build`；**只改 Vue/TS** 时 install 可缓存，多数只重跑 stub + Vite（见 `frontend/docs/build-performance.md`）。
 
 查看各步耗时：`docker build --progress=plain -f docker/Dockerfile.frontend .`（在仓库根执行）。勿滥用 `--no-cache`。
 
