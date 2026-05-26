@@ -25,5 +25,6 @@
 !**/.env.example
 
 frontend/playground
+frontend/out
 **/coverage
 **/*.log
