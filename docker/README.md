@@ -18,7 +18,7 @@
 |------|------|
 | `docker-compose.yml` | `mysql`、`backend`、`frontend` 三服务编排；`build.context` 为仓库根，`dockerfile` 为 `docker/Dockerfile.*` |
 | `Dockerfile.backend` | FastAPI + Gunicorn/Uvicorn Worker |
-| `Dockerfile.frontend` | pnpm 构建 `web-tdesign` + `nginx:stable-alpine` 托管静态资源 |
+| `Dockerfile.frontend` | `turbo prune` 拆依赖层 + pnpm store 缓存 + 构建 `web-tdesign` + `nginx:stable-alpine` |
 | `gunicorn.docker.conf.py` | 容器内 Gunicorn：监听 `0.0.0.0:8001`，日志输出 stdout/stderr |
 | `nginx.conf` | 前端容器监听 **8080**（非 80）；`/api` 反代至 `http://backend:8001` |
 | `.env.example` | 环境变量模板，复制为 `.env` 后修改 |
@@ -244,6 +244,18 @@ docker exec car-sales-frontend grep -o 'VITE_GLOB_API_URL[^,]*' /usr/share/nginx
 - `GUNICORN_WORKERS`（默认见 `gunicorn.docker.conf.py`，上限 4）
 - `GUNICORN_TIMEOUT`
 - `GUNICORN_LOG_LEVEL`
+
+## 前端镜像构建加速
+
+`Dockerfile.frontend` 使用 **BuildKit**（Compose 默认开启）：
+
+1. **`turbo prune @vben/web-tdesign --docker`**：生成 `out/json`（仅 lock + 各 workspace 的 `package.json`）与 `out/full`（裁剪后的源码）。
+2. **依赖层**：`out/json` + `pnpm install`；仅当 `pnpm-lock.yaml` 或 workspace 依赖关系变化时失效（约数十秒）。
+3. **源码层**：`out/full` + `pnpm run build`；**只改 Vue/TS 业务代码**时通常只重跑 Vite 构建（约数秒～十几秒，见 `frontend/docs/build-performance.md`）。
+
+查看各步耗时：`docker build --progress=plain -f docker/Dockerfile.frontend .`（在仓库根执行）。勿滥用 `--no-cache`。
+
+本地 `turbo prune` 产生的 `frontend/out/` 已加入 `.dockerignore`，不会打进构建上下文。
 
 ## 常见问题
 
