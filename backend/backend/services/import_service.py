@@ -1,16 +1,18 @@
 import logging
 from importlib.resources import files
+from typing import Any, cast
 
 import yaml
 from sqlalchemy import text
 from sqlmodel import Session, select
 
+from backend.common.types import BrandSalesRecord, BrandSalesUpsertRow
 from backend.core.exceptions import AppError, ExternalSourceAppError
 from backend.models.brand import BrandMeta, BrandSales
 from backend.models.origin import OriginShareData
 from backend.models.overall import SalesData
 from backend.sources.cpca_client import CpcaClient
-from backend.sources.yiche_client import YicheOverallClient, YicheBrandClient
+from backend.sources.yiche_client import YicheBrandClient, YicheOverallClient
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +24,7 @@ yiche_brand_client = YicheBrandClient()
 def _batch_upsert(
     db: Session,
     model: type,
-    records: list[dict],
+    records: list[dict[str, Any]],
     fields: list[str],
     batch_size: int = 500,
 ) -> int:
@@ -45,6 +47,35 @@ def _batch_upsert(
         db.commit()
         total += len(batch)
     return total
+
+
+def _refresh_status(overall_ok: bool, brand_ok: bool) -> str:
+    match (overall_ok, brand_ok):
+        case (True, True):
+            return "success"
+        case (False, False):
+            return "failed"
+        case _:
+            return "partial_failure"
+
+
+def _normalize_brand_records(
+    records: list[BrandSalesRecord],
+    master_id_to_brand_id: dict[int, int],
+) -> list[BrandSalesUpsertRow]:
+    return [
+        {
+            "year": rec["year"],
+            "month": rec["month"],
+            "brand_id": brand_id,
+            "sales_volume": rec.get("sales_volume"),
+            "data_type": rec.get("data_type", "retail"),
+            "date_type": rec.get("date_type", "monthly"),
+            "level_type": rec.get("level_type", "all"),
+        }
+        for rec in records
+        if (brand_id := master_id_to_brand_id.get(rec["master_id"]))
+    ]
 
 
 META_DATA_PATH = files("backend") / "meta_data.yaml"
@@ -125,23 +156,10 @@ def refresh_sales_data(db: Session) -> dict:
             master_ids = list(master_id_to_brand_id.keys())
             brand_fr = yiche_brand_client.fetch_brand_sales(master_ids)
 
-            normalized = []
-            for rec in brand_fr.records:
-                master_id = rec.get("master_id")
-                brand_id = master_id_to_brand_id.get(master_id)
-                if not brand_id:
-                    continue
-                normalized.append(
-                    {
-                        "year": rec["year"],
-                        "month": rec["month"],
-                        "brand_id": brand_id,
-                        "sales_volume": rec.get("sales_volume"),
-                        "data_type": rec.get("data_type", "retail"),
-                        "date_type": rec.get("date_type", "monthly"),
-                        "level_type": rec.get("level_type", "all"),
-                    }
-                )
+            normalized = _normalize_brand_records(
+                cast(list[BrandSalesRecord], brand_fr.records),
+                master_id_to_brand_id,
+            )
 
             brand_count = _batch_upsert(
                 db,
@@ -163,13 +181,7 @@ def refresh_sales_data(db: Session) -> dict:
         has_brand_job = bool(rows)
         overall_ok = overall_fr.ok
         brand_ok = True if not has_brand_job else (brand_fr is not None and brand_fr.ok)
-
-        if overall_ok and brand_ok:
-            refresh_status = "success"
-        elif not overall_ok and not brand_ok:
-            refresh_status = "failed"
-        else:
-            refresh_status = "partial_failure"
+        refresh_status = _refresh_status(overall_ok, brand_ok)
 
         source_errors: dict[str, str | None] = {
             "overall": overall_fr.error_summary(),

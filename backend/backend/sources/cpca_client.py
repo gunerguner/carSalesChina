@@ -5,6 +5,7 @@ from typing import Any
 import akshare as ak
 import pandas as pd
 
+from backend.common.types import OriginShareUpsertRow
 from backend.sources.fetch_result import SourceFetchResult
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,14 @@ def _parse_month(date_str: str) -> tuple[int | None, int]:
     return year, int(month_match.group(1))
 
 
+def _try_parse_month(date_str: str) -> tuple[int | None, int | None]:
+    try:
+        year, month = _parse_month(date_str)
+        return year, month
+    except ValueError:
+        return None, None
+
+
 def _to_float(value: Any) -> float | None:
     if pd.isna(value):
         return None
@@ -36,20 +45,41 @@ def _to_float(value: Any) -> float | None:
     return float(value)
 
 
-def _transform_country(df: pd.DataFrame) -> list[dict[str, Any]]:
-    records = []
-    for _, row in df.iterrows():
-        month_str = row["月份"]
-        if pd.isna(month_str):
-            continue
-        year, month = _parse_month(str(month_str))
-        if not year:
-            continue
-        for col in df.columns[1:]:
-            value = _to_float(row[col])
-            if value is not None:
-                records.append({"year": year, "month": month, "国别": col, "销量": value})
-    return records
+def _transform_country(df: pd.DataFrame) -> list[OriginShareUpsertRow]:
+    df = df.dropna(subset=["月份"])
+    if df.empty:
+        return []
+
+    parsed = df["月份"].astype(str).map(_try_parse_month)
+    work = df.copy()
+    work["year"] = parsed.map(lambda item: item[0])
+    work["month"] = parsed.map(lambda item: item[1])
+    work = work.dropna(subset=["year", "month"])
+    if work.empty:
+        return []
+
+    work["year"] = work["year"].astype(int)
+    work["month"] = work["month"].astype(int)
+
+    value_cols = [col for col in work.columns if col not in {"月份", "year", "month"}]
+    melted = work.melt(
+        id_vars=["year", "month"],
+        value_vars=value_cols,
+        var_name="origin",
+        value_name="sales_volume",
+    )
+    melted["sales_volume"] = melted["sales_volume"].map(_to_float)
+    melted = melted.dropna(subset=["sales_volume"])
+
+    return [
+        {
+            "year": int(row["year"]),
+            "month": int(row["month"]),
+            "origin": str(row["origin"]),
+            "sales_volume": float(row["sales_volume"]),
+        }
+        for row in melted.to_dict("records")
+    ]
 
 
 class CpcaClient:
@@ -58,19 +88,8 @@ class CpcaClient:
             df = ak.car_market_country_cpca()
             records = _transform_country(df)
 
-            result = []
-            for r in records:
-                result.append(
-                    {
-                        "year": r["year"],
-                        "month": r["month"],
-                        "origin": r["国别"],
-                        "sales_volume": r["销量"],
-                    }
-                )
-
-            logger.info("获取国别数据成功, 记录数=%s", len(result))
-            return SourceFetchResult(records=result, ok=True)
+            logger.info("获取国别数据成功, 记录数=%s", len(records))
+            return SourceFetchResult(records=records, ok=True)
         except Exception as e:
             logger.error("获取国别数据失败: %s", e)
             return SourceFetchResult(records=[], ok=False, errors=[str(e)])

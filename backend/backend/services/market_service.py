@@ -1,13 +1,10 @@
 from sqlmodel import Session, select
 
-from backend.core.exceptions import ValidationAppError
+from backend.common.types import MarketRawRow
 from backend.models.overall import SalesData
 
 
-def get_raw_market_data(db: Session, *, date_type: str = "monthly") -> list[dict]:
-    if date_type not in {"monthly", "yearly", "quarterly"}:
-        raise ValidationAppError("date_type 仅支持 monthly、quarterly、yearly")
-
+def get_raw_market_data(db: Session, *, date_type: str = "monthly") -> list[MarketRawRow]:
     rows = db.exec(
         select(SalesData)
         .where(SalesData.date_type == date_type)

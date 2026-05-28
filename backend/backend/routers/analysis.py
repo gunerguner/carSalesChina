@@ -2,11 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
 from backend.core.database import get_db
-from backend.schemas.analysis import (
-    NevBreakdownQuery,
-    NevShareTrendQuery,
-    OriginShareTrendQuery,
-)
+from backend.schemas.analysis import AnalysisTrendQuery
 from backend.schemas.response import success
 from backend.services import analysis_service
 
@@ -15,7 +11,7 @@ router = APIRouter(prefix="/api/v1/analysis", tags=["analysis"])
 
 @router.get("/nev-share/trend")
 def nev_share_trend(
-    query: NevShareTrendQuery = Depends(),
+    query: AnalysisTrendQuery = Depends(),
     db: Session = Depends(get_db),
 ):
     data = analysis_service.get_nev_share_trend(
@@ -28,7 +24,7 @@ def nev_share_trend(
 
 @router.get("/nev-breakdown")
 def nev_breakdown(
-    query: NevBreakdownQuery = Depends(),
+    query: AnalysisTrendQuery = Depends(),
     db: Session = Depends(get_db),
 ):
     data = analysis_service.get_nev_breakdown(
@@ -41,7 +37,7 @@ def nev_breakdown(
 
 @router.get("/origin-share/trend")
 def origin_share_trend(
-    query: OriginShareTrendQuery = Depends(),
+    query: AnalysisTrendQuery = Depends(),
     db: Session = Depends(get_db),
 ):
     data = analysis_service.get_origin_share_trend(

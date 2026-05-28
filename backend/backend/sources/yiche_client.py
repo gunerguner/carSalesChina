@@ -7,10 +7,11 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import date
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
+from backend.common.types import BrandSalesRecord, OverallSalesRecord
 from backend.sources.fetch_result import SourceFetchResult
 
 logger = logging.getLogger(__name__)
@@ -214,7 +215,7 @@ class YicheOverallClient:
             return [], f"{dim_tag}: {e}"
 
     @staticmethod
-    def _normalize_overall_row(raw: dict, dim: OverallFetchDim) -> Optional[dict]:
+    def _normalize_overall_row(raw: dict, dim: OverallFetchDim) -> OverallSalesRecord | None:
         sales_num = raw.get("salesNum")
         if sales_num is None:
             return None
@@ -238,16 +239,17 @@ class YicheOverallClient:
 
     def fetch_overall_sales(self) -> SourceFetchResult:
         """拉取总体销量；任一维度接口失败则 ok=False（仍合并已成功维度的数据）。"""
-        records: list[dict] = []
+        records: list[OverallSalesRecord] = []
         errors: list[str] = []
         for dim in OVERALL_FETCH_DIMS:
             raw_data, err = self._fetch_overall(dim.sale_type, dim.time_type, dim.level_type)
             if err:
                 errors.append(err)
-            for raw in raw_data:
-                normalized = self._normalize_overall_row(raw, dim)
-                if normalized:
-                    records.append(normalized)
+            records.extend(
+                normalized
+                for raw in raw_data
+                if (normalized := self._normalize_overall_row(raw, dim))
+            )
             logger.info(
                 "总体销量已拉取: saleType=%s, timeType=%s, levelType=%s, 记录数=%s",
                 dim.sale_type, dim.time_type, dim.level_type, len(raw_data),
@@ -304,13 +306,7 @@ class YicheBrandClient:
                 logger.warning("品牌销量 API 异常 (%s): %s", tag, msg)
                 return {}, f"{tag}: {msg}"
             series_list: list[list[dict]] = result.get("data") or []
-            return (
-                {
-                    master_ids[i]: series_list[i]
-                    for i in range(min(len(master_ids), len(series_list)))
-                },
-                None,
-            )
+            return dict(zip(master_ids, series_list)), None
         except Exception as e:
             logger.warning("品牌销量批量拉取失败 (%s): %s", tag, e)
             return {}, f"{tag}: {e}"
@@ -325,7 +321,7 @@ class YicheBrandClient:
         master_id: int,
         data_type: str,
         level_label: str,
-    ) -> Optional[dict]:
+    ) -> BrandSalesRecord | None:
         year = row.get("year")
         month = row.get("month")
         num = row.get("num")
@@ -375,20 +371,22 @@ class YicheBrandClient:
                     errors.append(err)
                 aggregated[label].update(partial)
 
-        records = []
+        records: list[BrandSalesRecord] = []
         for dim in BRAND_FETCH_DIMS:
-            label = dim.label()
-            brand_map = aggregated.get(label, {})
+            brand_map = aggregated.get(dim.label(), {})
             for master_id, series in brand_map.items():
-                for row in series:
-                    normalized = self._normalize_brand_row(
-                        row=row,
-                        master_id=master_id,
-                        data_type=dim.data_type,
-                        level_label=dim.level_label,
+                records.extend(
+                    normalized
+                    for row in series
+                    if (
+                        normalized := self._normalize_brand_row(
+                            row=row,
+                            master_id=master_id,
+                            data_type=dim.data_type,
+                            level_label=dim.level_label,
+                        )
                     )
-                    if normalized:
-                        records.append(normalized)
+                )
 
         ok = len(errors) == 0
         logger.info(

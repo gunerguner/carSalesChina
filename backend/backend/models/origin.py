@@ -1,5 +1,3 @@
-from typing import Optional
-
 from sqlmodel import SQLModel, Field
 from sqlalchemy import UniqueConstraint, Index, Column, Numeric, String
 
@@ -13,8 +11,8 @@ class OriginShareData(SQLModel, table=True):
         {"mysql_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     year: int
     month: int
     origin: str = Field(sa_column=Column(String(20), nullable=False))
-    sales_volume: float = Field(default=None, sa_column=Column(Numeric(15, 4)))
+    sales_volume: float | None = Field(default=None, sa_column=Column(Numeric(15, 4)))

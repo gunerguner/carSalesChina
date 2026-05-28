@@ -1,5 +1,3 @@
-from typing import Optional
-
 from sqlmodel import SQLModel, Field
 from sqlalchemy import UniqueConstraint, Index, Column, Numeric, String, Enum as SAEnum
 
@@ -10,10 +8,11 @@ class BrandMeta(SQLModel, table=True):
         UniqueConstraint("brand_name", name="uk_brand_name"),
     )
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     brand_name: str = Field(sa_column=Column(String(100), nullable=False))
-    brand_name_en: Optional[str] = Field(default=None, sa_column=Column(String(100)))
-    master_id: Optional[int] = Field(default=None)
+    brand_name_en: str | None = Field(default=None, sa_column=Column(String(100)))
+    master_id: int | None = Field(default=None)
+
 
 class BrandSales(SQLModel, table=True):
     __tablename__ = "brand_sales"
@@ -25,11 +24,11 @@ class BrandSales(SQLModel, table=True):
         Index("idx_brand_id", "brand_id"),
     )
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     year: int
     month: int
     brand_id: int = Field(foreign_key="brand_meta.id")
-    sales_volume: Optional[float] = Field(default=None, sa_column=Column(Numeric(15, 2)))
+    sales_volume: float | None = Field(default=None, sa_column=Column(Numeric(15, 2)))
     data_type: str = Field(default="retail", sa_column=Column(SAEnum("retail", "production"), default="retail"))
     date_type: str = Field(
         default="monthly",

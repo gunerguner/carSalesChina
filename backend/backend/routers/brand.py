@@ -22,9 +22,7 @@ def trend_all_periods(
 ):
     data = get_brand_trend_all_periods(
         db=db,
-        brand_names=query.brand_names.split(","),
+        brand_names=query.brand_names,
         data_type=query.data_type,
     )
     return success(data)
-
-

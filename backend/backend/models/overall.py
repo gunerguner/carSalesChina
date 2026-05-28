@@ -1,5 +1,3 @@
-from typing import Optional
-
 from sqlmodel import SQLModel, Field
 from sqlalchemy import UniqueConstraint, Column, Numeric, Enum as SAEnum
 
@@ -13,19 +11,19 @@ class SalesData(SQLModel, table=True):
         ),
     )
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     year: int
     month: int
-    sales: Optional[float] = Field(default=None, sa_column=Column(Numeric(15, 2)))
-    data_type: Optional[str] = Field(
+    sales: float | None = Field(default=None, sa_column=Column(Numeric(15, 2)))
+    data_type: str | None = Field(
         default="retail",
         sa_column=Column(SAEnum("retail", "production"), default="retail"),
     )
-    date_type: Optional[str] = Field(
+    date_type: str | None = Field(
         default="monthly",
         sa_column=Column(SAEnum("monthly", "quarterly", "yearly"), default="monthly"),
     )
-    level_type: Optional[str] = Field(
+    level_type: str | None = Field(
         default="all",
         sa_column=Column(SAEnum("all", "nev", "bev"), default="all"),
     )
