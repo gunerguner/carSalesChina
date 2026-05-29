@@ -11,8 +11,10 @@ class TrendAllPeriodsQuery(BaseModel):
     @classmethod
     def split_brand_names(cls, value: str | list[str]) -> list[str]:
         if isinstance(value, str):
-            names = [name.strip() for name in value.split(",") if name.strip()][:3]
-            if not names:
-                raise ValueError("brand_names 不能为空")
-            return names
-        return value[:3]
+            parts = value
+        else:
+            parts = ",".join(str(item) for item in value)
+        names = [name.strip() for name in parts.split(",") if name.strip()][:3]
+        if not names:
+            raise ValueError("brand_names 不能为空")
+        return names

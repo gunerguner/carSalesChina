@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
 from backend.core.database import get_db
@@ -17,7 +19,7 @@ def meta_all(db: Session = Depends(get_db)):
 
 @router.get("/trend-all-periods")
 def trend_all_periods(
-    query: TrendAllPeriodsQuery = Depends(),
+    query: Annotated[TrendAllPeriodsQuery, Query()],
     db: Session = Depends(get_db),
 ):
     data = get_brand_trend_all_periods(
