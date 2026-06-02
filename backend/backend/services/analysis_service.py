@@ -45,6 +45,23 @@ def _trend_rows(
     return [build_entry(key, period_data[key]) for key in sorted(period_data)]
 
 
+def _sales_trend_rows(
+    db: Session,
+    *,
+    years: int,
+    levels: tuple[str, ...],
+    granularity: Granularity,
+    build_entry: Callable[[PeriodKey, dict[str, float]], dict[str, Any]],
+) -> list[dict[str, Any]]:
+    period_data = _sales_by_period_and_level(
+        db,
+        start_year=_start_year(years),
+        levels=levels,
+        granularity=granularity,
+    )
+    return _trend_rows(period_data, build_entry=build_entry)
+
+
 def _sales_by_period_and_level(
     db: Session,
     *,
@@ -78,13 +95,6 @@ def _sales_by_period_and_level(
 def get_nev_share_trend(
     db: Session, years: int, granularity: Granularity
 ) -> list[dict[str, Any]]:
-    period_data = _sales_by_period_and_level(
-        db,
-        start_year=_start_year(years),
-        levels=("all", "nev"),
-        granularity=granularity,
-    )
-
     def build_entry(key: PeriodKey, levels: dict[str, float]) -> dict[str, Any]:
         total = levels.get("all", 0)
         nev = levels.get("nev", 0)
@@ -95,20 +105,19 @@ def get_nev_share_trend(
             "nev_sales": nev,
         }
 
-    return _trend_rows(period_data, build_entry=build_entry)
+    return _sales_trend_rows(
+        db,
+        years=years,
+        levels=("all", "nev"),
+        granularity=granularity,
+        build_entry=build_entry,
+    )
 
 
 def get_nev_breakdown(
     db: Session, years: int, granularity: Granularity
 ) -> list[dict[str, Any]]:
     """同期纯电占新能源比例：bev / nev；nev、bev 为易车口径下的新能源、纯电级别销量。"""
-    period_data = _sales_by_period_and_level(
-        db,
-        start_year=_start_year(years),
-        levels=("nev", "bev"),
-        granularity=granularity,
-    )
-
     def build_entry(key: PeriodKey, levels: dict[str, float]) -> dict[str, Any]:
         nev = levels.get("nev", 0)
         bev = levels.get("bev", 0)
@@ -124,7 +133,13 @@ def get_nev_breakdown(
             "hybrid_ratio": 0,
         }
 
-    return _trend_rows(period_data, build_entry=build_entry)
+    return _sales_trend_rows(
+        db,
+        years=years,
+        levels=("nev", "bev"),
+        granularity=granularity,
+        build_entry=build_entry,
+    )
 
 
 def get_origin_share_trend(

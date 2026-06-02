@@ -43,3 +43,16 @@ def handle_try_catch_action(
             raise
 
     return wrapper
+
+
+def handle_success_response(
+    func: Callable[P, R | Awaitable[R]],
+) -> Callable[P, Awaitable[Any]]:
+    @wraps(func)
+    async def wrapper(*args: P.args, **kwargs: P.kwargs) -> Any:
+        result = func(*args, **kwargs)
+        if inspect.isawaitable(result):
+            result = await result
+        return success(result)
+
+    return wrapper

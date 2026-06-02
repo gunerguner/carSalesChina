@@ -1,11 +1,11 @@
-from typing import Literal
-
 from pydantic import BaseModel, Field, field_validator
+
+from backend.common.types import DataType
 
 
 class TrendAllPeriodsQuery(BaseModel):
     brand_names: list[str] = Field(...)
-    data_type: Literal["retail", "production"] = "retail"
+    data_type: DataType = "retail"
 
     @field_validator("brand_names", mode="before")
     @classmethod

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any
 
-Granularity = Literal["monthly", "yearly"]
+from backend.common.types import Granularity
 
 
 @dataclass(frozen=True, slots=True, order=True)

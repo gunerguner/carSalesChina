@@ -1,50 +1,49 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
-from sqlmodel import Session
+from fastapi import APIRouter, Query
 
-from backend.core.database import get_db
+from backend.core.decorators import handle_success_response
+from backend.core.deps import DbSession
 from backend.schemas.analysis import AnalysisTrendQuery
-from backend.schemas.response import success
 from backend.services import analysis_service
 
 router = APIRouter(prefix="/api/v1/analysis", tags=["analysis"])
 
 
 @router.get("/nev-share/trend")
+@handle_success_response
 def nev_share_trend(
     query: Annotated[AnalysisTrendQuery, Query()],
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
-    data = analysis_service.get_nev_share_trend(
+    return analysis_service.get_nev_share_trend(
         db=db,
         years=query.years,
         granularity=query.granularity,
     )
-    return success(data)
 
 
 @router.get("/nev-breakdown")
+@handle_success_response
 def nev_breakdown(
     query: Annotated[AnalysisTrendQuery, Query()],
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
-    data = analysis_service.get_nev_breakdown(
+    return analysis_service.get_nev_breakdown(
         db=db,
         years=query.years,
         granularity=query.granularity,
     )
-    return success(data)
 
 
 @router.get("/origin-share/trend")
+@handle_success_response
 def origin_share_trend(
     query: Annotated[AnalysisTrendQuery, Query()],
-    db: Session = Depends(get_db),
+    db: DbSession,
 ):
-    data = analysis_service.get_origin_share_trend(
+    return analysis_service.get_origin_share_trend(
         db=db,
         years=query.years,
         granularity=query.granularity,
     )
-    return success(data)

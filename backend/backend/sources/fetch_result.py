@@ -18,3 +18,6 @@ class SourceFetchResult:
         head = self.errors[:max_items]
         suffix = "…" if len(self.errors) > max_items else ""
         return "; ".join(head) + suffix
+
+    def to_error_map(self, source_name: str, max_items: int = 5) -> dict[str, str | None]:
+        return {source_name: self.error_summary(max_items=max_items)}

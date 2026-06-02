@@ -9,8 +9,8 @@ Granularity = Literal["monthly", "yearly"]
 class MarketRawRow(TypedDict):
     year: int
     month: int
-    data_type: str
-    level_type: str
+    data_type: DataType
+    level_type: LevelType
     sales: float
 
 
@@ -34,9 +34,9 @@ class SalesUpsertRow(TypedDict):
     year: int
     month: int
     sales: float
-    data_type: str
-    date_type: str
-    level_type: str
+    data_type: DataType
+    date_type: DateType
+    level_type: LevelType
 
 
 class BrandSalesUpsertRow(TypedDict):
@@ -44,9 +44,9 @@ class BrandSalesUpsertRow(TypedDict):
     month: int
     brand_id: int
     sales_volume: float | None
-    data_type: str
-    date_type: str
-    level_type: str
+    data_type: DataType
+    date_type: DateType
+    level_type: LevelType
 
 
 class OriginShareUpsertRow(TypedDict):
@@ -60,9 +60,9 @@ class OverallSalesRecord(TypedDict):
     year: int
     month: int
     sales: float
-    data_type: str
-    date_type: str
-    level_type: str
+    data_type: DataType
+    date_type: DateType
+    level_type: LevelType
 
 
 class BrandSalesRecord(TypedDict):
@@ -70,6 +70,6 @@ class BrandSalesRecord(TypedDict):
     month: int
     master_id: int
     sales_volume: float
-    data_type: str
-    date_type: str
-    level_type: str
+    data_type: DataType
+    date_type: DateType
+    level_type: LevelType
