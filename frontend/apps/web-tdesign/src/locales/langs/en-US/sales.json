@@ -2,6 +2,10 @@
   "market": {
     "title": "Market Sales",
     "timePeriod": "Time period",
+    "column": {
+      "retailSales": "Sales",
+      "productionSales": "Production"
+    },
     "filter": {
       "levelType": "Vehicle Level",
       "levelAll": "All",
@@ -60,6 +64,8 @@
       "chartTitle": "Brand sales trend",
       "tableTitle": "Brand sales detail",
       "salesWithYoy": " (Sales, YoY)",
+      "salesWithYoyRetail": " (Sales, YoY)",
+      "salesWithYoyProduction": " (Production, YoY)",
       "time": "Time",
       "noData": "Select at least one brand"
     }

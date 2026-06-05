@@ -2,6 +2,10 @@
     "market": {
         "title": "市场销量",
         "timePeriod": "时间段",
+        "column": {
+            "retailSales": "销量",
+            "productionSales": "产量"
+        },
         "filter": {
             "levelType": "车型级别",
             "levelAll": "全部",
@@ -60,6 +64,8 @@
             "chartTitle": "品牌销量趋势",
             "tableTitle": "品牌销量明细",
             "salesWithYoy": "（销量+同比）",
+            "salesWithYoyRetail": "（销量+同比）",
+            "salesWithYoyProduction": "（产量+同比）",
             "time": "时间",
             "noData": "请选择至少1个品牌"
         }

@@ -46,6 +46,7 @@ async function onFilterChange(payload: {
     <Card :title="$t('sales.brand.trend.tableTitle')">
       <BrandTrendTable
         :data="activeSeries"
+        :data-type="dataType"
         :loading="loading"
         :time-label-max-count="tableTimeLabelMaxCount"
         :time-labels="timeLabels"

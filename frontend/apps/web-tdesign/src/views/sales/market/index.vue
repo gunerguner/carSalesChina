@@ -45,7 +45,7 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
             <MarketTrendChart :data="monthlyTrendData" kind="monthly" />
           </Card>
           <Card :title="$t('sales.market.monthly.title')">
-            <MarketSalesTable :data="monthlyDetailData" kind="monthly" />
+            <MarketSalesTable :data="monthlyDetailData" :data-type="dataType" kind="monthly" />
           </Card>
         </TabPanel>
         <TabPanel
@@ -57,7 +57,7 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
             <MarketTrendChart :data="quarterlyTrendData" kind="quarterly" />
           </Card>
           <Card :title="$t('sales.market.quarterly.title')">
-            <MarketSalesTable :data="quarterlyTrendData" kind="quarterly" />
+            <MarketSalesTable :data="quarterlyTrendData" :data-type="dataType" kind="quarterly" />
           </Card>
         </TabPanel>
         <TabPanel
@@ -69,7 +69,7 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
             <MarketTrendChart :data="yearlyTrendData" kind="yearly" />
           </Card>
           <Card :title="$t('sales.market.yearly.title')">
-            <MarketSalesTable :data="yearlyTrendData" kind="yearly" />
+            <MarketSalesTable :data="yearlyTrendData" :data-type="dataType" kind="yearly" />
           </Card>
         </TabPanel>
       </Tabs>

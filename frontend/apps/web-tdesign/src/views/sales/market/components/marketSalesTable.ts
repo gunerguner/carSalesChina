@@ -22,7 +22,19 @@ type Translate = (key: string) => string;
 
 const PERIOD_WIDTHS = { monthly: 120, quarterly: 130, yearly: 110 } as const;
 
-export function buildMarketSalesTableColumns(kind: MarketSalesTableInput['kind'], t: Translate) {
+type DataType = 'production' | 'retail';
+
+function salesColumnTitle(dataType: DataType, t: Translate) {
+  return dataType === 'production'
+    ? t('sales.market.column.productionSales')
+    : t('sales.market.column.retailSales');
+}
+
+export function buildMarketSalesTableColumns(
+  kind: MarketSalesTableInput['kind'],
+  dataType: DataType,
+  t: Translate,
+) {
   const sorter =
     kind === 'monthly'
       ? (a: unknown, b: unknown) => {
@@ -41,7 +53,7 @@ export function buildMarketSalesTableColumns(kind: MarketSalesTableInput['kind']
 
   const base = [
     { colKey: 'periodText', sorter, title: t('sales.market.timePeriod'), width: PERIOD_WIDTHS[kind] },
-    { colKey: 'salesText', title: t(`sales.market.${kind}.sales`), width: 150 },
+    { colKey: 'salesText', title: salesColumnTitle(dataType, t), width: 150 },
     { cell: growthTableCell('yoyGrowth'), colKey: 'yoyGrowth', title: t(`sales.market.${kind}.yoyGrowth`), width: 140 },
   ];
 

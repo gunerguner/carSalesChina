@@ -12,6 +12,7 @@ import { salesYoyTableCell } from '#/utils/format';
 
 const props = defineProps<{
   data: BrandSeriesRecord[];
+  dataType: 'production' | 'retail';
   loading?: boolean;
   /** 最多展示多少条时间行；null 表示与 timeLabels 一致（如年度全部年份） */
   timeLabelMaxCount?: null | number;
@@ -31,7 +32,10 @@ const tableTimeLabels = computed(() => {
 
 const columns = computed<PrimaryTableCol[]>(() => {
   const base: PrimaryTableCol[] = [{ colKey: 'time', title: $t('sales.brand.trend.time'), width: 120 }];
-  const salesWithYoySuffix = $t('sales.brand.trend.salesWithYoy');
+  const salesWithYoySuffix =
+    props.dataType === 'production'
+      ? $t('sales.brand.trend.salesWithYoyProduction')
+      : $t('sales.brand.trend.salesWithYoyRetail');
   for (const brand of props.data) {
     const salesKey = `brand_${brand.brand_name}_sales`;
     const yoyKey = `brand_${brand.brand_name}_yoy`;
