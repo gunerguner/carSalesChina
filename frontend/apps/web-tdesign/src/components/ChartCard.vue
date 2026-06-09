@@ -1,5 +1,5 @@
-<script lang="ts" setup>
-import type { EchartsUIType } from '@vben/plugins/echarts';
+<script setup lang="ts">
+import type { EchartsUIType, ECOption } from '@vben/plugins/echarts';
 
 import { onMounted, ref, watch } from 'vue';
 
@@ -9,7 +9,7 @@ const props = withDefaults(
   defineProps<{
     heightClass?: string;
     /** ECharts option object; replace reference when data changes for reliable updates. */
-    option: Record<string, unknown>;
+    option: ECOption;
   }>(),
   { heightClass: 'h-80' },
 );
@@ -18,10 +18,11 @@ const chartRef = ref<EchartsUIType>();
 const { renderEcharts } = useEcharts(chartRef);
 
 function draw() {
+  // ECOption (compose) is runtime-compatible with renderEcharts; echarts ships duplicate type paths.
   renderEcharts(props.option as never);
 }
 
-watch(() => props.option, draw, { deep: true });
+watch(() => props.option, draw);
 onMounted(draw);
 </script>
 

@@ -1,8 +1,9 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue';
 
-import { Card, Loading, TabPanel, Tabs } from 'tdesign-vue-next';
+import { Card, TabPanel, Tabs } from 'tdesign-vue-next';
 
+import DataLoadState from '#/components/DataLoadState.vue';
 import { $t } from '#/locales';
 import { getChartPaletteColor } from '#/utils/chart';
 
@@ -14,20 +15,21 @@ import { useAnalysisData } from './useAnalysisData';
 
 const activeTab = ref('nev');
 
-const { loading, fetchAll, nevShareTrend, nevBreakdown, originShareTrend } =
-  useAnalysisData();
+const {
+  error,
+  loading,
+  fetchAll,
+  nevShareTrend,
+  nevBreakdown,
+  originShareTrend,
+} = useAnalysisData();
 
 onMounted(() => fetchAll());
 </script>
 
 <template>
   <div class="p-5">
-    <Loading
-      :loading="loading"
-      size="medium"
-      :text="$t('sales.common.loading')"
-      style="min-height: 200px"
-    >
+    <DataLoadState :error="error" :loading="loading" @retry="fetchAll(true)">
       <Tabs v-model="activeTab">
         <TabPanel
           :label="$t('sales.analysis.nevTab')"
@@ -35,7 +37,10 @@ onMounted(() => fetchAll());
           value="nev"
         >
           <div class="mb-4 flex gap-4">
-            <Card :title="$t('sales.analysis.nev.penetrationChartTitle')" class="flex-1">
+            <Card
+              :title="$t('sales.analysis.nev.penetrationChartTitle')"
+              class="flex-1"
+            >
               <NevTrendLineChart
                 :data="nevShareTrend"
                 :label="$t('sales.analysis.nev.penetrationRateLabel')"
@@ -43,7 +48,10 @@ onMounted(() => fetchAll());
                 value-key="nev_penetration_rate"
               />
             </Card>
-            <Card :title="$t('sales.analysis.nev.breakdownChartTitle')" class="flex-1">
+            <Card
+              :title="$t('sales.analysis.nev.breakdownChartTitle')"
+              class="flex-1"
+            >
               <NevTrendLineChart
                 :data="nevBreakdown"
                 :label="$t('sales.analysis.nev.bevInNevTrendLabel')"
@@ -72,6 +80,6 @@ onMounted(() => fetchAll());
           </Card>
         </TabPanel>
       </Tabs>
-    </Loading>
+    </DataLoadState>
   </div>
 </template>

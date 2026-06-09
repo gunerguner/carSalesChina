@@ -1,3 +1,5 @@
+import type { ECOption } from '@vben/plugins/echarts';
+
 import type {
   MonthlyTrendRecord,
   QuarterlyTrendRecord,
@@ -5,10 +7,10 @@ import type {
 } from '../useMarketData';
 
 import {
-  formatSalesAxisLabel,
+  buildLineChartOption,
+  buildValueYAxis,
   getChartPaletteColor,
   getEmptyChartOption,
-  lineSeriesTooltipFormatter,
 } from '#/utils/chart';
 import {
   formatQuarterPeriod,
@@ -23,14 +25,11 @@ export type MarketTrendChartInput =
 
 type Translate = (key: string) => string;
 
-function buildYAxis(locale: string) {
-  return {
-    type: 'value' as const,
-    axisLabel: { formatter: (val: number) => formatSalesAxisLabel(val, locale) },
-  };
-}
-
-function buildMonthlyOption(data: MonthlyTrendRecord[], locale: string, t: Translate) {
+function buildMonthlyOption(
+  data: MonthlyTrendRecord[],
+  locale: string,
+  t: Translate,
+): ECOption {
   if (data.length === 0) return getEmptyChartOption(t('sales.common.noData'));
 
   const yearDataMap = new Map<number, number[]>();
@@ -38,84 +37,83 @@ function buildMonthlyOption(data: MonthlyTrendRecord[], locale: string, t: Trans
     if (!yearDataMap.has(item.year)) {
       yearDataMap.set(item.year, Array.from<number>({ length: 12 }).fill(0));
     }
-    yearDataMap.get(item.year)![item.month - 1] = item.sales;
+    const yearArr = yearDataMap.get(item.year);
+    if (yearArr) yearArr[item.month - 1] = item.sales;
   }
   const years = [...yearDataMap.keys()].toSorted((a, b) => a - b);
 
   return {
     animation: false,
-    tooltip: { trigger: 'axis' as const, axisPointer: { type: 'shadow' as const } },
-    legend: { data: years.map(String), bottom: 0 },
-    grid: { left: '3%', right: '4%', bottom: '12%', top: '8%', containLabel: true },
-    xAxis: { type: 'category' as const, data: getLocalizedMonthLabels(locale), boundaryGap: false },
-    yAxis: buildYAxis(locale),
+    grid: {
+      bottom: '12%',
+      containLabel: true,
+      left: '3%',
+      right: '4%',
+      top: '8%',
+    },
+    legend: { bottom: 0, data: years.map(String) },
     series: years.map((year, i) => ({
-      name: String(year),
-      type: 'line' as const,
       data: yearDataMap.get(year),
-      smooth: true,
       itemStyle: { color: getChartPaletteColor(i) },
+      name: String(year),
+      smooth: true,
+      type: 'line',
     })),
+    tooltip: { axisPointer: { type: 'shadow' }, trigger: 'axis' },
+    xAxis: {
+      boundaryGap: false,
+      data: getLocalizedMonthLabels(locale),
+      type: 'category',
+    },
+    yAxis: buildValueYAxis(locale),
   };
 }
 
-function buildLineTrendOption(
-  xData: string[],
-  seriesName: string,
-  seriesData: number[],
+function buildQuarterlyOption(
+  data: QuarterlyTrendRecord[],
   locale: string,
-  xAxisExtra?: { interval: number; rotate: number },
-) {
-  return {
-    animation: false,
-    tooltip: {
-      trigger: 'axis' as const,
-      axisPointer: { type: 'line' as const },
-      formatter: lineSeriesTooltipFormatter,
-    },
-    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-    xAxis: {
-      type: 'category' as const,
-      boundaryGap: false,
-      data: xData,
-      ...(xAxisExtra && { axisLabel: xAxisExtra }),
-    },
-    yAxis: buildYAxis(locale),
+  t: Translate,
+): ECOption {
+  if (data.length === 0) return getEmptyChartOption(t('sales.common.noData'));
+  return buildLineChartOption({
+    locale,
     series: [
       {
-        name: seriesName,
-        type: 'line' as const,
-        smooth: true,
-        data: seriesData,
-        itemStyle: { color: getChartPaletteColor(0) },
+        color: getChartPaletteColor(0),
+        data: data.map((r) => r.sales),
+        name: t('sales.market.quarterly.sales'),
       },
     ],
-  };
+    xAxisExtra: { interval: 0, rotate: data.length > 8 ? 30 : 0 },
+    xData: data.map((r) => formatQuarterPeriod(r.year, r.quarter, locale)),
+  });
 }
 
-function buildQuarterlyOption(data: QuarterlyTrendRecord[], locale: string, t: Translate) {
+function buildYearlyOption(
+  data: YearlyTrendRecord[],
+  locale: string,
+  t: Translate,
+): ECOption {
   if (data.length === 0) return getEmptyChartOption(t('sales.common.noData'));
-  return buildLineTrendOption(
-    data.map((r) => formatQuarterPeriod(r.year, r.quarter, locale)),
-    t('sales.market.quarterly.sales'),
-    data.map((r) => r.sales),
+  return buildLineChartOption({
     locale,
-    { interval: 0, rotate: data.length > 8 ? 30 : 0 },
-  );
-}
-
-function buildYearlyOption(data: YearlyTrendRecord[], locale: string, t: Translate) {
-  if (data.length === 0) return getEmptyChartOption(t('sales.common.noData'));
-  return buildLineTrendOption(
-    data.map((r) => formatYearPeriod(r.year, locale)),
-    t('sales.market.yearly.sales'),
-    data.map((r) => r.sales),
-    locale,
-  );
+    series: [
+      {
+        color: getChartPaletteColor(0),
+        data: data.map((r) => r.sales),
+        name: t('sales.market.yearly.sales'),
+      },
+    ],
+    xData: data.map((r) => formatYearPeriod(r.year, locale)),
+  });
 }
 
 /** 市场页「月度 / 季度 / 年度」趋势折线图共用配置构建 */
-export function buildMarketTrendChartOption(input: MarketTrendChartInput, locale: string, t: Translate) {
+export function buildMarketTrendChartOption(
+  input: MarketTrendChartInput,
+  locale: string,
+  t: Translate,
+): ECOption {
   switch (input.kind) {
     case 'monthly': {
       return buildMonthlyOption(input.data, locale, t);

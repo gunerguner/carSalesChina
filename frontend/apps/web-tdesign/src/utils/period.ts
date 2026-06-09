@@ -7,9 +7,7 @@ export function formatMonthPeriod(
   month: number,
   locale: string,
 ): string {
-  return locale === 'zh-CN'
-    ? `${year}年${month}月`
-    : toMonthKey(year, month);
+  return locale === 'zh-CN' ? `${year}年${month}月` : toMonthKey(year, month);
 }
 
 export function formatQuarterPeriod(

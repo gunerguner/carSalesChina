@@ -42,13 +42,21 @@ export function refreshBrandMetaApi() {
 }
 
 export function refreshSalesApi() {
-  return requestClient.post<RefreshSalesPayload>('/v1/admin/data/refresh/sales', undefined, {
-    timeout: REFRESH_TIMEOUT,
-  });
+  return requestClient.post<RefreshSalesPayload>(
+    '/v1/admin/data/refresh/sales',
+    undefined,
+    {
+      timeout: REFRESH_TIMEOUT,
+    },
+  );
 }
 
 export function refreshOriginApi() {
-  return requestClient.post<RefreshOriginPayload>('/v1/admin/data/refresh/origin', undefined, {
-    timeout: REFRESH_TIMEOUT,
-  });
+  return requestClient.post<RefreshOriginPayload>(
+    '/v1/admin/data/refresh/origin',
+    undefined,
+    {
+      timeout: REFRESH_TIMEOUT,
+    },
+  );
 }

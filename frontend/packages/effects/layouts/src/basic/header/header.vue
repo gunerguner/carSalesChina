@@ -7,11 +7,7 @@ import { preferences, usePreferences } from '@vben/preferences';
 
 import { VbenIconButton } from '@vben-core/shadcn-ui';
 
-import {
-  LanguageToggle,
-  PreferencesButton,
-  ThemeToggle,
-} from '../../widgets';
+import { LanguageToggle, PreferencesButton, ThemeToggle } from '../../widgets';
 
 interface Props {
   theme?: string;

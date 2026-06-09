@@ -1,6 +1,7 @@
 import { parse } from 'yaml';
 
 import brandDefaultsYaml from '#/brand-defaults.yaml?raw';
+import { isNil, notNil } from '#/utils/format';
 
 interface BrandDefaultsFile {
   defaultSelectedBrands?: unknown;
@@ -37,7 +38,7 @@ function readQuickFilters(): BrandQuickFilter[] {
   }
   return list
     .map((item): BrandQuickFilter | null => {
-      if (item == null || typeof item !== 'object') {
+      if (isNil(item) || typeof item !== 'object') {
         return null;
       }
       const row = item as Record<string, unknown>;
@@ -58,7 +59,7 @@ function readQuickFilters(): BrandQuickFilter[] {
         ...(brands.length > 0 ? { brands } : {}),
       };
     })
-    .filter((item): item is BrandQuickFilter => item != null);
+    .filter((item): item is BrandQuickFilter => notNil(item));
 }
 
 /** 从配置名列表中筛出元数据存在的品牌并截断至 max */
@@ -71,7 +72,8 @@ export function resolveBrandNames(
 }
 
 /** 自模块加载时解析 YAML，最多 MAX_BRAND_COMPARE 个 */
-export const DEFAULT_SELECTED_BRAND_NAMES = readDefaultBrandNames(MAX_BRAND_COMPARE);
+export const DEFAULT_SELECTED_BRAND_NAMES =
+  readDefaultBrandNames(MAX_BRAND_COMPARE);
 
 /** 快筛配置（按钮文案走 labelKey → i18n） */
 export const BRAND_QUICK_FILTERS = readQuickFilters();

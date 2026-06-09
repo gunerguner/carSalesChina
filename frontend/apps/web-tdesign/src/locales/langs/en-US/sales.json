@@ -116,6 +116,8 @@
   "common": {
     "noData": "No Data",
     "loading": "Loading...",
+    "loadFailed": "Failed to load data. Please try again.",
+    "retry": "Retry",
     "year": "Year",
     "month": "Month"
   },

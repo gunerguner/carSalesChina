@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import { computed } from 'vue';
 
 import { RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
@@ -6,7 +6,9 @@ import { RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
 import { $t } from '#/locales';
 
 const levelType = defineModel<string>('levelType', { required: true });
-const dataType = defineModel<'production' | 'retail'>('dataType', { required: true });
+const dataType = defineModel<'production' | 'retail'>('dataType', {
+  required: true,
+});
 
 const levelOptions = computed(() => [
   { label: $t('sales.market.filter.levelAll'), value: 'all' },
@@ -23,7 +25,9 @@ const dataTypeOptions = computed(() => [
 <template>
   <div class="mb-4 flex flex-wrap items-center gap-4">
     <div class="flex items-center gap-2">
-      <span class="text-sm text-gray-600">{{ $t('sales.market.filter.levelType') }}</span>
+      <span class="text-sm text-gray-600">{{
+        $t('sales.market.filter.levelType')
+      }}</span>
       <Select
         v-model="levelType"
         :options="levelOptions"
@@ -31,11 +35,10 @@ const dataTypeOptions = computed(() => [
       />
     </div>
     <div class="flex items-center gap-2">
-      <span class="text-sm text-gray-600">{{ $t('sales.market.filter.dataType') }}</span>
-      <RadioGroup
-        v-model="dataType"
-        variant="default-filled"
-      >
+      <span class="text-sm text-gray-600">{{
+        $t('sales.market.filter.dataType')
+      }}</span>
+      <RadioGroup v-model="dataType" variant="default-filled">
         <RadioButton
           v-for="opt in dataTypeOptions"
           :key="opt.value"

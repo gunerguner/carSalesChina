@@ -1,16 +1,20 @@
-<script lang="ts" setup>
+<script setup lang="ts">
+import type { BrandTrendGranularity } from './useBrandSalesData';
+
 import { Card } from 'tdesign-vue-next';
 
+import DataLoadState from '#/components/DataLoadState.vue';
 import { $t } from '#/locales';
 
 import BrandSelectBar from './components/BrandSelectBar.vue';
 import BrandTrendChart from './components/BrandTrendChart.vue';
 import BrandTrendTable from './components/BrandTrendTable.vue';
-import { type BrandTrendGranularity, useBrandSalesData } from './useBrandSalesData';
+import { useBrandSalesData } from './useBrandSalesData';
 
 const {
   activeSeries,
   dataType,
+  error,
   fetchRawData,
   granularity,
   loading,
@@ -35,22 +39,23 @@ async function onFilterChange(payload: {
   <div class="p-5">
     <BrandSelectBar @change="onFilterChange" />
 
-    <Card :title="$t('sales.brand.trend.chartTitle')" class="mb-4">
-      <BrandTrendChart
-        :data="activeSeries"
-        :loading="loading"
-        :time-labels="timeLabels"
-      />
-    </Card>
+    <DataLoadState
+      :error="error"
+      :loading="loading"
+      @retry="fetchRawData(true)"
+    >
+      <Card :title="$t('sales.brand.trend.chartTitle')" class="mb-4">
+        <BrandTrendChart :data="activeSeries" :time-labels="timeLabels" />
+      </Card>
 
-    <Card :title="$t('sales.brand.trend.tableTitle')">
-      <BrandTrendTable
-        :data="activeSeries"
-        :data-type="dataType"
-        :loading="loading"
-        :time-label-max-count="tableTimeLabelMaxCount"
-        :time-labels="timeLabels"
-      />
-    </Card>
+      <Card :title="$t('sales.brand.trend.tableTitle')">
+        <BrandTrendTable
+          :data="activeSeries"
+          :data-type="dataType"
+          :time-label-max-count="tableTimeLabelMaxCount"
+          :time-labels="timeLabels"
+        />
+      </Card>
+    </DataLoadState>
   </div>
 </template>

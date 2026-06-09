@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 
-import { Card, Loading, TabPanel, Tabs } from 'tdesign-vue-next';
+import { Card, TabPanel, Tabs } from 'tdesign-vue-next';
 
+import DataLoadState from '#/components/DataLoadState.vue';
 import { $t } from '#/locales';
 
 import MarketSalesTable from './components/MarketSalesTable.vue';
@@ -14,27 +15,40 @@ const levelType = ref('all');
 const dataType = ref<'production' | 'retail'>('retail');
 const activeTab = ref('monthly');
 
-const { loading, fetchAll, getMonthlyTrend, getMonthlyDetail, getQuarterlyTrend, getYearlyTrend } =
-  useMarketData();
+const {
+  error,
+  loading,
+  fetchAll,
+  getMonthlyTrend,
+  getMonthlyDetail,
+  getQuarterlyTrend,
+  getYearlyTrend,
+} = useMarketData();
 
 onMounted(() => fetchAll());
 
-const monthlyTrendData = computed(() => getMonthlyTrend(levelType.value, dataType.value));
-const monthlyDetailData = computed(() => getMonthlyDetail(levelType.value, dataType.value));
-const quarterlyTrendData = computed(() => getQuarterlyTrend(levelType.value, dataType.value));
-const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.value));
+const monthlyTrendData = computed(() =>
+  getMonthlyTrend(levelType.value, dataType.value),
+);
+const monthlyDetailData = computed(() =>
+  getMonthlyDetail(levelType.value, dataType.value),
+);
+const quarterlyTrendData = computed(() =>
+  getQuarterlyTrend(levelType.value, dataType.value),
+);
+const yearlyTrendData = computed(() =>
+  getYearlyTrend(levelType.value, dataType.value),
+);
 </script>
 
 <template>
   <div class="p-5">
-    <SalesFilterBar v-model:level-type="levelType" v-model:data-type="dataType" />
+    <SalesFilterBar
+      v-model:level-type="levelType"
+      v-model:data-type="dataType"
+    />
 
-    <Loading
-      :loading="loading"
-      size="medium"
-      :text="$t('sales.common.loading')"
-      style="min-height: 200px"
-    >
+    <DataLoadState :error="error" :loading="loading" @retry="fetchAll(true)">
       <Tabs v-model="activeTab">
         <TabPanel
           :label="$t('sales.market.monthly.title')"
@@ -45,7 +59,11 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
             <MarketTrendChart :data="monthlyTrendData" kind="monthly" />
           </Card>
           <Card :title="$t('sales.market.monthly.title')">
-            <MarketSalesTable :data="monthlyDetailData" :data-type="dataType" kind="monthly" />
+            <MarketSalesTable
+              :data="monthlyDetailData"
+              :data-type="dataType"
+              kind="monthly"
+            />
           </Card>
         </TabPanel>
         <TabPanel
@@ -57,7 +75,11 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
             <MarketTrendChart :data="quarterlyTrendData" kind="quarterly" />
           </Card>
           <Card :title="$t('sales.market.quarterly.title')">
-            <MarketSalesTable :data="quarterlyTrendData" :data-type="dataType" kind="quarterly" />
+            <MarketSalesTable
+              :data="quarterlyTrendData"
+              :data-type="dataType"
+              kind="quarterly"
+            />
           </Card>
         </TabPanel>
         <TabPanel
@@ -69,10 +91,14 @@ const yearlyTrendData = computed(() => getYearlyTrend(levelType.value, dataType.
             <MarketTrendChart :data="yearlyTrendData" kind="yearly" />
           </Card>
           <Card :title="$t('sales.market.yearly.title')">
-            <MarketSalesTable :data="yearlyTrendData" :data-type="dataType" kind="yearly" />
+            <MarketSalesTable
+              :data="yearlyTrendData"
+              :data-type="dataType"
+              kind="yearly"
+            />
           </Card>
         </TabPanel>
       </Tabs>
-    </Loading>
+    </DataLoadState>
   </div>
 </template>

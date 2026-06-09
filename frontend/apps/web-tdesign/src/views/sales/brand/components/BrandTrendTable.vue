@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import type { PrimaryTableCol } from 'tdesign-vue-next';
 
 import type { BrandSeriesRecord } from '../types';
@@ -8,12 +8,11 @@ import { computed } from 'vue';
 import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
-import { salesYoyTableCell } from '#/utils/format';
+import { notNil, salesYoyTableCell } from '#/utils/format';
 
 const props = defineProps<{
   data: BrandSeriesRecord[];
   dataType: 'production' | 'retail';
-  loading?: boolean;
   /** 最多展示多少条时间行；null 表示与 timeLabels 一致（如年度全部年份） */
   timeLabelMaxCount?: null | number;
   timeLabels: string[];
@@ -31,7 +30,9 @@ const tableTimeLabels = computed(() => {
 });
 
 const columns = computed<PrimaryTableCol[]>(() => {
-  const base: PrimaryTableCol[] = [{ colKey: 'time', title: $t('sales.brand.trend.time'), width: 120 }];
+  const base: PrimaryTableCol[] = [
+    { colKey: 'time', title: $t('sales.brand.trend.time'), width: 120 },
+  ];
   const salesWithYoySuffix =
     props.dataType === 'production'
       ? $t('sales.brand.trend.salesWithYoyProduction')
@@ -55,7 +56,10 @@ const tableData = computed(() => {
     Map<string, { sales: number; yoyGrowth: null | number }>
   >();
   for (const brand of props.data) {
-    const pointMap = new Map<string, { sales: number; yoyGrowth: null | number }>();
+    const pointMap = new Map<
+      string,
+      { sales: number; yoyGrowth: null | number }
+    >();
     for (const point of brand.points ?? []) {
       pointMap.set(point.time, {
         sales: point.sales ?? 0,
@@ -69,7 +73,7 @@ const tableData = computed(() => {
     const row: Record<string, any> = { key: time, time };
     for (const brand of props.data) {
       const point = brandMap.get(brand.brand_name)?.get(time);
-      if (point != null) {
+      if (notNil(point)) {
         row[`brand_${brand.brand_name}_sales`] = point.sales;
         row[`brand_${brand.brand_name}_yoy`] = point.yoyGrowth;
       }
@@ -83,7 +87,6 @@ const tableData = computed(() => {
   <Table
     :columns="columns"
     :data="tableData"
-    :loading="loading"
     row-key="key"
     size="small"
     bordered

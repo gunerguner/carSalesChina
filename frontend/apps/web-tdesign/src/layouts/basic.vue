@@ -1,4 +1,6 @@
-<script lang="ts" setup>
+<script setup lang="ts">
+import type { RefreshOriginPayload, RefreshSalesPayload } from '#/api/admin';
+
 import { ref } from 'vue';
 
 import { VbenIconButton } from '@vben/common-ui';
@@ -9,24 +11,31 @@ import { notification } from '#/adapter/tdesign';
 import {
   refreshBrandMetaApi,
   refreshOriginApi,
-  type RefreshOriginPayload,
   refreshSalesApi,
-  type RefreshSalesPayload,
 } from '#/api/admin';
 import { $t } from '#/locales';
 
 const refreshing = ref(false);
 
-function collectSourceNotes(sales: RefreshSalesPayload, origin: RefreshOriginPayload): string[] {
+function collectSourceNotes(
+  sales: RefreshSalesPayload,
+  origin: RefreshOriginPayload,
+): string[] {
   const lines: string[] = [];
   if (sales.source_errors.overall) {
-    lines.push(`${$t('sales.admin.sourceOverall')}: ${sales.source_errors.overall}`);
+    lines.push(
+      `${$t('sales.admin.sourceOverall')}: ${sales.source_errors.overall}`,
+    );
   }
   if (sales.source_errors.brand) {
-    lines.push(`${$t('sales.admin.sourceBrand')}: ${sales.source_errors.brand}`);
+    lines.push(
+      `${$t('sales.admin.sourceBrand')}: ${sales.source_errors.brand}`,
+    );
   }
   if (origin.source_errors.origin) {
-    lines.push(`${$t('sales.admin.sourceOrigin')}: ${origin.source_errors.origin}`);
+    lines.push(
+      `${$t('sales.admin.sourceOrigin')}: ${origin.source_errors.origin}`,
+    );
   }
   return lines;
 }
@@ -80,7 +89,11 @@ async function handleRefreshData() {
 <template>
   <BasicLayout>
     <template #header-right-40>
-      <VbenIconButton class="my-0 mr-1 rounded-md" :disabled="refreshing" @click="handleRefreshData">
+      <VbenIconButton
+        class="my-0 mr-1 rounded-md"
+        :disabled="refreshing"
+        @click="handleRefreshData"
+      >
         <RotateCw class="size-4" :class="{ 'animate-spin': refreshing }" />
       </VbenIconButton>
     </template>

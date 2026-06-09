@@ -1,4 +1,7 @@
-import { getMarketRawApi, type RawSalesRecord } from '#/api/sales/market';
+import type { RawSalesRecord } from '#/api/sales/market';
+
+import { getMarketRawApi } from '#/api/sales/market';
+import { calcGrowthPercent, isNil } from '#/utils/format';
 
 export interface MonthlyTrendRecord {
   month: number;
@@ -52,10 +55,6 @@ export const EMPTY_SERIES_CACHE: SeriesCache = {
   maxYear: null,
 };
 
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
-}
-
 function getSeriesKey(levelType: string, dataType: string) {
   return `${levelType}::${dataType}`;
 }
@@ -65,8 +64,11 @@ function parseQuarterKey(key: string): { q: number; y: number } {
   return { y: Number(yPart), q: Number(qPart) };
 }
 
-function getWindowStartYear(maxYear: null | number, years: number): null | number {
-  return maxYear == null ? null : maxYear - years + 1;
+function getWindowStartYear(
+  maxYear: null | number,
+  years: number,
+): null | number {
+  return isNil(maxYear) ? null : maxYear - years + 1;
 }
 
 export async function fetchMarketRawData(
@@ -76,7 +78,9 @@ export async function fetchMarketRawData(
   return Array.isArray(data) ? data : [];
 }
 
-export function buildMarketSeriesCache(rawData: RawSalesRecord[]): Map<string, SeriesCache> {
+export function buildMarketSeriesCache(
+  rawData: RawSalesRecord[],
+): Map<string, SeriesCache> {
   const groupedRows = new Map<string, RawSalesRecord[]>();
   for (const row of rawData) {
     const key = getSeriesKey(row.level_type, row.data_type);
@@ -101,7 +105,10 @@ export function buildMarketSeriesCache(rawData: RawSalesRecord[]): Map<string, S
 
       const quarter = Math.ceil(row.month / 3);
       const quarterKey = `${row.year}-${quarter}`;
-      quarterSalesMap.set(quarterKey, (quarterSalesMap.get(quarterKey) ?? 0) + row.sales);
+      quarterSalesMap.set(
+        quarterKey,
+        (quarterSalesMap.get(quarterKey) ?? 0) + row.sales,
+      );
 
       yearSalesMap.set(row.year, (yearSalesMap.get(row.year) ?? 0) + row.sales);
     }
@@ -125,14 +132,18 @@ export function buildMarketSeriesCache(rawData: RawSalesRecord[]): Map<string, S
   return cacheMap;
 }
 
-export function calcMonthlyTrend(cache: SeriesCache, years = 3): MonthlyTrendRecord[] {
+export function calcMonthlyTrend(
+  cache: SeriesCache,
+  years = 3,
+): MonthlyTrendRecord[] {
   const startYear = getWindowStartYear(cache.maxYear, years);
-  if (startYear == null) return [];
+  if (isNil(startYear)) return [];
   return cache.sortedRows.filter((r) => r.year >= startYear);
 }
 
 export function calcMonthlyDetail(cache: SeriesCache): MonthlyDetailRecord[] {
-  const getSales = (year: number, month: number) => cache.monthlySalesMap.get(`${year}-${month}`) ?? 0;
+  const getSales = (year: number, month: number) =>
+    cache.monthlySalesMap.get(`${year}-${month}`) ?? 0;
 
   return cache.sortedRows
     .map((r, i) => {
@@ -146,33 +157,35 @@ export function calcMonthlyDetail(cache: SeriesCache): MonthlyDetailRecord[] {
         month: r.month,
         monthNum: r.month,
         sales: r.sales,
-        momGrowth: prevMonthSales ? round2((r.sales - prevMonthSales) / prevMonthSales * 100) : null,
-        yoyGrowth: prevYearSales ? round2((r.sales - prevYearSales) / prevYearSales * 100) : null,
+        momGrowth: calcGrowthPercent(r.sales, prevMonthSales),
+        yoyGrowth: calcGrowthPercent(r.sales, prevYearSales),
       };
     })
     .toReversed();
 }
 
-export function calcQuarterlyTrend(cache: SeriesCache, quarters = 12): QuarterlyTrendRecord[] {
+export function calcQuarterlyTrend(
+  cache: SeriesCache,
+  quarters = 12,
+): QuarterlyTrendRecord[] {
   const keys = cache.sortedQuarterKeys.slice(-quarters);
 
   const getQuarterSales = (year: number, quarter: number): null | number => {
     const key = `${year}-${quarter}`;
     if (!cache.quarterSalesMap.has(key)) return null;
-    return Math.round(cache.quarterSalesMap.get(key)!);
+    return Math.round(cache.quarterSalesMap.get(key) ?? 0);
   };
 
   return keys.map((k, i) => {
     const year = Number(k.split('-')[0]);
     const quarter = Number(k.split('-')[1]);
-    const sales = getQuarterSales(year, quarter)!;
+    const sales = getQuarterSales(year, quarter) ?? 0;
     const prevQ = quarter === 1 ? 4 : quarter - 1;
     const prevQYear = quarter === 1 ? year - 1 : year;
     const prevQSales = getQuarterSales(prevQYear, prevQ);
-    const qoqGrowth =
-      prevQSales != null && prevQSales > 0 ? round2((sales - prevQSales) / prevQSales * 100) : null;
+    const qoqGrowth = calcGrowthPercent(sales, prevQSales);
     const yoyBase = getQuarterSales(year - 1, quarter);
-    const yoyGrowth = yoyBase != null && yoyBase > 0 ? round2((sales - yoyBase) / yoyBase * 100) : null;
+    const yoyGrowth = calcGrowthPercent(sales, yoyBase);
     return { key: `${k}-${i}`, year, quarter, sales, qoqGrowth, yoyGrowth };
   });
 }
@@ -181,8 +194,10 @@ export function calcYearlyTrend(cache: SeriesCache): YearlyTrendRecord[] {
   return cache.sortedYears.map((year, i) => {
     const sales = Math.round(cache.yearSalesMap.get(year) ?? 0);
     const prevYear = i > 0 ? cache.sortedYears[i - 1] : undefined;
-    const prevSales = prevYear == null ? 0 : Math.round(cache.yearSalesMap.get(prevYear) ?? 0);
-    const yoyGrowth = prevSales ? round2((sales - prevSales) / prevSales * 100) : null;
+    const prevSales = isNil(prevYear)
+      ? 0
+      : Math.round(cache.yearSalesMap.get(prevYear) ?? 0);
+    const yoyGrowth = calcGrowthPercent(sales, prevSales);
     return { key: `${year}-${i}`, year, sales, yoyGrowth };
   });
 }

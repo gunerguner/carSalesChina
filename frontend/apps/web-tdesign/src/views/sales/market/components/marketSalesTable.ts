@@ -1,9 +1,12 @@
-import type { MonthlyDetailRecord, QuarterlyTrendRecord, YearlyTrendRecord } from '../useMarketData';
+import type { TableRowData } from 'tdesign-vue-next';
 
-import {
-  growthTableCell,
-  growthTableRowFields,
-} from '#/utils/format';
+import type {
+  MonthlyDetailRecord,
+  QuarterlyTrendRecord,
+  YearlyTrendRecord,
+} from '../useMarketData';
+
+import { growthTableCell, growthTableRowFields, isNil } from '#/utils/format';
 import {
   formatMonthPeriod,
   formatQuarterPeriod,
@@ -30,43 +33,84 @@ function salesColumnTitle(dataType: DataType, t: Translate) {
     : t('sales.market.column.retailSales');
 }
 
+function monthlySorter(a: TableRowData, b: TableRowData): number {
+  const ra = a as MonthlyDetailRecord;
+  const rb = b as MonthlyDetailRecord;
+  return (
+    toYearMonthSortKey(ra.year, ra.monthNum) -
+    toYearMonthSortKey(rb.year, rb.monthNum)
+  );
+}
+
+function quarterlySorter(a: TableRowData, b: TableRowData): number {
+  const ra = a as QuarterlyTrendRecord;
+  const rb = b as QuarterlyTrendRecord;
+  return (
+    toYearQuarterSortKey(ra.year, ra.quarter) -
+    toYearQuarterSortKey(rb.year, rb.quarter)
+  );
+}
+
+function yearlySorter(a: TableRowData, b: TableRowData): number {
+  const ra = a as YearlyTrendRecord;
+  const rb = b as YearlyTrendRecord;
+  return sortByNumberAsc(ra.year, rb.year);
+}
+
 export function buildMarketSalesTableColumns(
   kind: MarketSalesTableInput['kind'],
   dataType: DataType,
   t: Translate,
 ) {
-  const sorter =
-    kind === 'monthly'
-      ? (a: unknown, b: unknown) => {
-          const ra = a as MonthlyDetailRecord;
-          const rb = b as MonthlyDetailRecord;
-          return toYearMonthSortKey(ra.year, ra.monthNum) - toYearMonthSortKey(rb.year, rb.monthNum);
-        }
-      : (kind === 'quarterly'
-        ? (a: unknown, b: unknown) => {
-            const ra = a as QuarterlyTrendRecord;
-            const rb = b as QuarterlyTrendRecord;
-            return toYearQuarterSortKey(ra.year, ra.quarter) - toYearQuarterSortKey(rb.year, rb.quarter);
-          }
-        : (a: unknown, b: unknown) =>
-            sortByNumberAsc((a as YearlyTrendRecord).year, (b as YearlyTrendRecord).year));
+  let sorter = yearlySorter;
+  if (kind === 'monthly') sorter = monthlySorter;
+  else if (kind === 'quarterly') sorter = quarterlySorter;
 
   const base = [
-    { colKey: 'periodText', sorter, title: t('sales.market.timePeriod'), width: PERIOD_WIDTHS[kind] },
+    {
+      colKey: 'periodText',
+      sorter,
+      title: t('sales.market.timePeriod'),
+      width: PERIOD_WIDTHS[kind],
+    },
     { colKey: 'salesText', title: salesColumnTitle(dataType, t), width: 150 },
-    { cell: growthTableCell('yoyGrowth'), colKey: 'yoyGrowth', title: t(`sales.market.${kind}.yoyGrowth`), width: 140 },
+    {
+      cell: growthTableCell('yoyGrowth'),
+      colKey: 'yoyGrowth',
+      title: t(`sales.market.${kind}.yoyGrowth`),
+      width: 140,
+    },
   ];
 
   if (kind === 'monthly') {
-    return [...base, { cell: growthTableCell('momGrowth'), colKey: 'momGrowth', title: t('sales.market.monthly.momGrowth'), width: 130 }];
+    return [
+      ...base,
+      {
+        cell: growthTableCell('momGrowth'),
+        colKey: 'momGrowth',
+        title: t('sales.market.monthly.momGrowth'),
+        width: 130,
+      },
+    ];
   }
   if (kind === 'quarterly') {
-    return [...base, { cell: growthTableCell('qoqGrowth'), colKey: 'qoqGrowth', title: t('sales.market.quarterly.qoqGrowth'), width: 140 }];
+    return [
+      ...base,
+      {
+        cell: growthTableCell('qoqGrowth'),
+        colKey: 'qoqGrowth',
+        title: t('sales.market.quarterly.qoqGrowth'),
+        width: 140,
+      },
+    ];
   }
   return base;
 }
 
-export function buildMarketSalesTableRows(input: MarketSalesTableInput, locale: string) {
+export function buildMarketSalesTableRows(
+  input: MarketSalesTableInput,
+  locale: string,
+) {
   const { data, kind } = input;
 
   if (kind === 'monthly') {
@@ -75,7 +119,7 @@ export function buildMarketSalesTableRows(input: MarketSalesTableInput, locale: 
       ...growthTableRowFields('momGrowth', r.momGrowth),
       ...growthTableRowFields('yoyGrowth', r.yoyGrowth),
       periodText: formatMonthPeriod(r.year, r.monthNum, locale),
-      salesText: r.sales == null ? '-' : r.sales.toLocaleString(),
+      salesText: isNil(r.sales) ? '-' : r.sales.toLocaleString(),
     }));
   }
 
@@ -92,7 +136,9 @@ export function buildMarketSalesTableRows(input: MarketSalesTableInput, locale: 
           ...r,
           ...growthTableRowFields('yoyGrowth', r.yoyGrowth),
           periodText: formatYearPeriod(r.year, locale),
-          salesText: r.sales == null ? '-' : Math.round(r.sales).toLocaleString(),
+          salesText: isNil(r.sales)
+            ? '-'
+            : Math.round(r.sales).toLocaleString(),
         }));
 
   return rows.toReversed();

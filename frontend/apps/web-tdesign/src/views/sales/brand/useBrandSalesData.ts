@@ -1,12 +1,12 @@
 import type { BrandSeriesRecord } from './types';
 
+import type { BrandTrendAllPeriodsRecord } from '#/api/sales/brand';
+
 import { computed, ref } from 'vue';
 
-import {
-  type BrandTrendAllPeriodsRecord,
-  getBrandTrendAllPeriodsApi,
-} from '#/api/sales/brand';
-import { createGenerationTracker } from '#/composables/useFetchOnce';
+import { getBrandTrendAllPeriodsApi } from '#/api/sales/brand';
+import { createKeyedFetchController } from '#/composables/useFetchOnce';
+import { calcGrowthPercent, isNil } from '#/utils/format';
 import { toMonthKey } from '#/utils/period';
 
 type DataType = 'production' | 'retail';
@@ -16,24 +16,15 @@ export type BrandTrendGranularity = 'recentTwoYears' | 'recentYear' | 'yearly';
 
 type BrandRawRecord = BrandTrendAllPeriodsRecord;
 
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
-}
-
-function calcYoyGrowth(sales: number, base: null | number | undefined): null | number {
-  if (base == null || base <= 0) {
-    return null;
-  }
-  return round2(((sales - base) / base) * 100);
-}
-
 function priorYearMonthKey(monthKey: string): string {
   const [yearText, monthText] = monthKey.split('-');
   return toMonthKey(Number(yearText) - 1, Number(monthText));
 }
 
 /** 当前接口返回的所有品牌中，有数据的最晚一个年月（不跟系统日历对齐，避免多出库里没有的月份） */
-function getLatestMonthFromRawData(data: BrandRawRecord[]): null | { month: number; year: number } {
+function getLatestMonthFromRawData(
+  data: BrandRawRecord[],
+): null | { month: number; year: number } {
   let maxYear = 0;
   let maxMonth = 0;
   for (const brand of data) {
@@ -52,7 +43,11 @@ function getLatestMonthFromRawData(data: BrandRawRecord[]): null | { month: numb
 }
 
 /** 以 endYear-endMonth 为窗口末尾，连续 n 个月（含末尾月）的 YYYY-MM 列表，升序 */
-function getLastNMonthKeysEndingAt(endYear: number, endMonth: number, n: number): string[] {
+function getLastNMonthKeysEndingAt(
+  endYear: number,
+  endMonth: number,
+  n: number,
+): string[] {
   const keys: string[] = [];
   for (let offset = n - 1; offset >= 0; offset -= 1) {
     const date = new Date(endYear, endMonth - 1 - offset, 1);
@@ -61,73 +56,39 @@ function getLastNMonthKeysEndingAt(endYear: number, endMonth: number, n: number)
   return keys;
 }
 
-const loading = ref(false);
-const error = ref<null | string>(null);
 const selectedBrands = ref<string[]>([]);
 const granularity = ref<BrandTrendGranularity>('recentYear');
 const dataType = ref<DataType>('retail');
-const rawData = ref<BrandRawRecord[]>([]);
-const rawDataCache = new Map<string, BrandRawRecord[]>();
-const requestGen = createGenerationTracker();
 
-function getCacheKey() {
-  const brandsKey = [...selectedBrands.value].toSorted().join(',');
-  return `${dataType.value}::${brandsKey}`;
-}
+const {
+  data: rawDataRef,
+  error,
+  execute: executeFetch,
+  loading,
+} = createKeyedFetchController<BrandRawRecord[]>({
+  fetch: async (key) => {
+    const [requestDataType = 'retail', brandNames = ''] = key.split('::');
+    const result = await getBrandTrendAllPeriodsApi({
+      brand_names: brandNames,
+      data_type: requestDataType as DataType,
+    });
+    return Array.isArray(result) ? result : [];
+  },
+  getKey() {
+    const brandsKey = [...selectedBrands.value].toSorted().join(',');
+    return `${dataType.value}::${brandsKey}`;
+  },
+  isEmptyKey(key) {
+    const brandsKey = key.split('::')[1] ?? '';
+    return brandsKey === '';
+  },
+});
+
+const rawData = computed(() => rawDataRef.value ?? []);
 
 export function useBrandSalesData() {
   async function fetchRawData(force = false) {
-    if (selectedBrands.value.length === 0) {
-      requestGen.next();
-      error.value = null;
-      rawData.value = [];
-      loading.value = false;
-      return;
-    }
-
-    const requestKey = getCacheKey();
-    if (!force) {
-      const cached = rawDataCache.get(requestKey);
-      if (cached) {
-        error.value = null;
-        rawData.value = cached;
-        return;
-      }
-    }
-
-    const requestId = requestGen.next();
-    const requestBrandNames = selectedBrands.value.join(',');
-    const requestDataType = dataType.value;
-    return (async () => {
-      loading.value = true;
-      error.value = null;
-      try {
-        const result = await getBrandTrendAllPeriodsApi({
-          brand_names: requestBrandNames,
-          data_type: requestDataType,
-        });
-        const normalized = Array.isArray(result) ? result : [];
-        if (
-          !requestGen.matches(requestId) ||
-          requestKey !== getCacheKey()
-        ) {
-          return;
-        }
-        rawData.value = normalized;
-        rawDataCache.set(requestKey, normalized);
-      } catch (error_) {
-        if (!requestGen.matches(requestId)) {
-          return;
-        }
-        error.value = 'failed_to_load_brand_sales_data';
-        console.error('[useBrandSalesData] fetchRawData failed', error_);
-        rawData.value = [];
-      } finally {
-        if (requestGen.matches(requestId)) {
-          loading.value = false;
-        }
-      }
-    })();
+    return executeFetch(force);
   }
 
   const monthlySeries = computed<BrandSeriesRecord[]>(() => {
@@ -136,10 +97,9 @@ export function useBrandSalesData() {
     }
     const nMonths = granularity.value === 'recentTwoYears' ? 24 : 12;
     const latest = getLatestMonthFromRawData(rawData.value);
-    const recentKeys =
-      latest == null
-        ? []
-        : getLastNMonthKeysEndingAt(latest.year, latest.month, nMonths);
+    const recentKeys = isNil(latest)
+      ? []
+      : getLastNMonthKeysEndingAt(latest.year, latest.month, nMonths);
     return rawData.value.map((brand) => {
       const pointMap = new Map<string, number>();
       for (const point of brand.monthly_data ?? []) {
@@ -153,7 +113,10 @@ export function useBrandSalesData() {
           return {
             time,
             sales,
-            yoyGrowth: calcYoyGrowth(sales, pointMap.get(priorYearMonthKey(time))),
+            yoyGrowth: calcGrowthPercent(
+              sales,
+              pointMap.get(priorYearMonthKey(time)),
+            ),
           };
         }),
       };
@@ -176,7 +139,7 @@ export function useBrandSalesData() {
           return {
             time: String(year),
             sales,
-            yoyGrowth: calcYoyGrowth(sales, yearMap.get(year - 1)),
+            yoyGrowth: calcGrowthPercent(sales, yearMap.get(year - 1)),
           };
         }),
       };
@@ -184,7 +147,9 @@ export function useBrandSalesData() {
   });
 
   const activeSeries = computed<BrandSeriesRecord[]>(() => {
-    return granularity.value === 'yearly' ? yearlySeries.value : monthlySeries.value;
+    return granularity.value === 'yearly'
+      ? yearlySeries.value
+      : monthlySeries.value;
   });
 
   /** 表格时间列数量：null 表示与图表一致展示全部（年度为全部年份） */

@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import type { BrandQuickFilter } from '../brand-defaults';
 import type { BrandTrendGranularity } from '../useBrandSalesData';
 
@@ -7,6 +7,7 @@ import { ref, watch } from 'vue';
 import { Button, RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
+import { isNil } from '#/utils/format';
 
 import {
   BRAND_QUICK_FILTERS,
@@ -56,7 +57,9 @@ function syncActiveQuickFilter() {
   const current = selectedBrands.value;
 
   if (current.length === 0) {
-    const clearFilter = BRAND_QUICK_FILTERS.find((item) => item.action === 'clear');
+    const clearFilter = BRAND_QUICK_FILTERS.find(
+      (item) => item.action === 'clear',
+    );
     activeQuickFilterId.value = clearFilter?.id ?? null;
     return;
   }
@@ -102,7 +105,7 @@ async function initializeFromMeta() {
 }
 
 function handleBrandsChange(val: unknown) {
-  if (val == null) {
+  if (isNil(val)) {
     selectedBrands.value = [];
     return;
   }
@@ -148,7 +151,9 @@ initializeFromMeta();
   <div class="mb-4 flex flex-col gap-3">
     <div class="flex flex-wrap items-center gap-4">
       <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-600">{{ $t('sales.brand.trend.selectBrands') }}</span>
+        <span class="text-sm text-gray-600">{{
+          $t('sales.brand.trend.selectBrands')
+        }}</span>
         <Select
           :value="selectedBrands"
           :options="brandOptions"
@@ -162,18 +167,32 @@ initializeFromMeta();
         />
       </div>
       <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-600">{{ $t('sales.brand.trend.granularity') }}</span>
+        <span class="text-sm text-gray-600">{{
+          $t('sales.brand.trend.granularity')
+        }}</span>
         <RadioGroup v-model="granularity" variant="default-filled">
-          <RadioButton value="recentYear">{{ $t('sales.brand.trend.recentYear') }}</RadioButton>
-          <RadioButton value="recentTwoYears">{{ $t('sales.brand.trend.recentTwoYears') }}</RadioButton>
-          <RadioButton value="yearly">{{ $t('sales.brand.trend.yearly') }}</RadioButton>
+          <RadioButton value="recentYear">
+            {{ $t('sales.brand.trend.recentYear') }}
+          </RadioButton>
+          <RadioButton value="recentTwoYears">
+            {{ $t('sales.brand.trend.recentTwoYears') }}
+          </RadioButton>
+          <RadioButton value="yearly">
+            {{ $t('sales.brand.trend.yearly') }}
+          </RadioButton>
         </RadioGroup>
       </div>
       <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-600">{{ $t('sales.brand.trend.dataType') }}</span>
+        <span class="text-sm text-gray-600">{{
+          $t('sales.brand.trend.dataType')
+        }}</span>
         <RadioGroup v-model="dataType" variant="default-filled">
-          <RadioButton value="retail">{{ $t('sales.brand.trend.retail') }}</RadioButton>
-          <RadioButton value="production">{{ $t('sales.brand.trend.production') }}</RadioButton>
+          <RadioButton value="retail">
+            {{ $t('sales.brand.trend.retail') }}
+          </RadioButton>
+          <RadioButton value="production">
+            {{ $t('sales.brand.trend.production') }}
+          </RadioButton>
         </RadioGroup>
       </div>
     </div>

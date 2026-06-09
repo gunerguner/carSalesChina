@@ -34,9 +34,12 @@ export interface AnalysisTrendParams {
 }
 
 export function getNevShareTrendApi(params?: AnalysisTrendParams) {
-  return requestClient.get<NevShareTrendRecord[]>('/v1/analysis/nev-share/trend', {
-    params,
-  });
+  return requestClient.get<NevShareTrendRecord[]>(
+    '/v1/analysis/nev-share/trend',
+    {
+      params,
+    },
+  );
 }
 
 export function getNevBreakdownApi(params?: AnalysisTrendParams) {
