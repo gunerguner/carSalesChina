@@ -1,6 +1,6 @@
 import { formatNumberOrDash, formatSalesAxisLabel } from './format';
 
-/** Default ECharts categorical colors (subset indices used e.g. for 3-line brand charts). */
+/** Default ECharts categorical colors (subset indices used e.g. for brand line charts). */
 export const CHART_PALETTE = [
   '#5470c6',
   '#91cc75',
@@ -10,7 +10,7 @@ export const CHART_PALETTE = [
 ] as const;
 
 /** Indices into `CHART_PALETTE` for brand multi-line (matches previous hard-coded order). */
-export const BRAND_LINE_PALETTE_INDICES = [0, 3, 4] as const;
+export const BRAND_LINE_PALETTE_INDICES = [0, 3, 4, 1] as const;
 
 export function getChartPaletteColor(index: number): string {
   return CHART_PALETTE[index % CHART_PALETTE.length]!;

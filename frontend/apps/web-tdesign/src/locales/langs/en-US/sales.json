@@ -53,7 +53,7 @@
     "title": "Brand sales",
     "trend": {
       "selectBrands": "Brands",
-      "selectPlaceholder": "Select up to 3 brands",
+      "selectPlaceholder": "Select up to 4 brands",
       "granularity": "Period",
       "recentYear": "Last 12 months",
       "recentTwoYears": "Last 24 months",
@@ -67,7 +67,14 @@
       "salesWithYoyRetail": " (Sales, YoY)",
       "salesWithYoyProduction": " (Production, YoY)",
       "time": "Time",
-      "noData": "Select at least one brand"
+      "noData": "Select at least one brand",
+      "quickFilter": {
+        "clear": "Clear",
+        "main": "Main brands",
+        "japanese": "Japanese",
+        "bba": "BBA",
+        "newForce": "New forces"
+      }
     }
   },
   "analysis": {

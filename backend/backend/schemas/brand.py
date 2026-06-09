@@ -2,6 +2,8 @@ from pydantic import BaseModel, Field, field_validator
 
 from backend.common.types import DataType
 
+MAX_BRAND_COMPARE = 4
+
 
 class TrendAllPeriodsQuery(BaseModel):
     brand_names: list[str] = Field(...)
@@ -14,7 +16,9 @@ class TrendAllPeriodsQuery(BaseModel):
             parts = value
         else:
             parts = ",".join(str(item) for item in value)
-        names = [name.strip() for name in parts.split(",") if name.strip()][:3]
+        names = [name.strip() for name in parts.split(",") if name.strip()][
+            :MAX_BRAND_COMPARE
+        ]
         if not names:
             raise ValueError("brand_names 不能为空")
         return names

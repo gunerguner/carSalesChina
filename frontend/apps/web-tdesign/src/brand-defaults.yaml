@@ -1,5 +1,32 @@
 # 品牌销量趋势页：多选下拉的默认勾选（须与接口返回的 brand_name 一致）
-defaultSelectedBrands:
+defaultSelectedBrands: &mainBrands
   - 比亚迪
   - 大众
   - 丰田
+
+quickFilters:
+  - id: clear
+    action: clear
+    labelKey: sales.brand.trend.quickFilter.clear
+  - id: main
+    labelKey: sales.brand.trend.quickFilter.main
+    brands: *mainBrands
+  - id: japanese
+    labelKey: sales.brand.trend.quickFilter.japanese
+    brands:
+      - 丰田
+      - 本田
+      - 日产
+  - id: bba
+    labelKey: sales.brand.trend.quickFilter.bba
+    brands:
+      - 奔驰
+      - 宝马
+      - 大众
+  - id: newForce
+    labelKey: sales.brand.trend.quickFilter.newForce
+    brands:
+      - 蔚来
+      - 小鹏
+      - 理想汽车
+      - 极氪

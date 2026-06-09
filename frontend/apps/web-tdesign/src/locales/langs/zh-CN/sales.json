@@ -53,7 +53,7 @@
         "title": "品牌销量",
         "trend": {
             "selectBrands": "选择品牌",
-            "selectPlaceholder": "请选择品牌（最多3个）",
+            "selectPlaceholder": "请选择品牌（最多4个）",
             "granularity": "统计周期",
             "recentYear": "近一年",
             "recentTwoYears": "近两年",
@@ -67,7 +67,14 @@
             "salesWithYoyRetail": "（销量+同比）",
             "salesWithYoyProduction": "（产量+同比）",
             "time": "时间",
-            "noData": "请选择至少1个品牌"
+            "noData": "请选择至少1个品牌",
+            "quickFilter": {
+                "clear": "清空搜索",
+                "main": "主要品牌",
+                "japanese": "日系",
+                "bba": "BBA",
+                "newForce": "新势力"
+            }
         }
     },
     "analysis": {
