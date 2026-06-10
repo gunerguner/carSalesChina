@@ -177,7 +177,6 @@ export function useBrandSalesData() {
     fetchRawData,
     granularity,
     loading,
-    rawData,
     selectedBrands,
     tableTimeLabelMaxCount,
     timeLabels,

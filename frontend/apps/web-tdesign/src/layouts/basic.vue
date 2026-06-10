@@ -7,7 +7,8 @@ import { VbenIconButton } from '@vben/common-ui';
 import { RotateCw } from '@vben/icons';
 import { BasicLayout } from '@vben/layouts';
 
-import { notification } from '#/adapter/tdesign';
+import { NotifyPlugin as notification } from 'tdesign-vue-next';
+
 import {
   refreshBrandMetaApi,
   refreshOriginApi,

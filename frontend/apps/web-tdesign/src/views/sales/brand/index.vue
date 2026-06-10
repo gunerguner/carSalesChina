@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import type { BrandTrendGranularity } from './useBrandSalesData';
 
+import { computed } from 'vue';
+
+import { preferences } from '@vben/preferences';
+
 import { Card } from 'tdesign-vue-next';
 
+import ChartCard from '#/components/ChartCard.vue';
 import DataLoadState from '#/components/DataLoadState.vue';
 import { $t } from '#/locales';
 
 import BrandSelectBar from './components/BrandSelectBar.vue';
-import BrandTrendChart from './components/BrandTrendChart.vue';
+import { buildBrandTrendChartOption } from './components/brandTrendChart';
 import BrandTrendTable from './components/BrandTrendTable.vue';
 import { useBrandSalesData } from './useBrandSalesData';
 
@@ -22,6 +27,14 @@ const {
   tableTimeLabelMaxCount,
   timeLabels,
 } = useBrandSalesData();
+
+const chartOption = computed(() =>
+  buildBrandTrendChartOption(
+    { data: activeSeries.value, timeLabels: timeLabels.value },
+    preferences.app.locale,
+    $t,
+  ),
+);
 
 async function onFilterChange(payload: {
   brands: string[];
@@ -45,7 +58,7 @@ async function onFilterChange(payload: {
       @retry="fetchRawData(true)"
     >
       <Card :title="$t('sales.brand.trend.chartTitle')" class="mb-4">
-        <BrandTrendChart :data="activeSeries" :time-labels="timeLabels" />
+        <ChartCard :option="chartOption" />
       </Card>
 
       <Card :title="$t('sales.brand.trend.tableTitle')">

@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 
+import { preferences } from '@vben/preferences';
+
 import { Card, TabPanel, Tabs } from 'tdesign-vue-next';
 
+import ChartCard from '#/components/ChartCard.vue';
 import DataLoadState from '#/components/DataLoadState.vue';
 import { $t } from '#/locales';
 
 import MarketSalesTable from './components/MarketSalesTable.vue';
-import MarketTrendChart from './components/MarketTrendChart.vue';
+import { buildMarketTrendChartOption } from './components/marketTrendChart';
 import SalesFilterBar from './components/SalesFilterBar.vue';
 import { useMarketData } from './useMarketData';
 
@@ -39,6 +42,28 @@ const quarterlyTrendData = computed(() =>
 const yearlyTrendData = computed(() =>
   getYearlyTrend(levelType.value, dataType.value),
 );
+
+const monthlyChartOption = computed(() =>
+  buildMarketTrendChartOption(
+    { kind: 'monthly', data: monthlyTrendData.value },
+    preferences.app.locale,
+    $t,
+  ),
+);
+const quarterlyChartOption = computed(() =>
+  buildMarketTrendChartOption(
+    { kind: 'quarterly', data: quarterlyTrendData.value },
+    preferences.app.locale,
+    $t,
+  ),
+);
+const yearlyChartOption = computed(() =>
+  buildMarketTrendChartOption(
+    { kind: 'yearly', data: yearlyTrendData.value },
+    preferences.app.locale,
+    $t,
+  ),
+);
 </script>
 
 <template>
@@ -56,7 +81,7 @@ const yearlyTrendData = computed(() =>
           value="monthly"
         >
           <Card :title="$t('sales.market.monthly.chartTitle')" class="mb-4">
-            <MarketTrendChart :data="monthlyTrendData" kind="monthly" />
+            <ChartCard :option="monthlyChartOption" />
           </Card>
           <Card :title="$t('sales.market.monthly.title')">
             <MarketSalesTable
@@ -72,7 +97,7 @@ const yearlyTrendData = computed(() =>
           value="quarterly"
         >
           <Card :title="$t('sales.market.quarterly.chartTitle')" class="mb-4">
-            <MarketTrendChart :data="quarterlyTrendData" kind="quarterly" />
+            <ChartCard :option="quarterlyChartOption" />
           </Card>
           <Card :title="$t('sales.market.quarterly.title')">
             <MarketSalesTable
@@ -88,7 +113,7 @@ const yearlyTrendData = computed(() =>
           value="yearly"
         >
           <Card :title="$t('sales.market.yearly.chartTitle')" class="mb-4">
-            <MarketTrendChart :data="yearlyTrendData" kind="yearly" />
+            <ChartCard :option="yearlyChartOption" />
           </Card>
           <Card :title="$t('sales.market.yearly.title')">
             <MarketSalesTable

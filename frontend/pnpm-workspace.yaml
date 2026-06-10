@@ -18,11 +18,7 @@ overrides:
 
 catalog:
   '@ast-grep/napi': ^0.42.1
-  '@changesets/changelog-github': ^0.6.0
-  '@changesets/cli': ^2.30.0
   '@changesets/git': ^3.0.4
-  '@commitlint/cli': ^20.5.0
-  '@commitlint/config-conventional': ^20.5.0
   '@ctrl/tinycolor': ^4.2.0
   '@eslint-community/eslint-plugin-eslint-comments': ^4.7.1
   '@eslint/js': ^10.0.1
@@ -67,12 +63,8 @@ catalog:
   circular-dependency-scanner: ^3.0.1
   class-variance-authority: ^0.7.1
   clsx: ^2.1.1
-  commitlint-plugin-function-rules: ^4.3.2
   consola: ^3.4.2
   cross-env: ^10.1.0
-  cspell: ^10.0.0
-  cz-git: ^1.12.0
-  czg: ^1.12.0
   dayjs: ^1.11.20
   defu: ^6.1.7
   depcheck: ^1.4.7

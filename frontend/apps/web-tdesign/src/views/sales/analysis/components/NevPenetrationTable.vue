@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { PrimaryTableCol, TableRowData } from 'tdesign-vue-next';
+
 import type {
   NevBreakdownRecord,
   NevShareTrendRecord,
@@ -9,7 +11,7 @@ import { computed } from 'vue';
 import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
-import { formatNumberCell, formatPercentCell } from '#/utils/format';
+import { formatNumberOrDash, formatPercentOrDash } from '#/utils/format';
 import { toMonthKey } from '#/utils/period';
 
 const props = defineProps<{
@@ -27,37 +29,47 @@ interface NevPenetrationRow {
   totalSales: null | number;
 }
 
-const columns = [
+function numberCell(key: 'bevSales' | 'nevSales' | 'totalSales') {
+  return (_: unknown, { row }: { row: TableRowData }) =>
+    formatNumberOrDash((row as NevPenetrationRow)[key]);
+}
+
+function percentCell(key: 'bevRatio' | 'penetrationRate') {
+  return (_: unknown, { row }: { row: TableRowData }) =>
+    formatPercentOrDash((row as NevPenetrationRow)[key]);
+}
+
+const columns: PrimaryTableCol[] = [
   { colKey: 'time', title: $t('sales.analysis.nev.time'), width: 120 },
   {
     colKey: 'totalSales',
     title: $t('sales.analysis.nev.totalSales'),
     width: 130,
-    cell: (_h: any, { row }: any) => formatNumberCell(row.totalSales),
+    cell: numberCell('totalSales'),
   },
   {
     colKey: 'nevSales',
     title: $t('sales.analysis.nev.nevSales'),
     width: 130,
-    cell: (_h: any, { row }: any) => formatNumberCell(row.nevSales),
+    cell: numberCell('nevSales'),
   },
   {
     colKey: 'penetrationRate',
     title: $t('sales.analysis.nev.penetrationRate'),
     width: 140,
-    cell: (_h: any, { row }: any) => formatPercentCell(row.penetrationRate),
+    cell: percentCell('penetrationRate'),
   },
   {
     colKey: 'bevSales',
     title: $t('sales.analysis.nev.bevSales'),
     width: 130,
-    cell: (_h: any, { row }: any) => formatNumberCell(row.bevSales),
+    cell: numberCell('bevSales'),
   },
   {
     colKey: 'bevRatio',
     title: $t('sales.analysis.nev.bevRatioInNev'),
     width: 170,
-    cell: (_h: any, { row }: any) => formatPercentCell(row.bevRatio),
+    cell: percentCell('bevRatio'),
   },
 ];
 

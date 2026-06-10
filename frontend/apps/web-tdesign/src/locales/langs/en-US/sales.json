@@ -15,28 +15,15 @@
       "dataTypeRetail": "Retail",
       "dataTypeProduction": "Production"
     },
-    "overview": {
-      "totalSales": "Total Sales",
-      "nevSales": "NEV Sales",
-      "nevPenetration": "NEV Penetration",
-      "momGrowth": "MoM Growth",
-      "yoyGrowth": "YoY Growth",
-      "unit": "units"
-    },
     "monthly": {
       "title": "Monthly Sales",
       "chartTitle": "Monthly Sales Trend",
-      "month": "Month",
-      "sales": "Sales",
       "momGrowth": "MoM Growth(%)",
-      "yoyGrowth": "YoY Growth(%)",
-      "totalSales": "Total Sales",
-      "nevSales": "NEV Sales"
+      "yoyGrowth": "YoY Growth(%)"
     },
     "quarterly": {
       "title": "Quarterly Sales",
       "chartTitle": "Quarterly Sales Trend",
-      "quarter": "Quarter",
       "sales": "Sales",
       "qoqGrowth": "QoQ Growth(%)",
       "yoyGrowth": "YoY Growth(%)"
@@ -44,7 +31,6 @@
     "yearly": {
       "title": "Yearly Sales",
       "chartTitle": "Yearly Sales Trend",
-      "year": "Year",
       "sales": "Sales",
       "yoyGrowth": "YoY Growth(%)"
     }
@@ -63,7 +49,6 @@
       "production": "Production",
       "chartTitle": "Brand sales trend",
       "tableTitle": "Brand sales detail",
-      "salesWithYoy": " (Sales, YoY)",
       "salesWithYoyRetail": " (Sales, YoY)",
       "salesWithYoyProduction": " (Production, YoY)",
       "time": "Time",
@@ -117,16 +102,9 @@
     "noData": "No Data",
     "loading": "Loading...",
     "loadFailed": "Failed to load data. Please try again.",
-    "retry": "Retry",
-    "year": "Year",
-    "month": "Month"
+    "retry": "Retry"
   },
   "admin": {
-    "refreshData": "Refresh Data",
-    "refreshing": "Refreshing...",
-    "refreshBrandMeta": "Refreshing brand metadata...",
-    "refreshSales": "Refreshing sales data...",
-    "refreshOrigin": "Refreshing origin data...",
     "refreshSuccess": "Data refresh completed",
     "refreshFailed": "Data refresh failed",
     "refreshPartial": "Data refresh completed with errors",

@@ -3,7 +3,7 @@ import { ref } from 'vue';
 export const LOAD_FAILED_I18N_KEY = 'sales.common.loadFailed';
 
 /**
- * Dedupes in-flight work and optionally skips after first successful run (until `invalidate()`).
+ * Dedupes in-flight work and optionally skips after first successful run.
  * Used by sales data composables that load once per session unless `force` is true.
  */
 export function createFetchOnceController() {
@@ -45,11 +45,7 @@ export function createFetchOnceController() {
     return pending;
   }
 
-  function invalidate() {
-    hasFetched = false;
-  }
-
-  return { clearError, error, execute, invalidate, loading };
+  return { error, execute, loading };
 }
 
 export interface KeyedFetchControllerOptions<T> {
@@ -72,10 +68,6 @@ export function createKeyedFetchController<T>(
 
   function clearError() {
     error.value = null;
-  }
-
-  function invalidate() {
-    cache.clear();
   }
 
   async function execute(force = false): Promise<void> {
@@ -124,5 +116,5 @@ export function createKeyedFetchController<T>(
     }
   }
 
-  return { clearError, data, error, execute, invalidate, loading };
+  return { data, error, execute, loading };
 }

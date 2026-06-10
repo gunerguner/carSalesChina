@@ -70,7 +70,7 @@ const tableData = computed(() => {
   }
 
   return tableTimeLabels.value.map((time) => {
-    const row: Record<string, any> = { key: time, time };
+    const row: Record<string, null | number | string> = { key: time, time };
     for (const brand of props.data) {
       const point = brandMap.get(brand.brand_name)?.get(time);
       if (notNil(point)) {

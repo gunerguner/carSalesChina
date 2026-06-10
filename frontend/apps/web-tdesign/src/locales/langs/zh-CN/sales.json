@@ -15,28 +15,15 @@
       "dataTypeRetail": "零售量",
       "dataTypeProduction": "产量"
     },
-    "overview": {
-      "totalSales": "当月总销量",
-      "nevSales": "新能源销量",
-      "nevPenetration": "NEV渗透率",
-      "momGrowth": "环比增长",
-      "yoyGrowth": "同比增长",
-      "unit": "辆"
-    },
     "monthly": {
       "title": "月度销量",
       "chartTitle": "月度销量趋势",
-      "month": "月份",
-      "sales": "销量",
       "momGrowth": "环比增长(%)",
-      "yoyGrowth": "同比增长(%)",
-      "totalSales": "总销量",
-      "nevSales": "新能源销量"
+      "yoyGrowth": "同比增长(%)"
     },
     "quarterly": {
       "title": "季度销量",
       "chartTitle": "季度销量趋势",
-      "quarter": "季度",
       "sales": "销量",
       "qoqGrowth": "环比增长(%)",
       "yoyGrowth": "同比增长(%)"
@@ -44,7 +31,6 @@
     "yearly": {
       "title": "年度销量",
       "chartTitle": "年度销量趋势",
-      "year": "年份",
       "sales": "销量",
       "yoyGrowth": "同比增长(%)"
     }
@@ -63,7 +49,6 @@
       "production": "产量",
       "chartTitle": "品牌销量趋势",
       "tableTitle": "品牌销量明细",
-      "salesWithYoy": "（销量+同比）",
       "salesWithYoyRetail": "（销量+同比）",
       "salesWithYoyProduction": "（产量+同比）",
       "time": "时间",
@@ -117,16 +102,9 @@
     "noData": "暂无数据",
     "loading": "加载中...",
     "loadFailed": "数据加载失败，请稍后重试",
-    "retry": "重试",
-    "year": "年",
-    "month": "月"
+    "retry": "重试"
   },
   "admin": {
-    "refreshData": "刷新数据",
-    "refreshing": "正在刷新...",
-    "refreshBrandMeta": "正在刷新品牌元数据...",
-    "refreshSales": "正在刷新销量数据...",
-    "refreshOrigin": "正在刷新国别数据...",
     "refreshSuccess": "数据刷新完成",
     "refreshFailed": "数据刷新失败",
     "refreshPartial": "数据刷新未完全成功",

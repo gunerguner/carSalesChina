@@ -64,8 +64,6 @@ export function getEmptyChartOption(text: string): ECOption {
   };
 }
 
-export { formatSalesAxisLabel };
-
 export function lineSeriesTooltipFormatter(
   params: LineTooltipParams | LineTooltipParams[],
 ): string {
@@ -73,7 +71,7 @@ export function lineSeriesTooltipFormatter(
   if (arr.length === 0) return '';
   const head = arr[0];
   if (!head) return '';
-  const label = String(head.axisValueLabel ?? head.name ?? '');
+  const label = head.axisValueLabel ?? head.name ?? '';
   const body = arr
     .map((p) => {
       const v = formatNumberOrDash(Math.round(Number(p.value)));

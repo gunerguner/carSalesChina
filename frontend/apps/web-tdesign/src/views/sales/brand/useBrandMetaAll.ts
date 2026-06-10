@@ -5,7 +5,7 @@ import { computed, ref } from 'vue';
 import { getBrandMetaAllApi } from '#/api/sales/brand';
 import { createFetchOnceController } from '#/composables/useFetchOnce';
 
-const { error, execute, loading } = createFetchOnceController();
+const { execute, loading } = createFetchOnceController();
 const brandMetaList = ref<BrandMetaItem[]>([]);
 
 export function useBrandMetaAll() {
@@ -24,8 +24,6 @@ export function useBrandMetaAll() {
   }
 
   return {
-    brandMetaList,
-    brandMetaError: error,
     brandOptions,
     brandMetaLoading: loading,
     ensureLoaded,

@@ -11,7 +11,6 @@ import {
   formatMonthPeriod,
   formatQuarterPeriod,
   formatYearPeriod,
-  sortByNumberAsc,
   toYearMonthSortKey,
   toYearQuarterSortKey,
 } from '#/utils/period';
@@ -26,12 +25,6 @@ type Translate = (key: string) => string;
 const PERIOD_WIDTHS = { monthly: 120, quarterly: 130, yearly: 110 } as const;
 
 type DataType = 'production' | 'retail';
-
-function salesColumnTitle(dataType: DataType, t: Translate) {
-  return dataType === 'production'
-    ? t('sales.market.column.productionSales')
-    : t('sales.market.column.retailSales');
-}
 
 function monthlySorter(a: TableRowData, b: TableRowData): number {
   const ra = a as MonthlyDetailRecord;
@@ -54,7 +47,7 @@ function quarterlySorter(a: TableRowData, b: TableRowData): number {
 function yearlySorter(a: TableRowData, b: TableRowData): number {
   const ra = a as YearlyTrendRecord;
   const rb = b as YearlyTrendRecord;
-  return sortByNumberAsc(ra.year, rb.year);
+  return ra.year - rb.year;
 }
 
 export function buildMarketSalesTableColumns(
@@ -66,6 +59,11 @@ export function buildMarketSalesTableColumns(
   if (kind === 'monthly') sorter = monthlySorter;
   else if (kind === 'quarterly') sorter = quarterlySorter;
 
+  const salesTitle =
+    dataType === 'production'
+      ? t('sales.market.column.productionSales')
+      : t('sales.market.column.retailSales');
+
   const base = [
     {
       colKey: 'periodText',
@@ -73,7 +71,7 @@ export function buildMarketSalesTableColumns(
       title: t('sales.market.timePeriod'),
       width: PERIOD_WIDTHS[kind],
     },
-    { colKey: 'salesText', title: salesColumnTitle(dataType, t), width: 150 },
+    { colKey: 'salesText', title: salesTitle, width: 150 },
     {
       cell: growthTableCell('yoyGrowth'),
       colKey: 'yoyGrowth',

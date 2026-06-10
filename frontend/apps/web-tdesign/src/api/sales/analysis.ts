@@ -14,8 +14,6 @@ export interface NevShareTrendRecord extends AnalysisPeriodRecord {
 export interface NevBreakdownRecord extends AnalysisPeriodRecord {
   bev_ratio: null | number;
   bev_sales: null | number;
-  hybrid_ratio: null | number;
-  phev_ratio: null | number;
 }
 
 export interface OriginShareTrendRecord extends AnalysisPeriodRecord {
@@ -30,7 +28,6 @@ export interface OriginShareTrendRecord extends AnalysisPeriodRecord {
 
 export interface AnalysisTrendParams {
   granularity?: 'monthly' | 'yearly';
-  years?: number;
 }
 
 export function getNevShareTrendApi(params?: AnalysisTrendParams) {

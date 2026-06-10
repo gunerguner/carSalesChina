@@ -8,7 +8,7 @@ import {
   RequestClient,
 } from '@vben/request';
 
-import { message } from '#/adapter/tdesign';
+import { MessagePlugin as message } from 'tdesign-vue-next';
 
 const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
 

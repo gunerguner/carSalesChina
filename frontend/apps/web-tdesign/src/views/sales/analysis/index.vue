@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { Card, TabPanel, Tabs } from 'tdesign-vue-next';
 
+import ChartCard from '#/components/ChartCard.vue';
 import DataLoadState from '#/components/DataLoadState.vue';
 import { $t } from '#/locales';
 import { getChartPaletteColor } from '#/utils/chart';
 
 import NevPenetrationTable from './components/NevPenetrationTable.vue';
-import NevTrendLineChart from './components/NevTrendLineChart.vue';
-import OriginShareChart from './components/OriginShareChart.vue';
+import { buildNevTrendChartOption } from './components/nevTrendChart';
+import { buildOriginShareChartOption } from './components/originShareChart';
 import OriginShareTable from './components/OriginShareTable.vue';
 import { useAnalysisData } from './useAnalysisData';
 
@@ -25,6 +26,34 @@ const {
 } = useAnalysisData();
 
 onMounted(() => fetchAll());
+
+const nevPenetrationChartOption = computed(() =>
+  buildNevTrendChartOption(
+    {
+      color: getChartPaletteColor(0),
+      data: nevShareTrend.value,
+      label: $t('sales.analysis.nev.penetrationRateLabel'),
+      valueKey: 'nev_penetration_rate',
+    },
+    $t,
+  ),
+);
+
+const bevBreakdownChartOption = computed(() =>
+  buildNevTrendChartOption(
+    {
+      color: getChartPaletteColor(1),
+      data: nevBreakdown.value,
+      label: $t('sales.analysis.nev.bevInNevTrendLabel'),
+      valueKey: 'bev_ratio',
+    },
+    $t,
+  ),
+);
+
+const originShareChartOption = computed(() =>
+  buildOriginShareChartOption(originShareTrend.value, $t),
+);
 </script>
 
 <template>
@@ -41,22 +70,18 @@ onMounted(() => fetchAll());
               :title="$t('sales.analysis.nev.penetrationChartTitle')"
               class="flex-1"
             >
-              <NevTrendLineChart
-                :data="nevShareTrend"
-                :label="$t('sales.analysis.nev.penetrationRateLabel')"
-                :color="getChartPaletteColor(0)"
-                value-key="nev_penetration_rate"
+              <ChartCard
+                height-class="h-72"
+                :option="nevPenetrationChartOption"
               />
             </Card>
             <Card
               :title="$t('sales.analysis.nev.breakdownChartTitle')"
               class="flex-1"
             >
-              <NevTrendLineChart
-                :data="nevBreakdown"
-                :label="$t('sales.analysis.nev.bevInNevTrendLabel')"
-                :color="getChartPaletteColor(1)"
-                value-key="bev_ratio"
+              <ChartCard
+                height-class="h-72"
+                :option="bevBreakdownChartOption"
               />
             </Card>
           </div>
@@ -73,7 +98,7 @@ onMounted(() => fetchAll());
           value="origin"
         >
           <Card :title="$t('sales.analysis.origin.chartTitle')" class="mb-4">
-            <OriginShareChart :data="originShareTrend" />
+            <ChartCard :option="originShareChartOption" />
           </Card>
           <Card :title="$t('sales.analysis.origin.chartTitle')">
             <OriginShareTable :data="originShareTrend" />

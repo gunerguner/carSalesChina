@@ -8,7 +8,6 @@ import type {
 
 import {
   buildLineChartOption,
-  buildValueYAxis,
   getChartPaletteColor,
   getEmptyChartOption,
 } from '#/utils/chart';
@@ -42,8 +41,8 @@ function buildMonthlyOption(
   }
   const years = [...yearDataMap.keys()].toSorted((a, b) => a - b);
 
-  return {
-    animation: false,
+  return buildLineChartOption({
+    locale,
     grid: {
       bottom: '12%',
       containLabel: true,
@@ -53,20 +52,12 @@ function buildMonthlyOption(
     },
     legend: { bottom: 0, data: years.map(String) },
     series: years.map((year, i) => ({
-      data: yearDataMap.get(year),
-      itemStyle: { color: getChartPaletteColor(i) },
+      color: getChartPaletteColor(i),
+      data: yearDataMap.get(year) ?? [],
       name: String(year),
-      smooth: true,
-      type: 'line',
     })),
-    tooltip: { axisPointer: { type: 'shadow' }, trigger: 'axis' },
-    xAxis: {
-      boundaryGap: false,
-      data: getLocalizedMonthLabels(locale),
-      type: 'category',
-    },
-    yAxis: buildValueYAxis(locale),
-  };
+    xData: getLocalizedMonthLabels(locale),
+  });
 }
 
 function buildQuarterlyOption(
@@ -114,15 +105,11 @@ export function buildMarketTrendChartOption(
   locale: string,
   t: Translate,
 ): ECOption {
-  switch (input.kind) {
-    case 'monthly': {
-      return buildMonthlyOption(input.data, locale, t);
-    }
-    case 'quarterly': {
-      return buildQuarterlyOption(input.data, locale, t);
-    }
-    case 'yearly': {
-      return buildYearlyOption(input.data, locale, t);
-    }
+  if (input.kind === 'monthly') {
+    return buildMonthlyOption(input.data, locale, t);
   }
+  if (input.kind === 'quarterly') {
+    return buildQuarterlyOption(input.data, locale, t);
+  }
+  return buildYearlyOption(input.data, locale, t);
 }

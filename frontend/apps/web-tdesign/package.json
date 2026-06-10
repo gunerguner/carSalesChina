@@ -28,7 +28,6 @@
   "dependencies": {
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
-    "@vben/constants": "workspace:*",
     "@vben/hooks": "workspace:*",
     "@vben/icons": "workspace:*",
     "@vben/layouts": "workspace:*",
@@ -48,5 +47,9 @@
     "vue": "catalog:",
     "vue-router": "catalog:",
     "yaml": "catalog:"
+  },
+  "devDependencies": {
+    "@vben/tsconfig": "workspace:*",
+    "typescript": "catalog:"
   }
 }

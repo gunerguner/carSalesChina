@@ -27,10 +27,6 @@ function readStringList(value: unknown): string[] {
   return value.map(String).filter(Boolean);
 }
 
-function readDefaultBrandNames(max: number): string[] {
-  return readStringList(parsedDefaults.defaultSelectedBrands).slice(0, max);
-}
-
 function readQuickFilters(): BrandQuickFilter[] {
   const list = parsedDefaults.quickFilters;
   if (!Array.isArray(list)) {
@@ -72,8 +68,9 @@ export function resolveBrandNames(
 }
 
 /** 自模块加载时解析 YAML，最多 MAX_BRAND_COMPARE 个 */
-export const DEFAULT_SELECTED_BRAND_NAMES =
-  readDefaultBrandNames(MAX_BRAND_COMPARE);
+export const DEFAULT_SELECTED_BRAND_NAMES = readStringList(
+  parsedDefaults.defaultSelectedBrands,
+).slice(0, MAX_BRAND_COMPARE);
 
 /** 快筛配置（按钮文案走 labelKey → i18n） */
 export const BRAND_QUICK_FILTERS = readQuickFilters();

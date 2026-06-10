@@ -35,7 +35,7 @@ export function formatNumberOrDash(
   value: null | number | undefined,
   locale?: string,
 ): string {
-  return isNil(value) ? '-' : Number(value).toLocaleString(locale);
+  return isNil(value) ? '-' : value.toLocaleString(locale);
 }
 
 export function formatSalesAxisLabel(value: number, locale: string): string {
@@ -44,21 +44,7 @@ export function formatSalesAxisLabel(value: number, locale: string): string {
       ? `${(value / 10_000).toFixed(0)}万`
       : `${(value / 1000).toFixed(0)}k`;
   }
-  return Number(value).toLocaleString(locale);
-}
-
-export function formatNumberCell(
-  value: null | number | undefined,
-  locale?: string,
-): string {
-  return formatNumberOrDash(value, locale);
-}
-
-export function formatPercentCell(
-  value: null | number | undefined,
-  digits = 2,
-): string {
-  return formatPercentOrDash(value, digits);
+  return value.toLocaleString(locale);
 }
 
 export function growthColor(val: null | number | undefined): string {
@@ -91,7 +77,7 @@ export function salesYoyTableCell(salesKey: string, yoyKey: string) {
   ) => {
     const sales = row[salesKey];
     const yoy = row[yoyKey];
-    const salesText = isNil(sales) ? '-' : Number(sales).toLocaleString();
+    const salesText = isNil(sales) ? '-' : sales.toLocaleString();
     if (isNil(yoy)) {
       return salesText;
     }
