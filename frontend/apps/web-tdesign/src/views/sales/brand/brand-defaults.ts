@@ -1,7 +1,7 @@
 import { parse } from 'yaml';
 
 import brandDefaultsYaml from '#/brand-defaults.yaml?raw';
-import { isNil, notNil } from '#/utils/format';
+import { isNil } from '#/utils/format';
 
 interface BrandDefaultsFile {
   defaultSelectedBrands?: unknown;
@@ -55,7 +55,7 @@ function readQuickFilters(): BrandQuickFilter[] {
         ...(brands.length > 0 ? { brands } : {}),
       };
     })
-    .filter((item): item is BrandQuickFilter => notNil(item));
+    .filter((item): item is BrandQuickFilter => !isNil(item));
 }
 
 /** 从配置名列表中筛出元数据存在的品牌并截断至 max */

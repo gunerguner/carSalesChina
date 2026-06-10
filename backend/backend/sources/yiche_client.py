@@ -394,10 +394,3 @@ class YicheBrandClient:
             len(master_ids), len(BRAND_FETCH_DIMS), len(records), ok,
         )
         return SourceFetchResult(records=records, ok=ok, errors=errors)
-
-
-class YicheClient(YicheOverallClient, YicheBrandClient):
-    """易车 API 聚合客户端，向后兼容原有调用方式。"""
-
-    def fetch_all(self) -> SourceFetchResult:
-        return self.fetch_overall_sales()

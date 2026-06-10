@@ -6,7 +6,7 @@ import type {
   YearlyTrendRecord,
 } from '../useMarketData';
 
-import { growthTableCell, growthTableRowFields, isNil } from '#/utils/format';
+import { growthTableRowFields } from '#/utils/format';
 import {
   formatMonthPeriod,
   formatQuarterPeriod,
@@ -14,6 +14,7 @@ import {
   toYearMonthSortKey,
   toYearQuarterSortKey,
 } from '#/utils/period';
+import { growthTableCell } from '#/utils/render';
 
 export type MarketSalesTableInput =
   | { data: MonthlyDetailRecord[]; kind: 'monthly' }
@@ -117,7 +118,7 @@ export function buildMarketSalesTableRows(
       ...growthTableRowFields('momGrowth', r.momGrowth),
       ...growthTableRowFields('yoyGrowth', r.yoyGrowth),
       periodText: formatMonthPeriod(r.year, r.monthNum, locale),
-      salesText: isNil(r.sales) ? '-' : r.sales.toLocaleString(),
+      salesText: r.sales.toLocaleString(),
     }));
   }
 
@@ -134,9 +135,7 @@ export function buildMarketSalesTableRows(
           ...r,
           ...growthTableRowFields('yoyGrowth', r.yoyGrowth),
           periodText: formatYearPeriod(r.year, locale),
-          salesText: isNil(r.sales)
-            ? '-'
-            : Math.round(r.sales).toLocaleString(),
+          salesText: Math.round(r.sales).toLocaleString(),
         }));
 
   return rows.toReversed();

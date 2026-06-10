@@ -8,7 +8,8 @@ import { computed } from 'vue';
 import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
-import { notNil, salesYoyTableCell } from '#/utils/format';
+import { isNil } from '#/utils/format';
+import { salesYoyTableCell } from '#/utils/render';
 
 const props = defineProps<{
   data: BrandSeriesRecord[];
@@ -73,7 +74,7 @@ const tableData = computed(() => {
     const row: Record<string, null | number | string> = { key: time, time };
     for (const brand of props.data) {
       const point = brandMap.get(brand.brand_name)?.get(time);
-      if (notNil(point)) {
+      if (!isNil(point)) {
         row[`brand_${brand.brand_name}_sales`] = point.sales;
         row[`brand_${brand.brand_name}_yoy`] = point.yoyGrowth;
       }

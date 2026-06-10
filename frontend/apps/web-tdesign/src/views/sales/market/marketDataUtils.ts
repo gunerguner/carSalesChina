@@ -14,7 +14,7 @@ export interface MonthlyDetailRecord {
   month: number;
   monthNum: number;
   momGrowth: null | number;
-  sales: null | number;
+  sales: number;
   year: number;
   yoyGrowth: null | number;
 }

@@ -8,7 +8,7 @@ import { computed } from 'vue';
 import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
-import { formatPercentOrDash } from '#/utils/format';
+import { formatOrDash } from '#/utils/format';
 import { toMonthKey, toYearMonthSortKey } from '#/utils/period';
 
 const props = defineProps<{
@@ -25,21 +25,21 @@ type OriginShareKey =
   | 'korean';
 
 interface OriginShareRow {
-  american: null | number;
-  domestic: null | number;
-  european: null | number;
-  french: null | number;
-  german: null | number;
-  japanese: null | number;
+  american: number;
+  domestic: number;
+  european: number;
+  french: number;
+  german: number;
+  japanese: number;
   key: number;
-  korean: null | number;
+  korean: number;
   sortKey: number;
   time: string;
 }
 
 function percentCell(key: OriginShareKey) {
   return (_: unknown, { row }: { row: TableRowData }) =>
-    formatPercentOrDash((row as OriginShareRow)[key]);
+    formatOrDash((row as OriginShareRow)[key], '%');
 }
 
 const columns: PrimaryTableCol[] = [
@@ -94,13 +94,13 @@ const tableData = computed<OriginShareRow[]>(() => {
       key: index,
       time: toMonthKey(item.year, item.month),
       sortKey: toYearMonthSortKey(item.year, item.month),
-      domestic: item.domestic ?? null,
-      german: item.german ?? null,
-      japanese: item.japanese ?? null,
-      american: item.american ?? null,
-      european: item.european ?? null,
-      korean: item.korean ?? null,
-      french: item.french ?? null,
+      domestic: item.domestic,
+      german: item.german,
+      japanese: item.japanese,
+      american: item.american,
+      european: item.european,
+      korean: item.korean,
+      french: item.french,
     }))
     .toSorted((a, b) => b.sortKey - a.sortKey);
 });

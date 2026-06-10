@@ -9,7 +9,6 @@ import {
   ORIGIN_COLORS,
   ORIGIN_KEYS,
 } from '#/utils/chart';
-import { isNil } from '#/utils/format';
 import { toMonthKey } from '#/utils/period';
 
 type Translate = (key: string) => string;
@@ -35,10 +34,7 @@ export function buildOriginShareChartOption(
   const timeLabels = data.map((item) => toMonthKey(item.year, item.month));
   const series = ORIGIN_KEYS.map((key) => ({
     color: ORIGIN_COLORS[key],
-    data: data.map((item) => {
-      const v = item[key];
-      return isNil(v) ? 0 : +v.toFixed(2);
-    }),
+    data: data.map((item) => +item[key].toFixed(2)),
     name: t(ORIGIN_LABEL_KEYS[key]),
   }));
 

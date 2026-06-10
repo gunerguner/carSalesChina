@@ -71,40 +71,6 @@ def _refresh_status(overall_ok: bool, brand_ok: bool) -> str:
             return "partial_failure"
 
 
-def _sales_source_errors(
-    *,
-    overall_errors: dict[str, str | None],
-    brand_errors: dict[str, str | None],
-) -> dict[str, str | None]:
-    return {**overall_errors, **brand_errors}
-
-
-def _sales_refresh_result(
-    overall_count: int,
-    brand_count: int,
-    refresh_status: str,
-    source_errors: dict[str, str | None],
-) -> dict[str, Any]:
-    return {
-        "overall_count": overall_count,
-        "brand_count": brand_count,
-        "records_count": overall_count + brand_count,
-        "status": refresh_status,
-        "source_errors": source_errors,
-    }
-
-
-def _origin_refresh_result(
-    origin_count: int, source_error: str | None, refresh_status: str
-) -> dict[str, Any]:
-    return {
-        "origin_count": origin_count,
-        "records_count": origin_count,
-        "status": refresh_status,
-        "source_errors": {"origin": source_error},
-    }
-
-
 def _normalize_brand_records(
     records: list[BrandSalesRecord],
     master_id_to_brand_id: dict[int, int],
@@ -219,10 +185,10 @@ def refresh_sales_data(db: Session) -> dict:
         brand_ok = True if not has_brand_job else (brand_fr is not None and brand_fr.ok)
         refresh_status = _refresh_status(overall_ok, brand_ok)
 
-        source_errors = _sales_source_errors(
-            overall_errors=overall_fr.to_error_map("overall"),
-            brand_errors=brand_fr.to_error_map("brand") if brand_fr else {"brand": None},
-        )
+        source_errors = {
+            **overall_fr.to_error_map("overall"),
+            **(brand_fr.to_error_map("brand") if brand_fr else {"brand": None}),
+        }
 
         logger.info(
             "销量数据刷新完成: 总体 %s 条, 品牌 %s 条, status=%s",
@@ -234,12 +200,13 @@ def refresh_sales_data(db: Session) -> dict:
             raise ExternalSourceAppError(
                 f"外部源全部失败: overall={source_errors['overall']}; brand={source_errors['brand']}"
             )
-        return _sales_refresh_result(
-            overall_count=overall_count,
-            brand_count=brand_count,
-            refresh_status=refresh_status,
-            source_errors=source_errors,
-        )
+        return {
+            "overall_count": overall_count,
+            "brand_count": brand_count,
+            "records_count": overall_count + brand_count,
+            "status": refresh_status,
+            "source_errors": source_errors,
+        }
     except Exception:
         logger.exception("销量数据刷新失败")
         raise
@@ -264,11 +231,12 @@ def refresh_origin_data(db: Session) -> dict:
             raise ExternalSourceAppError(
                 f"外部源失败: origin={origin_fr.error_summary()}"
             )
-        return _origin_refresh_result(
-            origin_count=origin_count,
-            source_error=origin_fr.to_error_map("origin")["origin"],
-            refresh_status=refresh_status,
-        )
+        return {
+            "origin_count": origin_count,
+            "records_count": origin_count,
+            "status": refresh_status,
+            "source_errors": {"origin": origin_fr.to_error_map("origin")["origin"]},
+        }
     except Exception:
         logger.exception("国别数据刷新失败")
         raise

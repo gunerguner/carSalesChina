@@ -30,15 +30,6 @@ class BrandTrendSeries(TypedDict):
     monthly_data: list[BrandMonthlyPoint]
 
 
-class SalesUpsertRow(TypedDict):
-    year: int
-    month: int
-    sales: float
-    data_type: DataType
-    date_type: DateType
-    level_type: LevelType
-
-
 class BrandSalesUpsertRow(TypedDict):
     year: int
     month: int

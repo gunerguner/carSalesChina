@@ -8,7 +8,6 @@ import type {
 import type { LineTooltipParams } from '#/utils/chart';
 
 import { buildLineChartOption, getEmptyChartOption } from '#/utils/chart';
-import { isNil } from '#/utils/format';
 import { toMonthKey } from '#/utils/period';
 
 type Translate = (key: string) => string;
@@ -25,7 +24,7 @@ export interface NevTrendChartInput {
 function getRecordValue(
   item: AnalysisPeriodRecord,
   valueKey: NevTrendValueKey,
-): null | number {
+): number {
   if (valueKey === 'nev_penetration_rate') {
     return (item as NevShareTrendRecord).nev_penetration_rate;
   }
@@ -43,10 +42,7 @@ export function buildNevTrendChartOption(
   }
 
   const timeLabels = data.map((item) => toMonthKey(item.year, item.month));
-  const values = data.map((item) => {
-    const v = getRecordValue(item, valueKey);
-    return isNil(v) ? 0 : +v.toFixed(2);
-  });
+  const values = data.map((item) => +getRecordValue(item, valueKey).toFixed(2));
 
   const tooltipFormatter = (
     params: LineTooltipParams | LineTooltipParams[],

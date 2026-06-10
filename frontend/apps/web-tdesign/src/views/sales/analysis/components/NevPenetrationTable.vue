@@ -11,7 +11,7 @@ import { computed } from 'vue';
 import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
-import { formatNumberOrDash, formatPercentOrDash } from '#/utils/format';
+import { formatOrDash } from '#/utils/format';
 import { toMonthKey } from '#/utils/period';
 
 const props = defineProps<{
@@ -20,23 +20,23 @@ const props = defineProps<{
 }>();
 
 interface NevPenetrationRow {
-  bevRatio: null | number;
-  bevSales: null | number;
+  bevRatio: number;
+  bevSales: number;
   key: number;
-  nevSales: null | number;
-  penetrationRate: null | number;
+  nevSales: number;
+  penetrationRate: number;
   time: string;
-  totalSales: null | number;
+  totalSales: number;
 }
 
 function numberCell(key: 'bevSales' | 'nevSales' | 'totalSales') {
   return (_: unknown, { row }: { row: TableRowData }) =>
-    formatNumberOrDash((row as NevPenetrationRow)[key]);
+    formatOrDash((row as NevPenetrationRow)[key]);
 }
 
 function percentCell(key: 'bevRatio' | 'penetrationRate') {
   return (_: unknown, { row }: { row: TableRowData }) =>
-    formatPercentOrDash((row as NevPenetrationRow)[key]);
+    formatOrDash((row as NevPenetrationRow)[key], '%');
 }
 
 const columns: PrimaryTableCol[] = [
@@ -74,15 +74,12 @@ const columns: PrimaryTableCol[] = [
 ];
 
 const tableData = computed<NevPenetrationRow[]>(() => {
-  const bevMap = new Map<
-    string,
-    { bevRatio: null | number; bevSales: null | number }
-  >();
+  const bevMap = new Map<string, { bevRatio: number; bevSales: number }>();
   for (const item of props.breakdownTrend) {
     const key = toMonthKey(item.year, item.month);
     bevMap.set(key, {
-      bevSales: item.bev_sales ?? null,
-      bevRatio: item.bev_ratio ?? null,
+      bevSales: item.bev_sales,
+      bevRatio: item.bev_ratio,
     });
   }
 
@@ -93,11 +90,11 @@ const tableData = computed<NevPenetrationRow[]>(() => {
       return {
         key: index,
         time: key,
-        totalSales: item.total_sales ?? null,
-        nevSales: item.nev_sales ?? null,
-        penetrationRate: item.nev_penetration_rate ?? null,
-        bevSales: bevInfo?.bevSales ?? null,
-        bevRatio: bevInfo?.bevRatio ?? null,
+        totalSales: item.total_sales,
+        nevSales: item.nev_sales,
+        penetrationRate: item.nev_penetration_rate,
+        bevSales: bevInfo?.bevSales ?? 0,
+        bevRatio: bevInfo?.bevRatio ?? 0,
       };
     })
     .toReversed();

@@ -6,24 +6,24 @@ export interface AnalysisPeriodRecord {
 }
 
 export interface NevShareTrendRecord extends AnalysisPeriodRecord {
-  nev_penetration_rate: null | number;
-  nev_sales: null | number;
-  total_sales: null | number;
+  nev_penetration_rate: number;
+  nev_sales: number;
+  total_sales: number;
 }
 
 export interface NevBreakdownRecord extends AnalysisPeriodRecord {
-  bev_ratio: null | number;
-  bev_sales: null | number;
+  bev_ratio: number;
+  bev_sales: number;
 }
 
 export interface OriginShareTrendRecord extends AnalysisPeriodRecord {
-  american: null | number;
-  domestic: null | number;
-  european: null | number;
-  french: null | number;
-  german: null | number;
-  japanese: null | number;
-  korean: null | number;
+  american: number;
+  domestic: number;
+  european: number;
+  french: number;
+  german: number;
+  japanese: number;
+  korean: number;
 }
 
 export interface AnalysisTrendParams {

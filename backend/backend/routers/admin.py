@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from backend.core.csrf import verify_csrf
 from backend.core.deps import DbSession
-from backend.core.decorators import handle_try_catch_action
+from backend.core.decorators import handle_success_response
 from backend.services.import_service import refresh_brand_meta, refresh_origin_data, refresh_sales_data
 
 router = APIRouter(
@@ -13,7 +13,7 @@ router = APIRouter(
 
 
 @router.post("/data/refresh/sales")
-@handle_try_catch_action
+@handle_success_response
 def trigger_refresh_sales(
     db: DbSession,
 ):
@@ -21,7 +21,7 @@ def trigger_refresh_sales(
 
 
 @router.post("/data/refresh/brand-meta")
-@handle_try_catch_action
+@handle_success_response
 def trigger_refresh_brand_meta(
     db: DbSession,
 ):
@@ -29,7 +29,7 @@ def trigger_refresh_brand_meta(
 
 
 @router.post("/data/refresh/origin")
-@handle_try_catch_action
+@handle_success_response
 def trigger_refresh_origin(
     db: DbSession,
 ):

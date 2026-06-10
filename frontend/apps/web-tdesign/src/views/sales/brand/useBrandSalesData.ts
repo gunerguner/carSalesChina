@@ -115,7 +115,7 @@ export function useBrandSalesData() {
             sales,
             yoyGrowth: calcGrowthPercent(
               sales,
-              pointMap.get(priorYearMonthKey(time)),
+              pointMap.get(priorYearMonthKey(time)) ?? null,
             ),
           };
         }),
@@ -139,7 +139,7 @@ export function useBrandSalesData() {
           return {
             time: String(year),
             sales,
-            yoyGrowth: calcGrowthPercent(sales, yearMap.get(year - 1)),
+            yoyGrowth: calcGrowthPercent(sales, yearMap.get(year - 1) ?? null),
           };
         }),
       };

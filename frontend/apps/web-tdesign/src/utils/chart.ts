@@ -1,6 +1,6 @@
 import type { ECOption } from '@vben/plugins/echarts';
 
-import { formatNumberOrDash, formatSalesAxisLabel } from './format';
+import { formatOrDash } from './format';
 
 export interface LineTooltipParams {
   axisValue?: string;
@@ -11,8 +11,7 @@ export interface LineTooltipParams {
   value?: number | string;
 }
 
-/** Default ECharts categorical colors (subset indices used e.g. for brand line charts). */
-export const CHART_PALETTE = [
+const CHART_PALETTE = [
   '#5470c6',
   '#91cc75',
   '#fac858',
@@ -20,7 +19,6 @@ export const CHART_PALETTE = [
   '#73c0de',
 ] as const;
 
-/** Indices into `CHART_PALETTE` for brand multi-line (matches previous hard-coded order). */
 export const BRAND_LINE_PALETTE_INDICES = [0, 3, 4, 1] as const;
 
 export function getChartPaletteColor(index: number): string {
@@ -64,37 +62,35 @@ export function getEmptyChartOption(text: string): ECOption {
   };
 }
 
-export function lineSeriesTooltipFormatter(
+function lineSeriesTooltipFormatter(
   params: LineTooltipParams | LineTooltipParams[],
 ): string {
   const arr = Array.isArray(params) ? params : [params];
-  if (arr.length === 0) return '';
   const head = arr[0];
   if (!head) return '';
   const label = head.axisValueLabel ?? head.name ?? '';
   const body = arr
-    .map((p) => {
-      const v = formatNumberOrDash(Math.round(Number(p.value)));
-      return `${p.marker}${p.seriesName}: ${v}`;
-    })
+    .map(
+      (p) =>
+        `${p.marker}${p.seriesName}: ${formatOrDash(Math.round(Number(p.value)))}`,
+    )
     .join('<br/>');
   return `${label}<br/>${body}`;
 }
 
-export function buildValueYAxis(locale: string): ECOption['yAxis'] {
+function valueYAxis(locale: string): ECOption['yAxis'] {
   return {
     type: 'value',
     axisLabel: {
-      formatter: (val: number) => formatSalesAxisLabel(val, locale),
+      formatter: (v: number) => {
+        if (v >= 10_000) {
+          return locale === 'zh-CN'
+            ? `${(v / 10_000).toFixed(0)}万`
+            : `${(v / 1000).toFixed(0)}k`;
+        }
+        return v.toLocaleString(locale);
+      },
     },
-  };
-}
-
-export function buildPercentYAxis(maxCap = 100): ECOption['yAxis'] {
-  return {
-    type: 'value',
-    axisLabel: { formatter: '{value}%' },
-    max: maxCap,
   };
 }
 
@@ -119,17 +115,19 @@ export interface BuildLineChartOptionParams {
   yAxisType?: 'percent' | 'value';
 }
 
+const DEFAULT_LINE_GRID = {
+  bottom: '3%',
+  containLabel: true,
+  left: '3%',
+  right: '4%',
+  top: '8%',
+};
+
 export function buildLineChartOption(
   params: BuildLineChartOptionParams,
 ): ECOption {
   const {
-    grid = {
-      bottom: '3%',
-      containLabel: true,
-      left: '3%',
-      right: '4%',
-      top: '8%',
-    },
+    grid = DEFAULT_LINE_GRID,
     legend,
     locale = 'zh-CN',
     percentMaxCap = 100,
@@ -140,17 +138,18 @@ export function buildLineChartOption(
     yAxisType = 'value',
   } = params;
 
-  const yAxis =
+  const yAxis: ECOption['yAxis'] =
     yAxisType === 'percent'
       ? {
-          ...buildPercentYAxis(percentMaxCap),
+          type: 'value',
+          axisLabel: { formatter: '{value}%' },
           max:
             percentMaxCap < 100
-              ? (value: { max: number }) =>
-                  Math.min(Math.ceil(value.max * 1.2), percentMaxCap)
+              ? (v: { max: number }) =>
+                  Math.min(Math.ceil(v.max * 1.2), percentMaxCap)
               : percentMaxCap,
         }
-      : buildValueYAxis(locale);
+      : valueYAxis(locale);
 
   return {
     animation: false,
@@ -193,23 +192,18 @@ export interface BuildStackedBarChartOptionParams {
   yMax?: number;
 }
 
+const DEFAULT_BAR_GRID = {
+  bottom: '15%',
+  containLabel: true,
+  left: '3%',
+  right: '4%',
+  top: '8%',
+};
+
 export function buildStackedBarChartOption(
   params: BuildStackedBarChartOptionParams,
 ): ECOption {
-  const {
-    grid = {
-      bottom: '15%',
-      containLabel: true,
-      left: '3%',
-      right: '4%',
-      top: '8%',
-    },
-    legend,
-    series,
-    xData,
-    yMax = 100,
-  } = params;
-
+  const { grid = DEFAULT_BAR_GRID, legend, series, xData, yMax = 100 } = params;
   return {
     animation: false,
     grid,
@@ -224,6 +218,6 @@ export function buildStackedBarChartOption(
     })),
     tooltip: { axisPointer: { type: 'shadow' }, trigger: 'axis' },
     xAxis: { data: xData, type: 'category' },
-    yAxis: buildPercentYAxis(yMax),
+    yAxis: { type: 'value', axisLabel: { formatter: '{value}%' }, max: yMax },
   };
 }

@@ -22,11 +22,9 @@ def get_brand_trend_all_periods(
     brand_names: list[str],
     data_type: DataType,
 ) -> list[BrandTrendSeries]:
-    names = brand_names
-
-    metas = db.exec(select(BrandMeta).where(BrandMeta.brand_name.in_(names))).all()
+    metas = db.exec(select(BrandMeta).where(BrandMeta.brand_name.in_(brand_names))).all()
     found_names = {meta.brand_name for meta in metas if meta.brand_name}
-    missing = [name for name in names if name not in found_names]
+    missing = [name for name in brand_names if name not in found_names]
     if missing:
         raise NotFoundAppError(f"品牌不存在: {', '.join(missing)}")
 
@@ -43,7 +41,7 @@ def get_brand_trend_all_periods(
     ).all()
 
     data: dict[str, BrandTrendSeries] = {
-        name: {"brand_name": name, "monthly_data": []} for name in names
+        name: {"brand_name": name, "monthly_data": []} for name in brand_names
     }
     for row in rows:
         brand_name = id_to_name.get(row.brand_id)
@@ -57,4 +55,4 @@ def get_brand_trend_all_periods(
             }
         )
 
-    return [data[name] for name in names]
+    return [data[name] for name in brand_names]

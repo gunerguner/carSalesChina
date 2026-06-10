@@ -37,14 +37,6 @@ def _percent(part: float, total: float) -> float:
     return round(part / total * 100, 2) if total else 0
 
 
-def _trend_rows(
-    period_data: dict[PeriodKey, dict[str, float]],
-    *,
-    build_entry: Callable[[PeriodKey, dict[str, float]], dict[str, Any]],
-) -> list[dict[str, Any]]:
-    return [build_entry(key, period_data[key]) for key in sorted(period_data)]
-
-
 def _sales_trend_rows(
     db: Session,
     *,
@@ -59,7 +51,7 @@ def _sales_trend_rows(
         levels=levels,
         granularity=granularity,
     )
-    return _trend_rows(period_data, build_entry=build_entry)
+    return [build_entry(key, period_data[key]) for key in sorted(period_data)]
 
 
 def _sales_by_period_and_level(

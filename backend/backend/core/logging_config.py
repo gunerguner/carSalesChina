@@ -79,8 +79,3 @@ def setup_logging() -> None:
 
     # 降低第三方噪声（仍可在 LOG_LEVEL=DEBUG 时看到）
     logging.getLogger("urllib3").setLevel(logging.WARNING)
-
-
-def get_logger(name: str) -> logging.Logger:
-    """与 logging.getLogger 等价，便于统一从本模块引用。"""
-    return logging.getLogger(name)
