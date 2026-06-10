@@ -29,6 +29,7 @@ carSales/                     # Git 根
 ├── frontend/                 # Vben Admin Monorepo
 │   ├── apps/web-tdesign/     # 业务前端（唯一业务 app）
 │   ├── packages/             # 工作区公共包
+│   ├── internal/             # Vben 工具层（lint/vite-config/tailwind）
 │   └── package.json
 └── docker/                   # Compose、Dockerfile、nginx、.env.example
 ```
@@ -40,7 +41,7 @@ carSales/                     # Git 根
 | 层 | 技术 |
 |----|------|
 | 后端 | Python ≥3.10，FastAPI，SQLModel/SQLAlchemy，Uvicorn/Gunicorn |
-| 数据库 | **MySQL 8.x**（PyMySQL）；**无 Redis**（`.env.example` 中 REDIS 未使用） |
+| 数据库 | **MySQL**（PyMySQL；Docker 镜像 `mysql:9.0`）；**无 Redis**（`.env.example` 中 REDIS 未使用） |
 | 外部源 | 易车 HTTP API（`yiche_client.py`）；乘联会 via AkShare（`cpca_client.py`） |
 | 前端 | Vue 3 + Vite，TDesign Vue Next，Vben Admin Monorepo，Pinia，ECharts |
 | 包管理 | pnpm ≥10（`packageManager: pnpm@10.33.0`），Node ^20.19 \|\| ^22.18 \|\| ^24 |
@@ -54,7 +55,7 @@ carSales/                     # Git 根
 
 **CSRF**：`CSRFCookieMiddleware` 下发 `csrf_token` Cookie；非 GET 管理接口需 `X-CSRF-Token` 与 Cookie 一致（`core/csrf.py`）。前端 `api/request.ts` 自动注入。
 
-**错误码**：`core/error_codes.py`（1001 校验、1002 权限、2001 外部源、3001 数据库、9000 内部）。
+**错误码**：`core/error_codes.py`（1001 校验、1002 权限、1003 资源不存在、2001 外部源、3001 数据库、9000 内部）；业务异常类在 `core/exceptions.py`，全局映射在 `core/exception_handlers.py`。
 
 **数据刷新**：`import_service._batch_upsert` 用 MySQL `ON DUPLICATE KEY UPDATE`；外部源返回 `SourceFetchResult`（`records`/`ok`/`errors`）；销量刷新可返回 `success` / `partial_failure` / `failed`。
 
@@ -87,9 +88,9 @@ flowchart LR
 | 新外部源 | `sources/` 新客户端，返回 `SourceFetchResult` |
 | 新表/字段 | `models/` + **`init_db.sql` 唯一索引**（upsert 依赖） |
 | 新前端页 | `router/routes/modules/sales.ts` + `views/sales/` + `locales/langs/*/sales.json` |
-| 市场本地聚合 | `marketDataUtils.ts`（优先复用，勿为每个筛选项打 API） |
-| 图表工具 | `utils/chart.ts`、`utils/format.ts`、`utils/period.ts` |
-| 管理刷新 UI | `api/admin.ts`；超时 5 分钟 |
+| 市场本地聚合 | `views/sales/market/marketDataUtils.ts`（优先复用，勿为每个筛选项打 API） |
+| 图表工具 | `src/utils/chart.ts`、`src/utils/format.ts`、`src/utils/period.ts` |
+| 管理刷新 UI | `layouts/basic.vue` 工具栏按钮（非独立路由）→ `api/admin.ts`；超时 5 分钟 |
 | 部署/静态/API 404 | 改前端后须 **重建 frontend 镜像**；`docker/nginx.conf` 反代 `/api` → backend:8001 |
 
 ## 本地开发
@@ -103,7 +104,7 @@ flowchart LR
 
 **环境变量**（`backend/.env`）：`DB_*`、`FASTAPI_PORT`、`LOG_LEVEL`、`LOG_DIR`。
 
-**前端环境**（`frontend/apps/web-tdesign/.env.*`）：`VITE_GLOB_API_URL=/api`、`VITE_PORT=5999` 等。
+**前端环境**（`frontend/apps/web-tdesign/.env.*`）：`VITE_GLOB_API_URL=/api`、`VITE_PORT=5999`、`VITE_ROUTER_HISTORY=hash`（hash 路由）等；默认首页 `defaultHomePath: '/market-sales'`（`preferences.ts`）。
 
 ## 数据初始化顺序
 

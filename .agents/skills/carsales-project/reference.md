@@ -10,8 +10,11 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 | 配置 | `backend/backend/config.py` |
 | 数据库会话 | `backend/backend/core/database.py` |
 | CSRF | `backend/backend/core/csrf.py` |
-| 异常处理 | `backend/backend/core/exception_handlers.py` |
-| 管理装饰器 | `backend/backend/core/decorators.py` |
+| 异常处理 | `backend/backend/core/exception_handlers.py`（全局映射） |
+| 业务异常类 | `backend/backend/core/exceptions.py`（`AppError`、`ExternalSourceAppError` 等） |
+| 错误码 | `backend/backend/core/error_codes.py` |
+| 管理装饰器 | `backend/backend/core/decorators.py`（`@handle_try_catch_action`、`@handle_success_response`） |
+| 公共工具 | `backend/backend/common/`（`periods.py` 周期、`types.py` 枚举） |
 | 模型 | `backend/backend/models/`（`overall.py`、`brand.py`、`origin.py`） |
 | 路由 | `backend/backend/routers/` |
 | 采集编排 | `backend/backend/services/import_service.py` |
@@ -55,6 +58,8 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 | 品牌销量 | `YicheBrandClient` | 易车 `get_master_sales_history`（按 master_id 并发） |
 | 品牌元数据 | YAML | `meta_data.yaml` → upsert `brand_meta` |
 | 国别占比 | `CpcaClient` | AkShare `car_market_country_cpca()` |
+
+客户端类（`yiche_client.py`）：`YicheOverallClient`、`YicheBrandClient`，组合类 `YicheClient(YicheOverallClient, YicheBrandClient)`；`import_service.py` 实际实例化 `YicheOverallClient()`、`YicheBrandClient()`、`CpcaClient()`（非 `YicheClient`）。
 
 刷新返回值（销量示例）：`status`、`overall_count`、`brand_count`、`records_count`、`source_errors: { overall, brand }`。
 
