@@ -1,14 +1,24 @@
 from collections import defaultdict
-from collections.abc import Callable
 from datetime import datetime
 from importlib.resources import files
-from typing import Any
 
 import yaml
 from sqlalchemy import func
 from sqlmodel import Session, select
 
-from backend.common.periods import Granularity, PeriodKey, period_columns, period_entry, period_key
+from backend.common.periods import (
+    LevelSalesByPeriod,
+    PeriodKey,
+    period_columns,
+    period_entry,
+    period_key,
+)
+from backend.common.types import (
+    Granularity,
+    NevBreakdownRow,
+    NevShareTrendRow,
+    OriginShareTrendRow,
+)
 from backend.core.exceptions import AppError, ValidationAppError
 from backend.models.origin import OriginShareData
 from backend.models.overall import SalesData
@@ -37,30 +47,13 @@ def _percent(part: float, total: float) -> float:
     return round(part / total * 100, 2) if total else 0
 
 
-def _sales_trend_rows(
-    db: Session,
-    *,
-    years: int,
-    levels: tuple[str, ...],
-    granularity: Granularity,
-    build_entry: Callable[[PeriodKey, dict[str, float]], dict[str, Any]],
-) -> list[dict[str, Any]]:
-    period_data = _sales_by_period_and_level(
-        db,
-        start_year=_start_year(years),
-        levels=levels,
-        granularity=granularity,
-    )
-    return [build_entry(key, period_data[key]) for key in sorted(period_data)]
-
-
 def _sales_by_period_and_level(
     db: Session,
     *,
     start_year: int,
     levels: tuple[str, ...],
     granularity: Granularity,
-) -> dict[PeriodKey, dict[str, float]]:
+) -> LevelSalesByPeriod:
     period_cols = period_columns(SalesData, granularity)
     rows = db.exec(
         select(
@@ -78,67 +71,83 @@ def _sales_by_period_and_level(
         .order_by(*period_cols)
     ).all()
 
-    grouped: dict[PeriodKey, dict[str, float]] = defaultdict(dict)
+    grouped: LevelSalesByPeriod = defaultdict(dict)
     for row in rows:
         grouped[period_key(row, granularity)][row.level_type] = float(row.sales or 0)
     return dict(grouped)
 
 
+def _nev_share_row(key: PeriodKey, levels: dict[str, float]) -> NevShareTrendRow:
+    total = levels.get("all", 0)
+    nev = levels.get("nev", 0)
+    return {
+        **period_entry(key),
+        "nev_penetration_rate": _percent(nev, total),
+        "total_sales": total,
+        "nev_sales": nev,
+    }
+
+
+def _nev_breakdown_row(key: PeriodKey, levels: dict[str, float]) -> NevBreakdownRow:
+    nev = levels.get("nev", 0)
+    bev = levels.get("bev", 0)
+    phev = max(nev - bev, 0)
+    return {
+        **period_entry(key),
+        "nev_sales": nev,
+        "bev_sales": bev,
+        "bev_ratio": _percent(bev, nev),
+        "phev_sales": phev,
+        "phev_ratio": _percent(phev, nev),
+        "hybrid_sales": 0,
+        "hybrid_ratio": 0,
+    }
+
+
+def _origin_share_row(
+    key: PeriodKey,
+    origins: dict[str, float],
+    total: float,
+) -> OriginShareTrendRow:
+    return {
+        **period_entry(key),
+        **{
+            origin_en: _percent(origins.get(origin_cn, 0), total)
+            for origin_cn, origin_en in ORIGIN_FIELD_MAP.items()
+        },
+    }
+
+
 def get_nev_share_trend(
     db: Session, years: int, granularity: Granularity
-) -> list[dict[str, Any]]:
-    def build_entry(key: PeriodKey, levels: dict[str, float]) -> dict[str, Any]:
-        total = levels.get("all", 0)
-        nev = levels.get("nev", 0)
-        return {
-            **period_entry(key),
-            "nev_penetration_rate": _percent(nev, total),
-            "total_sales": total,
-            "nev_sales": nev,
-        }
-
-    return _sales_trend_rows(
+) -> list[NevShareTrendRow]:
+    period_data = _sales_by_period_and_level(
         db,
-        years=years,
+        start_year=_start_year(years),
         levels=("all", "nev"),
         granularity=granularity,
-        build_entry=build_entry,
     )
+    return [_nev_share_row(key, period_data[key]) for key in sorted(period_data)]
 
 
 def get_nev_breakdown(
     db: Session, years: int, granularity: Granularity
-) -> list[dict[str, Any]]:
+) -> list[NevBreakdownRow]:
     """同期纯电占新能源比例：bev / nev；nev、bev 为易车口径下的新能源、纯电级别销量。"""
-    def build_entry(key: PeriodKey, levels: dict[str, float]) -> dict[str, Any]:
-        nev = levels.get("nev", 0)
-        bev = levels.get("bev", 0)
-        phev = max(nev - bev, 0)
-        return {
-            **period_entry(key),
-            "nev_sales": nev,
-            "bev_sales": bev,
-            "bev_ratio": _percent(bev, nev),
-            "phev_sales": phev,
-            "phev_ratio": _percent(phev, nev),
-            "hybrid_sales": 0,
-            "hybrid_ratio": 0,
-        }
-
-    return _sales_trend_rows(
+    period_data = _sales_by_period_and_level(
         db,
-        years=years,
+        start_year=_start_year(years),
         levels=("nev", "bev"),
         granularity=granularity,
-        build_entry=build_entry,
     )
+    return [_nev_breakdown_row(key, period_data[key]) for key in sorted(period_data)]
 
 
 def get_origin_share_trend(
     db: Session,
     years: int,
     granularity: Granularity,
-) -> list[dict[str, Any]]:
+) -> list[OriginShareTrendRow]:
     if not ORIGIN_FIELD_MAP:
         raise AppError(message="origin_field_map 配置为空或格式错误")
 
@@ -164,16 +173,7 @@ def get_origin_share_trend(
         period_totals[key] += sales
         period_origins[key][row.origin] = sales
 
-    data: list[dict[str, Any]] = []
-    for key in sorted(period_origins):
-        total = period_totals[key]
-        origins = period_origins[key]
-        entry: dict[str, Any] = {
-            **period_entry(key),
-            **{
-                origin_en: _percent(origins.get(origin_cn, 0), total)
-                for origin_cn, origin_en in ORIGIN_FIELD_MAP.items()
-            },
-        }
-        data.append(entry)
-    return data
+    return [
+        _origin_share_row(key, period_origins[key], period_totals[key])
+        for key in sorted(period_origins)
+    ]

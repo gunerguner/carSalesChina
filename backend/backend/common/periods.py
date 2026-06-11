@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from backend.common.types import Granularity
+from backend.common.types import AnalysisPeriodRow, Granularity, LevelType
 
 
 @dataclass(frozen=True, slots=True, order=True)
@@ -21,7 +21,10 @@ def period_key(row: Any, granularity: Granularity) -> PeriodKey:
     return PeriodKey(row.year, month)
 
 
-def period_entry(key: PeriodKey) -> dict[str, int]:
+LevelSalesByPeriod = dict[PeriodKey, dict[LevelType, float]]
+
+
+def period_entry(key: PeriodKey) -> AnalysisPeriodRow:
     if key.month is None:
         return {"year": key.year}
     return {"year": key.year, "month": key.month}

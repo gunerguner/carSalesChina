@@ -64,3 +64,34 @@ class BrandSalesRecord(TypedDict):
     data_type: DataType
     date_type: DateType
     level_type: LevelType
+
+
+class AnalysisPeriodRow(TypedDict, total=False):
+    year: int
+    month: int
+
+
+class NevShareTrendRow(AnalysisPeriodRow):
+    nev_penetration_rate: float
+    total_sales: float
+    nev_sales: float
+
+
+class NevBreakdownRow(AnalysisPeriodRow):
+    nev_sales: float
+    bev_sales: float
+    bev_ratio: float
+    phev_sales: float
+    phev_ratio: float
+    hybrid_sales: float
+    hybrid_ratio: float
+
+
+class OriginShareTrendRow(AnalysisPeriodRow):
+    domestic: float
+    german: float
+    japanese: float
+    american: float
+    european: float
+    french: float
+    korean: float

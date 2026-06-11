@@ -6,7 +6,7 @@ import akshare as ak
 import pandas as pd
 
 from backend.common.types import OriginShareUpsertRow
-from backend.sources.fetch_result import SourceFetchResult
+from backend.sources.fetch_result import SliceResult, SourceFetchResult
 
 logger = logging.getLogger(__name__)
 
@@ -82,14 +82,22 @@ def _transform_country(df: pd.DataFrame) -> list[OriginShareUpsertRow]:
     ]
 
 
+def _fetch_country_records() -> SliceResult[list[OriginShareUpsertRow]]:
+    try:
+        df = ak.car_market_country_cpca()
+        return SliceResult(data=_transform_country(df))
+    except Exception as e:
+        logger.error("获取国别数据失败: %s", e)
+        return SliceResult(data=[], error=str(e))
+
+
 class CpcaClient:
     def get_country_data(self) -> SourceFetchResult:
-        try:
-            df = ak.car_market_country_cpca()
-            records = _transform_country(df)
-
-            logger.info("获取国别数据成功, 记录数=%s", len(records))
-            return SourceFetchResult(records=records, ok=True)
-        except Exception as e:
-            logger.error("获取国别数据失败: %s", e)
-            return SourceFetchResult(records=[], ok=False, errors=[str(e)])
+        result = _fetch_country_records()
+        if result.ok:
+            logger.info("获取国别数据成功, 记录数=%s", len(result.data))
+        return SourceFetchResult(
+            records=result.data,
+            ok=result.ok,
+            errors=[result.error] if result.error else [],
+        )
