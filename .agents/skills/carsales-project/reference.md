@@ -14,14 +14,15 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 | 业务异常类 | `backend/backend/core/exceptions.py`（`AppError`、`ExternalSourceAppError` 等） |
 | 错误码 | `backend/backend/core/error_codes.py` |
 | 管理装饰器 | `backend/backend/core/decorators.py`（`@handle_try_catch_action`、`@handle_success_response`） |
-| 公共工具 | `backend/backend/common/`（`periods.py` 周期、`types.py` 枚举） |
+| 公共工具 | `backend/backend/common/`（见下节） |
+| 分析查询 schema | `backend/backend/schemas/analysis.py`（`AnalysisTrendQuery`：`years`、`granularity`） |
 | 模型 | `backend/backend/models/`（`overall.py`、`brand.py`、`origin.py`） |
 | 路由 | `backend/backend/routers/` |
 | 采集编排 | `backend/backend/services/import_service.py` |
 | 市场/品牌/分析 | `market_service.py`、`brand_service.py`、`analysis_service.py` |
 | 易车客户端 | `backend/backend/sources/yiche_client.py` |
 | 乘联会客户端 | `backend/backend/sources/cpca_client.py` |
-| 拉取结果类型 | `backend/backend/sources/fetch_result.py` |
+| 拉取结果类型 | `backend/backend/sources/fetch_result.py`（见下节） |
 | 品牌 YAML | `backend/backend/meta_data.yaml` |
 | 国别字段映射 | `backend/backend/origin_field_map.yaml` |
 | 建表脚本 | `backend/init_db.sql` |
@@ -36,6 +37,37 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 | Docker Compose | `docker/docker-compose.yml` |
 | Nginx | `docker/nginx.conf` |
 | 环境模板 | `backend/.env.example`、`docker/.env.example` |
+
+## 公共类型与周期聚合（`common/`）
+
+**`types.py`**：`DataType`、`DateType`、`LevelType`、`Granularity` 等 `Literal`；以及 API/入库行 `TypedDict`：
+
+| TypedDict | 用途 |
+|-----------|------|
+| `MarketRawRow`、`OverallSalesRecord`、`BrandSalesRecord` | 市场/易车采集行 |
+| `BrandSalesUpsertRow`、`OriginShareUpsertRow` | 入库 upsert 行 |
+| `AnalysisPeriodRow` | 分析周期基类（`year`、可选 `month`） |
+| `NevShareTrendRow`、`NevBreakdownRow`、`OriginShareTrendRow` | 分析 API 响应行 |
+
+**`periods.py`**：分析读路径共用周期键与 SQL 分组列：
+
+- `PeriodKey(year, month?)`：年度粒度时 `month=None`
+- `period_columns(model_cls, granularity)` → `(year,)` 或 `(year, month)`
+- `period_key(row, granularity)`、`period_entry(key)` → `AnalysisPeriodRow`
+- `LevelSalesByPeriod`：`dict[PeriodKey, dict[LevelType, float]]`
+
+`analysis_service.py` 对 `SalesData` / `OriginShareData` 按上述工具做 `years` 窗口 + 月度/年度聚合；国别份额百分比字段名来自 `origin_field_map.yaml`（中文列名 → 英文键）。
+
+## 外部源拉取结果层次（`fetch_result.py`）
+
+| 类型 | 层级 | 说明 |
+|------|------|------|
+| `HttpJsonResult` | HTTP | `body` / `error`；易车 `_safe_get_json` |
+| `SliceResult[T]` | 单次切片 | 单维度或单次 AkShare 拉取 |
+| `KeyedSliceResult[T]` | 并发切片 | 带 `key` 的品牌并发批次 |
+| `SourceFetchResult` | 对外 | `import_service` 消费的统一结果；含 `error_summary()` |
+
+易车：`YicheOverallClient` 按 `OverallFetchDim` 切片；`YicheBrandClient` 按 `BrandFetchDim` + `master_id` 批次并发，归一化为 `OverallSalesRecord` / `BrandSalesRecord`。乘联会：`CpcaClient.get_country_data()` 内部 `SliceResult` → `SourceFetchResult`，记录为 `OriginShareUpsertRow`。
 
 ## 数据库表
 
@@ -54,14 +86,14 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 
 | 数据 | 客户端 | 接口/方式 |
 |------|--------|-----------|
-| 总体销量 | `YicheOverallClient` | 易车 `carserialsalestrend/search` |
-| 品牌销量 | `YicheBrandClient` | 易车 `get_master_sales_history`（按 master_id 并发） |
+| 总体销量 | `YicheOverallClient` | 易车 `carserialsalestrend/search`；零售/产量 × all/nev/bev 六维切片 |
+| 品牌销量 | `YicheBrandClient` | 易车 `get_master_sales_history`（按 master_id 批次并发，默认 5/批、8 worker） |
 | 品牌元数据 | YAML | `meta_data.yaml` → upsert `brand_meta` |
 | 国别占比 | `CpcaClient` | AkShare `car_market_country_cpca()` |
 
-客户端类（`yiche_client.py`）：`YicheOverallClient`、`YicheBrandClient`，组合类 `YicheClient(YicheOverallClient, YicheBrandClient)`；`import_service.py` 实际实例化 `YicheOverallClient()`、`YicheBrandClient()`、`CpcaClient()`（非 `YicheClient`）。
+客户端类（`yiche_client.py`）：`YicheOverallClient`、`YicheBrandClient`，组合类 `YicheClient(YicheOverallClient, YicheBrandClient)`；`import_service.py` 实际实例化 `YicheOverallClient()`、`YicheBrandClient()`、`CpcaClient()`（非 `YicheClient`）。易车 retail/production 的 saleType 编码在 overall 与 brand 接口中**顺序相反**（见 `yiche_client.py` 模块注释）。
 
-刷新返回值（销量示例）：`status`、`overall_count`、`brand_count`、`records_count`、`source_errors: { overall, brand }`。
+刷新返回值（销量示例）：`status`、`overall_count`、`brand_count`、`records_count`、`source_errors: { overall, brand }`（`SourceFetchResult.to_error_map()` 生成摘要）。
 
 ## 前端 Monorepo 结构
 
@@ -96,6 +128,7 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 | 库连接失败 | MySQL 进程、`backend/.env` 或 `docker/.env` 密码一致 |
 | POST 403 | CSRF Cookie + Header；前端非 GET 自动带 token |
 | 品牌销量空 | 是否先刷新 brand-meta；`master_id` 是否存在 |
+| 国别占比空/字段缺失 | 是否先刷新 origin；`origin_field_map.yaml` 是否与 AkShare 列名一致 |
 | 刷新 partial_failure | 日志 `source_errors`、外网与易车/AkShare 可用性 |
 | 页面开但接口错 | Docker 未注入 `VITE_*` → 重建 frontend `--no-cache` |
 | 前端代理 404 | 后端是否在 8001；`vite.config.mts` proxy |
