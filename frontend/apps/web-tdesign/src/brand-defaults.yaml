@@ -7,24 +7,24 @@ defaultSelectedBrands: &mainBrands
 quickFilters:
   - id: clear
     action: clear
-    labelKey: sales.brand.trend.quickFilter.clear
+    labelKey: pages.brand.trend.quickFilter.clear
   - id: main
-    labelKey: sales.brand.trend.quickFilter.main
+    labelKey: pages.brand.trend.quickFilter.main
     brands: *mainBrands
   - id: japanese
-    labelKey: sales.brand.trend.quickFilter.japanese
+    labelKey: pages.brand.trend.quickFilter.japanese
     brands:
       - 丰田
       - 本田
       - 日产
   - id: bba
-    labelKey: sales.brand.trend.quickFilter.bba
+    labelKey: pages.brand.trend.quickFilter.bba
     brands:
       - 奔驰
       - 宝马
       - 大众
   - id: newForce
-    labelKey: sales.brand.trend.quickFilter.newForce
+    labelKey: pages.brand.trend.quickFilter.newForce
     brands:
       - 蔚来
       - 小鹏

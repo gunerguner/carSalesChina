@@ -12,7 +12,7 @@ import App from './app.vue';
 import { router } from './router';
 
 import 'tdesign-vue-next/es/style/index.css';
-import '#/styles/sales-theme.css';
+import '#/styles/theme.css';
 
 async function bootstrap(namespace: string) {
   const app = createApp(App);

@@ -1,14 +1,14 @@
 import type { RouteRecordRaw } from 'vue-router';
 
 import { coreRoutes, fallbackNotFoundRoute } from './core';
-import salesRoutes from './modules/sales';
+import appRoutes from './modules/app';
 
 const routes: RouteRecordRaw[] = [
   ...coreRoutes,
-  ...salesRoutes,
+  ...appRoutes,
   fallbackNotFoundRoute,
 ];
 
-const permissionRoutes = salesRoutes;
+const permissionRoutes = appRoutes;
 
 export { permissionRoutes, routes };

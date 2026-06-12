@@ -2,6 +2,11 @@ export function toMonthKey(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, '0')}`;
 }
 
+export function priorYearMonthKey(monthKey: string): string {
+  const [yearText, monthText] = monthKey.split('-');
+  return toMonthKey(Number(yearText) - 1, Number(monthText));
+}
+
 export function formatMonthPeriod(
   year: number,
   month: number,

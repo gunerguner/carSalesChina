@@ -2,7 +2,7 @@ export function isNil(value: unknown): value is null | undefined {
   return value === null || value === undefined;
 }
 
-function readSalesCssVar(name: string, fallback: string): string {
+function readCssVar(name: string, fallback: string): string {
   if (typeof document === 'undefined') return fallback;
   const value = getComputedStyle(document.documentElement)
     .getPropertyValue(name)
@@ -31,13 +31,13 @@ export function growthStyle(val: null | number): {
   color: string;
   text: string;
 } {
-  const muted = readSalesCssVar('--sales-muted-foreground', '#64748b');
+  const muted = readCssVar('--tone-muted', '#64748b');
   if (isNil(val)) return { color: muted, text: '-' };
   let color = muted;
   if (val > 0) {
-    color = readSalesCssVar('--sales-destructive', '#ef4444');
+    color = readCssVar('--tone-destructive', '#ef4444');
   } else if (val < 0) {
-    color = readSalesCssVar('--sales-success', '#22c55e');
+    color = readCssVar('--tone-success', '#22c55e');
   }
   return { color, text: `${val > 0 ? '+' : ''}${formatOrDash(val, '%')}` };
 }

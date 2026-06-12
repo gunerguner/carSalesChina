@@ -1,10 +1,10 @@
 import { ref } from 'vue';
 
-export const LOAD_FAILED_I18N_KEY = 'sales.common.loadFailed';
+export const LOAD_FAILED_I18N_KEY = 'pages.common.loadFailed';
 
 /**
  * Dedupes in-flight work and optionally skips after first successful run.
- * Used by sales data composables that load once per session unless `force` is true.
+ * Used by data composables that load once per session unless `force` is true.
  */
 export function createFetchOnceController() {
   const loading = ref(false);

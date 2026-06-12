@@ -1,5 +1,9 @@
 import type { ECOption } from '@vben/plugins/echarts';
 
+import type { OriginShareKey } from '#/views/analysis/originShareDimensions';
+
+import { ORIGIN_KEYS } from '#/views/analysis/originShareDimensions';
+
 import { formatOrDash } from './format';
 
 export interface LineTooltipParams {
@@ -55,18 +59,6 @@ export function getChartPaletteColor(index: number): string {
     CHART_FALLBACKS[index % CHART_FALLBACKS.length] ?? '#475569',
   );
 }
-
-export const ORIGIN_KEYS = [
-  'domestic',
-  'german',
-  'japanese',
-  'american',
-  'european',
-  'korean',
-  'french',
-] as const;
-
-export type OriginShareKey = (typeof ORIGIN_KEYS)[number];
 
 export function getOriginShareColor(key: OriginShareKey): string {
   const index = ORIGIN_KEYS.indexOf(key);

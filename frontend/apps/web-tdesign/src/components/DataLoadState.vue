@@ -22,19 +22,19 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div v-if="error" class="sales-load-error">
+  <div v-if="error" class="load-error">
     <Alert :message="$t(error)" theme="error" />
     <Button theme="primary" variant="outline" @click="emit('retry')">
-      {{ $t('sales.common.retry') }}
+      {{ $t('pages.common.retry') }}
     </Button>
   </div>
   <div
     v-else-if="loading"
-    class="sales-load-skeleton"
+    class="load-skeleton"
     :style="{ minHeight: props.minHeight }"
   >
-    <div class="sales-load-skeleton__chart"></div>
-    <div class="sales-load-skeleton__table"></div>
+    <div class="load-skeleton__chart"></div>
+    <div class="load-skeleton__table"></div>
   </div>
   <slot v-else></slot>
 </template>

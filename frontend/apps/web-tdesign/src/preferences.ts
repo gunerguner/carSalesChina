@@ -3,7 +3,7 @@ import { defineOverridesPreferences } from '@vben/preferences';
 export const overridesPreferences = defineOverridesPreferences({
   app: {
     name: import.meta.env.VITE_APP_TITLE || '中国市场汽车销量',
-    defaultHomePath: '/market-sales',
+    defaultHomePath: '/market',
   },
   tabbar: {
     enable: false,
