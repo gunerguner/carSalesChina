@@ -1,13 +1,13 @@
 import type { BrandSeriesRecord } from './types';
 
 import type { BrandTrendAllPeriodsRecord } from '#/api/brand';
-import type { DataType } from '#/types/domain';
+import type { DataType } from '#/utils/types';
 
 import { computed, ref } from 'vue';
 
 import { getBrandTrendAllPeriodsApi } from '#/api/brand';
 import { createKeyedFetchController } from '#/composables/useFetchOnce';
-import { calcGrowthPercent, isNil } from '#/utils/format';
+import { calcGrowthPercent, ensureArray, isNil } from '#/utils/format';
 import { priorYearMonthKey, toMonthKey } from '#/utils/period';
 import {
   calcYoyByKey,
@@ -37,7 +37,7 @@ const {
       brand_names: brandNames,
       data_type: requestDataType as DataType,
     });
-    return Array.isArray(result) ? result : [];
+    return ensureArray(result);
   },
   getKey() {
     const brandsKey = [...selectedBrands.value].toSorted().join(',');

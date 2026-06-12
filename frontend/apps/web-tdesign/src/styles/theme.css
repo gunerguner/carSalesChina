@@ -1,9 +1,12 @@
 :root {
   --chart-1: hsl(var(--primary));
-  --chart-2: hsl(215deg 28% 42%);
-  --chart-3: hsl(200deg 22% 48%);
-  --chart-4: hsl(220deg 18% 58%);
-  --chart-5: hsl(210deg 14% 68%);
+  --chart-2: hsl(173deg 42% 36%);
+  --chart-3: hsl(32deg 72% 44%);
+  --chart-4: hsl(262deg 48% 50%);
+  --chart-5: hsl(347deg 58% 48%);
+  --chart-6: hsl(142deg 38% 36%);
+  --chart-7: hsl(199deg 62% 42%);
+  --chart-8: hsl(18deg 62% 48%);
   --chart-axis: hsl(var(--muted-foreground));
   --chart-grid: hsl(var(--border));
   --chart-pointer: hsl(var(--primary));
@@ -17,10 +20,13 @@
 
 .dark {
   --chart-1: hsl(var(--primary));
-  --chart-2: hsl(215deg 35% 68%);
-  --chart-3: hsl(200deg 30% 72%);
-  --chart-4: hsl(220deg 25% 76%);
-  --chart-5: hsl(210deg 20% 80%);
+  --chart-2: hsl(173deg 45% 58%);
+  --chart-3: hsl(32deg 75% 58%);
+  --chart-4: hsl(262deg 55% 68%);
+  --chart-5: hsl(347deg 65% 62%);
+  --chart-6: hsl(142deg 42% 55%);
+  --chart-7: hsl(199deg 55% 58%);
+  --chart-8: hsl(18deg 70% 58%);
   --chart-axis: hsl(var(--muted-foreground));
   --chart-grid: hsl(var(--border));
   --chart-pointer: hsl(var(--primary));

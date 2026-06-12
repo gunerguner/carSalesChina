@@ -1,6 +1,20 @@
+import type { Ref } from 'vue';
+
 import { ref } from 'vue';
 
+import { ensureArray } from '#/utils/format';
+
 export const LOAD_FAILED_I18N_KEY = 'pages.common.loadFailed';
+
+/** Assign API array response into a ref; coerces non-arrays to []. */
+export function fetchArrayInto<T>(
+  target: Ref<T[]>,
+  fetcher: () => Promise<unknown>,
+): Promise<void> {
+  return fetcher().then((value) => {
+    target.value = ensureArray<T>(value);
+  });
+}
 
 /**
  * Dedupes in-flight work and optionally skips after first successful run.

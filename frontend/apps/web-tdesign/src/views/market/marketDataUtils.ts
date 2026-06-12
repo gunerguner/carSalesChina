@@ -3,10 +3,10 @@ import type {
   DataType,
   LevelType,
   YearMonthRecord,
-} from '#/types/domain';
+} from '#/utils/types';
 
 import { getMarketRawApi } from '#/api/market';
-import { calcGrowthPercent, isNil } from '#/utils/format';
+import { calcGrowthPercent, ensureArray, isNil } from '#/utils/format';
 import { toMonthKey } from '#/utils/period';
 import {
   getLatestYearMonth,
@@ -85,7 +85,7 @@ export async function fetchMarketRawData(
   fetcher: () => Promise<RawSalesRecord[]> = getMarketRawApi,
 ): Promise<RawSalesRecord[]> {
   const data = await fetcher();
-  return Array.isArray(data) ? data : [];
+  return ensureArray(data);
 }
 
 export function buildMarketSeriesCache(

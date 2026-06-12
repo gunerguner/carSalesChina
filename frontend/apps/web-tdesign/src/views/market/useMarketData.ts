@@ -7,7 +7,7 @@ import type {
 } from './marketDataUtils';
 
 import type { RawSalesRecord } from '#/api/market';
-import type { DataType, LevelType } from '#/types/domain';
+import type { DataType, LevelType } from '#/utils/types';
 
 import { computed, ref } from 'vue';
 

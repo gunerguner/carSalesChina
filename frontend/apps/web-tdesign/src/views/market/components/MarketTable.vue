@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { MarketTableInput } from './marketSalesTable';
 
-import type { DataType } from '#/types/domain';
+import type { DataType } from '#/utils/types';
 
 import { computed } from 'vue';
 
@@ -10,7 +10,7 @@ import { preferences } from '@vben/preferences';
 import { Table } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
-import { DEFAULT_TABLE_PROPS } from '#/utils/table';
+import { DEFAULT_TABLE_PROPS } from '#/utils/style';
 
 import {
   buildMarketTableColumns,

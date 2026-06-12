@@ -4,13 +4,12 @@ import type {
   NevBreakdownRecord,
   NevShareTrendRecord,
 } from '#/api/analysis';
-import type { YearMonthRecord } from '#/types/domain';
 import type { LineTooltipParams } from '#/utils/chart';
+import type { YearMonthRecord } from '#/utils/types';
+import type { Translate } from '#/utils/types';
 
-import { buildLineChartOption, getEmptyChartOption } from '#/utils/chart';
+import { buildLineChartOption, emptyChartIfNoData } from '#/utils/chart';
 import { toMonthKey } from '#/utils/period';
-
-type Translate = (key: string) => string;
 
 export type NevTrendValueKey = 'bev_ratio' | 'nev_penetration_rate';
 
@@ -37,9 +36,8 @@ export function buildNevTrendChartOption(
 ): ECOption {
   const { color, data, label, valueKey } = input;
 
-  if (!data || data.length === 0) {
-    return getEmptyChartOption(t('pages.common.noData'));
-  }
+  const empty = emptyChartIfNoData(data ?? [], t('pages.common.noData'));
+  if (empty) return empty;
 
   const timeLabels = data.map((item) => toMonthKey(item.year, item.month));
   const values = data.map((item) => +getRecordValue(item, valueKey).toFixed(2));

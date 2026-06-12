@@ -1,4 +1,4 @@
-import type { YearMonthRecord } from '#/types/domain';
+import type { YearMonthRecord } from '#/utils/types';
 
 import { calcGrowthPercent } from '#/utils/format';
 import { toMonthKey } from '#/utils/period';

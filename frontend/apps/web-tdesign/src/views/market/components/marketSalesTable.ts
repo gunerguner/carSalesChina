@@ -1,14 +1,15 @@
 import type { TableRowData } from 'tdesign-vue-next';
 
+import type { MarketPeriodInput } from '../types';
 import type {
   MonthlyDetailRecord,
   QuarterlyTrendRecord,
   YearlyTrendRecord,
 } from '../useMarketData';
 
-import type { DataType } from '#/types/domain';
+import type { DataType } from '#/utils/types';
+import type { Translate } from '#/utils/types';
 
-import { growthTableRowFields } from '#/utils/format';
 import {
   formatMonthPeriod,
   formatQuarterPeriod,
@@ -17,13 +18,13 @@ import {
   toYearQuarterSortKey,
 } from '#/utils/period';
 import { growthTableCell } from '#/utils/render';
+import { growthTableRowFields } from '#/utils/style';
 
-export type MarketTableInput =
-  | { data: MonthlyDetailRecord[]; kind: 'monthly' }
-  | { data: QuarterlyTrendRecord[]; kind: 'quarterly' }
-  | { data: YearlyTrendRecord[]; kind: 'yearly' };
-
-type Translate = (key: string) => string;
+export type MarketTableInput = MarketPeriodInput<{
+  monthly: MonthlyDetailRecord;
+  quarterly: QuarterlyTrendRecord;
+  yearly: YearlyTrendRecord;
+}>;
 
 const PERIOD_WIDTHS = { monthly: 120, quarterly: 130, yearly: 110 } as const;
 

@@ -2,7 +2,7 @@
 import type { BrandQuickFilter } from '../brand-defaults';
 import type { BrandTrendGranularity } from '../useBrandData';
 
-import type { DataType } from '#/types/domain';
+import type { DataType } from '#/utils/types';
 
 import { ref, watch } from 'vue';
 

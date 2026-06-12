@@ -1,5 +1,5 @@
-import type { AnalysisGranularity, YearMonthRecord } from '#/types/domain';
-import type { OriginShareKey } from '#/views/analysis/originShareDimensions';
+import type { AnalysisGranularity, YearMonthRecord } from '#/utils/types';
+import type { OriginShareKey } from '#/utils/types';
 
 import { requestClient } from '#/api/request';
 

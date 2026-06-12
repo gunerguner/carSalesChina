@@ -4,22 +4,18 @@ import type { OriginShareTrendRecord } from '#/api/analysis';
 
 import {
   buildStackedBarChartOption,
-  getEmptyChartOption,
-  getOriginShareColor,
+  emptyChartIfNoData,
 } from '#/utils/chart';
 import { toMonthKey } from '#/utils/period';
-
-import { ORIGIN_DIMENSIONS } from '../originShareDimensions';
-
-type Translate = (key: string) => string;
+import { getOriginShareColor } from '#/utils/style';
+import { ORIGIN_DIMENSIONS, type Translate } from '#/utils/types';
 
 export function buildOriginShareChartOption(
   data: OriginShareTrendRecord[],
   t: Translate,
 ): ECOption {
-  if (!data || data.length === 0) {
-    return getEmptyChartOption(t('pages.common.noData'));
-  }
+  const empty = emptyChartIfNoData(data ?? [], t('pages.common.noData'));
+  if (empty) return empty;
 
   const timeLabels = data.map((item) => toMonthKey(item.year, item.month));
   const series = ORIGIN_DIMENSIONS.map(({ key, chartLabelKey }) => ({

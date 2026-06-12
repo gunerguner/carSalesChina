@@ -1,27 +1,20 @@
-import type { PrimaryTableCol, TableRowData } from 'tdesign-vue-next';
+import type { PrimaryTableCol } from 'tdesign-vue-next';
 
 import type { OriginShareTrendRecord } from '#/api/analysis';
+import type { Translate } from '#/utils/types';
 
-import { formatOrDash } from '#/utils/format';
 import { toMonthKey, toYearMonthSortKey } from '#/utils/period';
-
+import { tablePercentCell } from '#/utils/render';
 import {
   ORIGIN_DIMENSIONS,
   type OriginShareKey,
-} from '../originShareDimensions';
-
-type Translate = (key: string) => string;
+} from '#/utils/types';
 
 export type OriginShareRow = Record<OriginShareKey, number> & {
   key: number;
   sortKey: number;
   time: string;
 };
-
-function percentCell(key: OriginShareKey) {
-  return (_: unknown, { row }: { row: TableRowData }) =>
-    formatOrDash((row as OriginShareRow)[key], '%');
-}
 
 export function buildOriginShareTableColumns(t: Translate): PrimaryTableCol[] {
   return [
@@ -30,7 +23,7 @@ export function buildOriginShareTableColumns(t: Translate): PrimaryTableCol[] {
       colKey: key,
       title: t(tableLabelKey),
       width: 100,
-      cell: percentCell(key),
+      cell: tablePercentCell(key),
     })),
   ];
 }

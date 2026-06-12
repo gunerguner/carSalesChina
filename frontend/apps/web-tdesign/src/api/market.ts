@@ -2,7 +2,7 @@ import type {
   DataType,
   LevelType,
   YearMonthRecord,
-} from '#/types/domain';
+} from '#/utils/types';
 
 import { requestClient } from '#/api/request';
 

@@ -1,4 +1,4 @@
-import type { DataType, YearMonthRecord } from '#/types/domain';
+import type { DataType, YearMonthRecord } from '#/utils/types';
 
 import { requestClient } from '#/api/request';
 

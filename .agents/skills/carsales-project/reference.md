@@ -28,12 +28,12 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 | 建表脚本 | `backend/init_db.sql` |
 | Vite/代理 | `frontend/apps/web-tdesign/vite.config.mts` |
 | 请求客户端 | `frontend/apps/web-tdesign/src/api/request.ts` |
-| 销售 API | `frontend/apps/web-tdesign/src/api/sales/` |
+| 读 API | `frontend/apps/web-tdesign/src/api/`（`market.ts`、`brand.ts`、`analysis.ts`） |
 | 管理刷新 API | `frontend/apps/web-tdesign/src/api/admin.ts` |
-| 路由模块 | `frontend/apps/web-tdesign/src/router/routes/modules/sales.ts` |
-| 市场页 | `frontend/apps/web-tdesign/src/views/sales/market/` |
-| 品牌页 | `frontend/apps/web-tdesign/src/views/sales/brand/` |
-| 分析页 | `frontend/apps/web-tdesign/src/views/sales/analysis/` |
+| 路由模块 | `frontend/apps/web-tdesign/src/router/routes/modules/app.ts` |
+| 市场页 | `frontend/apps/web-tdesign/src/views/market/` |
+| 品牌页 | `frontend/apps/web-tdesign/src/views/brand/` |
+| 分析页 | `frontend/apps/web-tdesign/src/views/analysis/` |
 | Docker Compose | `docker/docker-compose.yml` |
 | Nginx | `docker/nginx.conf` |
 | 环境模板 | `backend/.env.example`、`docker/.env.example` |
@@ -105,10 +105,11 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 
 | 用途 | 路径 |
 |------|------|
-| 双模式视觉 token | `apps/web-tdesign/src/styles/sales-theme.css` |
+| 双模式视觉 token | `apps/web-tdesign/src/styles/theme.css` |
 | 图表主题与交互 | `apps/web-tdesign/src/utils/chart.ts` |
 | 同比着色 | `apps/web-tdesign/src/utils/format.ts` |
-| 筛选面板 | `apps/web-tdesign/src/components/SalesFilterPanel.vue` |
+| 筛选面板 | `apps/web-tdesign/src/components/FilterPanel.vue` |
+| 图表/表格区块 | `apps/web-tdesign/src/components/SectionCard.vue` |
 | 图表容器 | `apps/web-tdesign/src/components/ChartCard.vue` |
 | 加载态 | `apps/web-tdesign/src/components/DataLoadState.vue` |
 | 主题偏好 | `apps/web-tdesign/src/preferences.ts` |
@@ -117,7 +118,7 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 
 | 变量 | 用途 |
 |------|------|
-| `--chart-1` … `--chart-5` | 折线/堆叠柱配色 |
+| `--chart-1` … `--chart-8` | 折线/堆叠柱配色 |
 | `--chart-axis` / `--chart-grid` | 轴标签与网格线 |
 | `--chart-pointer` | axisPointer 指示线 |
 | `--chart-tooltip-*` | tooltip 背景/边框/文字 |

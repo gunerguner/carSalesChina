@@ -2,14 +2,17 @@ import type { ECOption } from '@vben/plugins/echarts';
 
 import type { BrandSeriesRecord } from '../types';
 
+import type { Translate } from '#/utils/types';
+
 import {
-  BRAND_LINE_PALETTE_INDICES,
   buildLineChartOption,
-  getChartPaletteColor,
+  emptyChartIfNoData,
   getEmptyChartOption,
 } from '#/utils/chart';
-
-type Translate = (key: string) => string;
+import {
+  BRAND_LINE_PALETTE_INDICES,
+  getChartPaletteColor,
+} from '#/utils/style';
 
 export interface BrandTrendChartInput {
   data: BrandSeriesRecord[];
@@ -23,9 +26,11 @@ export function buildBrandTrendChartOption(
 ): ECOption {
   const { data, timeLabels } = input;
 
-  if (data.length === 0 || timeLabels.length === 0) {
+  if (timeLabels.length === 0) {
     return getEmptyChartOption(t('pages.brand.trend.noData'));
   }
+  const empty = emptyChartIfNoData(data, t('pages.brand.trend.noData'));
+  if (empty) return empty;
 
   const series = data.map((brand, index) => {
     const map = new Map<string, number>();

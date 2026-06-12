@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 
-import { Card } from 'tdesign-vue-next';
-
 import ChartCard from '#/components/ChartCard.vue';
 import DataLoadState from '#/components/DataLoadState.vue';
+import SectionCard from '#/components/SectionCard.vue';
 import { $t } from '#/locales';
-import { getChartPaletteColor } from '#/utils/chart';
+import { getChartPaletteColor } from '#/utils/style';
 
 import NevPenetrationTable from '../components/NevPenetrationTable.vue';
 import { buildNevTrendChartOption } from '../components/nevTrendChart';
@@ -46,28 +45,19 @@ const bevBreakdownChartOption = computed(() =>
   <div class="page-content">
     <DataLoadState :error="error" :loading="loading" @retry="fetchAll(true)">
       <div class="chart-grid">
-        <Card
-          :title="$t('pages.analysis.nev.penetrationChartTitle')"
-          class="section-card"
-        >
+        <SectionCard :title="$t('pages.analysis.nev.penetrationChartTitle')">
           <ChartCard height-class="h-72" :option="nevPenetrationChartOption" />
-        </Card>
-        <Card
-          :title="$t('pages.analysis.nev.breakdownChartTitle')"
-          class="section-card"
-        >
+        </SectionCard>
+        <SectionCard :title="$t('pages.analysis.nev.breakdownChartTitle')">
           <ChartCard height-class="h-72" :option="bevBreakdownChartOption" />
-        </Card>
+        </SectionCard>
       </div>
-      <Card
-        :title="$t('pages.analysis.nev.penetrationTitle')"
-        class="section-card"
-      >
+      <SectionCard :title="$t('pages.analysis.nev.penetrationTitle')">
         <NevPenetrationTable
           :breakdown-trend="nevBreakdown"
           :share-trend="nevShareTrend"
         />
-      </Card>
+      </SectionCard>
     </DataLoadState>
   </div>
 </template>

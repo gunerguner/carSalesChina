@@ -3,7 +3,7 @@ import type { PrimaryTableCol } from 'tdesign-vue-next';
 
 import type { BrandSeriesRecord } from '../types';
 
-import type { DataType } from '#/types/domain';
+import type { DataType } from '#/utils/types';
 
 import { computed } from 'vue';
 
@@ -12,7 +12,7 @@ import { Table } from 'tdesign-vue-next';
 import { $t } from '#/locales';
 import { isNil } from '#/utils/format';
 import { salesYoyTableCell } from '#/utils/render';
-import { DEFAULT_TABLE_PROPS } from '#/utils/table';
+import { DEFAULT_TABLE_PROPS } from '#/utils/style';
 
 const props = defineProps<{
   data: BrandSeriesRecord[];

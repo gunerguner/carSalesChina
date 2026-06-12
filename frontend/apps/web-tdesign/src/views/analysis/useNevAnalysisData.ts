@@ -7,6 +7,7 @@ import { ref } from 'vue';
 
 import { getNevBreakdownApi, getNevShareTrendApi } from '#/api/analysis';
 import { createFetchOnceController } from '#/composables/useFetchOnce';
+import { ensureArray } from '#/utils/format';
 
 const { error, execute, loading } = createFetchOnceController();
 const nevShareTrend = ref<NevShareTrendRecord[]>([]);
@@ -20,8 +21,8 @@ export function useNevAnalysisData() {
           getNevShareTrendApi({ granularity: 'monthly' }),
           getNevBreakdownApi({ granularity: 'monthly' }),
         ]);
-        nevShareTrend.value = Array.isArray(share) ? share : [];
-        nevBreakdown.value = Array.isArray(breakdown) ? breakdown : [];
+        nevShareTrend.value = ensureArray(share);
+        nevBreakdown.value = ensureArray(breakdown);
       } catch (error_) {
         nevShareTrend.value = [];
         nevBreakdown.value = [];

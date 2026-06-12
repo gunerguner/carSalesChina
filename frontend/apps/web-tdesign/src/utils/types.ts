@@ -1,3 +1,15 @@
+export type DataType = 'production' | 'retail';
+export type LevelType = 'all' | 'bev' | 'nev';
+export type AnalysisGranularity = 'monthly' | 'yearly';
+
+export interface YearMonthRecord {
+  year: number;
+  month: number;
+}
+
+/** i18n key lookup passed into chart/table builders (typically `$t`). */
+export type Translate = (key: string) => string;
+
 export const ORIGIN_DIMENSIONS = [
   {
     key: 'domestic',

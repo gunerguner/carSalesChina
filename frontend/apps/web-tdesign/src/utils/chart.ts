@@ -1,10 +1,7 @@
 import type { ECOption } from '@vben/plugins/echarts';
 
-import type { OriginShareKey } from '#/views/analysis/originShareDimensions';
-
-import { ORIGIN_KEYS } from '#/views/analysis/originShareDimensions';
-
 import { formatOrDash } from './format';
+import { getChartTheme } from './style';
 
 export interface LineTooltipParams {
   axisValue?: string;
@@ -15,58 +12,8 @@ export interface LineTooltipParams {
   value?: number | string;
 }
 
-const CHART_VAR_KEYS = [
-  '--chart-1',
-  '--chart-2',
-  '--chart-3',
-  '--chart-4',
-  '--chart-5',
-] as const;
-
-const CHART_FALLBACKS = [
-  '#475569',
-  '#64748b',
-  '#94a3b8',
-  '#cbd5e1',
-  '#e2e8f0',
-] as const;
-
-function readCssVar(name: string, fallback: string): string {
-  if (typeof document === 'undefined') return fallback;
-  const value = getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
-  return value || fallback;
-}
-
-function chartTheme() {
-  return {
-    axis: readCssVar('--chart-axis', '#64748b'),
-    grid: readCssVar('--chart-grid', '#e2e8f0'),
-    pointer: readCssVar('--chart-pointer', '#475569'),
-    tooltipBg: readCssVar('--chart-tooltip-bg', '#ffffff'),
-    tooltipBorder: readCssVar('--chart-tooltip-border', '#e2e8f0'),
-    tooltipText: readCssVar('--chart-tooltip-text', '#1e293b'),
-  };
-}
-
-export const BRAND_LINE_PALETTE_INDICES = [0, 3, 4, 1] as const;
-
-export function getChartPaletteColor(index: number): string {
-  const key = CHART_VAR_KEYS[index % CHART_VAR_KEYS.length] ?? '--chart-1';
-  return readCssVar(
-    key,
-    CHART_FALLBACKS[index % CHART_FALLBACKS.length] ?? '#475569',
-  );
-}
-
-export function getOriginShareColor(key: OriginShareKey): string {
-  const index = ORIGIN_KEYS.indexOf(key);
-  return getChartPaletteColor(Math.max(index, 0));
-}
-
 export function getEmptyChartOption(text: string): ECOption {
-  const theme = chartTheme();
+  const theme = getChartTheme();
   return {
     animation: false,
     title: {
@@ -79,6 +26,15 @@ export function getEmptyChartOption(text: string): ECOption {
     yAxis: { show: false, type: 'value' },
     series: [],
   };
+}
+
+/** Returns empty chart option when `data` has no rows; otherwise undefined. */
+export function emptyChartIfNoData(
+  data: { length: number },
+  message: string,
+): ECOption | undefined {
+  if (data.length === 0) return getEmptyChartOption(message);
+  return undefined;
 }
 
 function lineSeriesTooltipFormatter(
@@ -98,7 +54,7 @@ function lineSeriesTooltipFormatter(
 }
 
 function themedCategoryAxis() {
-  const theme = chartTheme();
+  const theme = getChartTheme();
   return {
     axisLabel: { color: theme.axis, fontSize: 11 },
     axisLine: { lineStyle: { color: theme.grid } },
@@ -117,7 +73,7 @@ function valueAxisLabelFormatter(locale: string) {
 }
 
 function themedValueAxis(locale?: string, percent = false) {
-  const theme = chartTheme();
+  const theme = getChartTheme();
   const axisLabel: {
     color: string;
     fontSize: number;
@@ -145,7 +101,7 @@ function themedTooltip(
   formatter?: (params: LineTooltipParams | LineTooltipParams[]) => string,
   axisPointerType: 'line' | 'shadow' = 'line',
 ) {
-  const theme = chartTheme();
+  const theme = getChartTheme();
   return {
     axisPointer: {
       type: axisPointerType,
@@ -237,14 +193,12 @@ export function buildLineChartOption(
   const categoryAxis = themedCategoryAxis();
 
   return {
-    animation: true,
-    animationDuration: 400,
-    animationEasing: 'cubicOut',
+    animation: false,
     grid,
     legend: legend
       ? {
           ...legend,
-          textStyle: { color: chartTheme().axis, fontSize: 11 },
+          textStyle: { color: getChartTheme().axis, fontSize: 11 },
         }
       : undefined,
     series: series.map((item) => ({
@@ -298,12 +252,10 @@ export function buildStackedBarChartOption(
   params: BuildStackedBarChartOptionParams,
 ): ECOption {
   const { grid = DEFAULT_BAR_GRID, legend, series, xData, yMax = 100 } = params;
-  const theme = chartTheme();
+  const theme = getChartTheme();
 
   return {
-    animation: true,
-    animationDuration: 400,
-    animationEasing: 'cubicOut',
+    animation: false,
     grid,
     legend: {
       ...legend,

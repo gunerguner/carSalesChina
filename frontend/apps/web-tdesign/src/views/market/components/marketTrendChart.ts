@@ -1,35 +1,38 @@
 import type { ECOption } from '@vben/plugins/echarts';
 
+import type { MarketPeriodInput } from '../types';
 import type {
   MonthlyTrendRecord,
   QuarterlyTrendRecord,
   YearlyTrendRecord,
 } from '../useMarketData';
 
+import type { Translate } from '#/utils/types';
+
 import {
   buildLineChartOption,
-  getChartPaletteColor,
-  getEmptyChartOption,
+  emptyChartIfNoData,
 } from '#/utils/chart';
 import {
   formatQuarterPeriod,
   formatYearPeriod,
   getLocalizedMonthLabels,
 } from '#/utils/period';
+import { getChartPaletteColor } from '#/utils/style';
 
-export type MarketTrendChartInput =
-  | { data: MonthlyTrendRecord[]; kind: 'monthly' }
-  | { data: QuarterlyTrendRecord[]; kind: 'quarterly' }
-  | { data: YearlyTrendRecord[]; kind: 'yearly' };
-
-type Translate = (key: string) => string;
+export type MarketTrendChartInput = MarketPeriodInput<{
+  monthly: MonthlyTrendRecord;
+  quarterly: QuarterlyTrendRecord;
+  yearly: YearlyTrendRecord;
+}>;
 
 function buildMonthlyOption(
   data: MonthlyTrendRecord[],
   locale: string,
   t: Translate,
 ): ECOption {
-  if (data.length === 0) return getEmptyChartOption(t('pages.common.noData'));
+  const empty = emptyChartIfNoData(data, t('pages.common.noData'));
+  if (empty) return empty;
 
   const yearDataMap = new Map<number, number[]>();
   for (const item of data) {
@@ -65,7 +68,8 @@ function buildQuarterlyOption(
   locale: string,
   t: Translate,
 ): ECOption {
-  if (data.length === 0) return getEmptyChartOption(t('pages.common.noData'));
+  const empty = emptyChartIfNoData(data, t('pages.common.noData'));
+  if (empty) return empty;
   return buildLineChartOption({
     locale,
     series: [
@@ -85,7 +89,8 @@ function buildYearlyOption(
   locale: string,
   t: Translate,
 ): ECOption {
-  if (data.length === 0) return getEmptyChartOption(t('pages.common.noData'));
+  const empty = emptyChartIfNoData(data, t('pages.common.noData'));
+  if (empty) return empty;
   return buildLineChartOption({
     locale,
     series: [

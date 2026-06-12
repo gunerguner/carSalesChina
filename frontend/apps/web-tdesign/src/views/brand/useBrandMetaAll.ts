@@ -4,8 +4,9 @@ import { computed, ref } from 'vue';
 
 import { getBrandMetaAllApi } from '#/api/brand';
 import { createFetchOnceController } from '#/composables/useFetchOnce';
+import { ensureArray } from '#/utils/format';
 
-const { execute, loading } = createFetchOnceController();
+const { error, execute, loading } = createFetchOnceController();
 const brandMetaList = ref<BrandMetaItem[]>([]);
 
 export function useBrandMetaAll() {
@@ -19,7 +20,7 @@ export function useBrandMetaAll() {
   async function ensureLoaded(force = false) {
     return execute(force, async () => {
       const list = await getBrandMetaAllApi();
-      brandMetaList.value = Array.isArray(list) ? list : [];
+      brandMetaList.value = ensureArray(list);
     });
   }
 
@@ -27,5 +28,6 @@ export function useBrandMetaAll() {
     brandOptions,
     brandMetaLoading: loading,
     ensureLoaded,
+    error,
   };
 }

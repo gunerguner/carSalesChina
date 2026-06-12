@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { MarketPeriodGranularity } from '../types';
 
-import type { DataType, LevelType } from '#/types/domain';
+import type { DataType, LevelType } from '#/utils/types';
 
 import { computed } from 'vue';
 

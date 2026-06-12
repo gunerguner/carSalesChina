@@ -1,17 +1,16 @@
 <script setup lang="ts">
 import type { BrandTrendGranularity } from './useBrandData';
 
-import type { DataType } from '#/types/domain';
+import type { DataType } from '#/utils/types';
 
 import { computed } from 'vue';
 
 import { preferences } from '@vben/preferences';
 
-import { Card } from 'tdesign-vue-next';
-
 import ChartCard from '#/components/ChartCard.vue';
 import DataLoadState from '#/components/DataLoadState.vue';
 import FilterPanel from '#/components/FilterPanel.vue';
+import SectionCard from '#/components/SectionCard.vue';
 import { $t } from '#/locales';
 
 import BrandSelectBar from './components/BrandSelectBar.vue';
@@ -62,24 +61,18 @@ async function onFilterChange(payload: {
       :loading="loading"
       @retry="fetchRawData(true)"
     >
-      <Card
-        :title="$t('pages.brand.trend.chartTitle')"
-        class="section-card"
-      >
+      <SectionCard :title="$t('pages.brand.trend.chartTitle')">
         <ChartCard :option="chartOption" />
-      </Card>
+      </SectionCard>
 
-      <Card
-        :title="$t('pages.brand.trend.tableTitle')"
-        class="section-card"
-      >
+      <SectionCard :title="$t('pages.brand.trend.tableTitle')">
         <BrandTrendTable
           :data="activeSeries"
           :data-type="dataType"
           :time-label-max-count="tableTimeLabelMaxCount"
           :time-labels="timeLabels"
         />
-      </Card>
+      </SectionCard>
     </DataLoadState>
   </div>
 </template>

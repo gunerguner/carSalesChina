@@ -3,17 +3,16 @@ import type { MarketTableInput } from './components/marketSalesTable';
 import type { MarketTrendChartInput } from './components/marketTrendChart';
 import type { MarketPeriodGranularity } from './types';
 
-import type { DataType, LevelType } from '#/types/domain';
+import type { DataType, LevelType } from '#/utils/types';
 
 import { computed, onMounted, ref } from 'vue';
 
 import { preferences } from '@vben/preferences';
 
-import { Card } from 'tdesign-vue-next';
-
 import ChartCard from '#/components/ChartCard.vue';
 import DataLoadState from '#/components/DataLoadState.vue';
 import FilterPanel from '#/components/FilterPanel.vue';
+import SectionCard from '#/components/SectionCard.vue';
 import { $t } from '#/locales';
 
 import MarketFilterBar from './components/MarketFilterBar.vue';
@@ -95,16 +94,16 @@ const tableTitle = computed(() => $t(activeMarketView.value.tableTitleKey));
     </FilterPanel>
 
     <DataLoadState :error="error" :loading="loading" @retry="fetchAll(true)">
-      <Card :title="chartTitle" class="section-card">
+      <SectionCard :title="chartTitle">
         <ChartCard :option="chartOption" />
-      </Card>
-      <Card :title="tableTitle" class="section-card">
+      </SectionCard>
+      <SectionCard :title="tableTitle">
         <MarketTable
           :key="period"
           v-bind="activeMarketView.tableInput"
           :data-type="dataType"
         />
-      </Card>
+      </SectionCard>
     </DataLoadState>
   </div>
 </template>

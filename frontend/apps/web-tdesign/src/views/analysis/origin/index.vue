@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 
-import { Card } from 'tdesign-vue-next';
-
 import ChartCard from '#/components/ChartCard.vue';
 import DataLoadState from '#/components/DataLoadState.vue';
+import SectionCard from '#/components/SectionCard.vue';
 import { $t } from '#/locales';
 
 import { buildOriginShareChartOption } from '../components/originShareChart';
@@ -23,18 +22,12 @@ const originShareChartOption = computed(() =>
 <template>
   <div class="page-content">
     <DataLoadState :error="error" :loading="loading" @retry="fetchAll(true)">
-      <Card
-        :title="$t('pages.analysis.origin.chartTitle')"
-        class="section-card"
-      >
+      <SectionCard :title="$t('pages.analysis.origin.chartTitle')">
         <ChartCard :option="originShareChartOption" />
-      </Card>
-      <Card
-        :title="$t('pages.analysis.origin.tableTitle')"
-        class="section-card"
-      >
+      </SectionCard>
+      <SectionCard :title="$t('pages.analysis.origin.tableTitle')">
         <OriginShareTable :data="originShareTrend" />
-      </Card>
+      </SectionCard>
     </DataLoadState>
   </div>
 </template>
