@@ -9,7 +9,9 @@ export const overridesPreferences = defineOverridesPreferences({
     enable: false,
   },
   theme: {
+    builtinType: 'slate',
     mode: 'auto',
+    radius: '0.75',
   },
   widget: {
     lockScreen: false,

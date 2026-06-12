@@ -6,7 +6,7 @@ import type { OriginShareKey } from '#/utils/chart';
 import {
   buildStackedBarChartOption,
   getEmptyChartOption,
-  ORIGIN_COLORS,
+  getOriginShareColor,
   ORIGIN_KEYS,
 } from '#/utils/chart';
 import { toMonthKey } from '#/utils/period';
@@ -33,7 +33,7 @@ export function buildOriginShareChartOption(
 
   const timeLabels = data.map((item) => toMonthKey(item.year, item.month));
   const series = ORIGIN_KEYS.map((key) => ({
-    color: ORIGIN_COLORS[key],
+    color: getOriginShareColor(key),
     data: data.map((item) => +item[key].toFixed(2)),
     name: t(ORIGIN_LABEL_KEYS[key]),
   }));

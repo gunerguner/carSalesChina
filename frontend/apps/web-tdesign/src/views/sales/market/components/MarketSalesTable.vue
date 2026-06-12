@@ -30,13 +30,12 @@ const tableData = computed(() =>
 </script>
 
 <template>
-  <div class="px-4 py-3">
-    <Table
-      :columns="columns"
-      :data="tableData"
-      row-key="key"
-      size="small"
-      bordered
-    />
-  </div>
+  <Table
+    :columns="columns"
+    :data="tableData"
+    bordered
+    row-key="key"
+    size="small"
+    stripe
+  />
 </template>

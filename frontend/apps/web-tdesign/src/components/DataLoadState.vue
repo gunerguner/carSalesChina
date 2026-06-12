@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Alert, Button, Loading } from 'tdesign-vue-next';
+import { Alert, Button } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
 
@@ -22,19 +22,19 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div v-if="error" class="flex flex-col items-center gap-4 py-8">
+  <div v-if="error" class="sales-load-error">
     <Alert :message="$t(error)" theme="error" />
     <Button theme="primary" variant="outline" @click="emit('retry')">
       {{ $t('sales.common.retry') }}
     </Button>
   </div>
-  <Loading
-    v-else
-    :loading="loading"
-    size="medium"
-    :text="$t('sales.common.loading')"
+  <div
+    v-else-if="loading"
+    class="sales-load-skeleton"
     :style="{ minHeight: props.minHeight }"
   >
-    <slot></slot>
-  </Loading>
+    <div class="sales-load-skeleton__chart"></div>
+    <div class="sales-load-skeleton__table"></div>
+  </div>
+  <slot v-else></slot>
 </template>

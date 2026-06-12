@@ -101,6 +101,42 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 - 路径别名 `#/*` → `apps/web-tdesign/src/*`
 - 常用脚本（在 `frontend/`）：`pnpm dev:tdesign`、`pnpm build`（=`build:tdesign`）、`pnpm build:workspace`（全仓 Turbo）、`pnpm check:type`、`pnpm check`；构建说明见 `frontend/docs/build-performance.md`
 
+### 销售看板 UI 关键文件
+
+| 用途 | 路径 |
+|------|------|
+| 双模式视觉 token | `apps/web-tdesign/src/styles/sales-theme.css` |
+| 图表主题与交互 | `apps/web-tdesign/src/utils/chart.ts` |
+| 同比着色 | `apps/web-tdesign/src/utils/format.ts` |
+| 筛选面板 | `apps/web-tdesign/src/components/SalesFilterPanel.vue` |
+| 图表容器 | `apps/web-tdesign/src/components/ChartCard.vue` |
+| 加载态 | `apps/web-tdesign/src/components/DataLoadState.vue` |
+| 主题偏好 | `apps/web-tdesign/src/preferences.ts` |
+
+### 双模式 CSS 变量（`:root` / `.dark`）
+
+| 变量 | 用途 |
+|------|------|
+| `--chart-1` … `--chart-5` | 折线/堆叠柱配色 |
+| `--chart-axis` / `--chart-grid` | 轴标签与网格线 |
+| `--chart-pointer` | axisPointer 指示线 |
+| `--chart-tooltip-*` | tooltip 背景/边框/文字 |
+| `--sales-destructive` / `--sales-success` | 表格同比红绿 |
+
+### 图表交互约束
+
+- 禁止 `emphasis: { focus: 'series' }`（堆叠柱 hover 时会淡化其他系列）
+- 折线/柱系列使用 `emphasis: { disabled: true, focus: 'none' }`；靠 tooltip + axisPointer 反馈
+- tooltip 设 `confine: true`，背景/边框读 `--chart-tooltip-*`，保证 light/dark 对比度
+- 改配色或交互优先改 `chart.ts`，各页 builder 只负责数据与 legend/grid
+
+### UI 验证清单
+
+1. 三页顶部无重复大标题块（无 PageShell）
+2. light/dark 切换后图表轴、tooltip、系列色均清晰
+3. 国别堆叠柱 hover 时各系列仍可见、不被淡化
+4. 筛选切换、Tab 切换、表格 stripe/hover 正常
+
 ## Dev vs Prod
 
 | 项 | 开发 | 生产（Docker） |

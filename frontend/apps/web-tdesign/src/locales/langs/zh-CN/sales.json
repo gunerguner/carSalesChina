@@ -13,23 +13,24 @@
       "levelBev": "纯电动(BEV)",
       "dataType": "数据类型",
       "dataTypeRetail": "零售量",
-      "dataTypeProduction": "产量"
+      "dataTypeProduction": "产量",
+      "granularity": "统计周期"
     },
     "monthly": {
-      "title": "月度销量",
+      "title": "月度",
       "chartTitle": "月度销量趋势",
       "momGrowth": "环比增长(%)",
       "yoyGrowth": "同比增长(%)"
     },
     "quarterly": {
-      "title": "季度销量",
+      "title": "季度",
       "chartTitle": "季度销量趋势",
       "sales": "销量",
       "qoqGrowth": "环比增长(%)",
       "yoyGrowth": "同比增长(%)"
     },
     "yearly": {
-      "title": "年度销量",
+      "title": "年度",
       "chartTitle": "年度销量趋势",
       "sales": "销量",
       "yoyGrowth": "同比增长(%)"
@@ -81,6 +82,7 @@
     },
     "origin": {
       "chartTitle": "车系占比趋势",
+      "tableTitle": "车系占比明细",
       "time": "时间",
       "domestic": "自主(%)",
       "german": "德系(%)",

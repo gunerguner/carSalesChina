@@ -105,8 +105,9 @@ const tableData = computed<NevPenetrationRow[]>(() => {
   <Table
     :columns="columns"
     :data="tableData"
+    bordered
     row-key="key"
     size="small"
-    bordered
+    stripe
   />
 </template>

@@ -110,8 +110,9 @@ const tableData = computed<OriginShareRow[]>(() => {
   <Table
     :columns="columns"
     :data="tableData"
+    bordered
     row-key="key"
     size="small"
-    bordered
+    stripe
   />
 </template>

@@ -9,6 +9,7 @@ import { Card } from 'tdesign-vue-next';
 
 import ChartCard from '#/components/ChartCard.vue';
 import DataLoadState from '#/components/DataLoadState.vue';
+import SalesFilterPanel from '#/components/SalesFilterPanel.vue';
 import { $t } from '#/locales';
 
 import BrandSelectBar from './components/BrandSelectBar.vue';
@@ -49,19 +50,27 @@ async function onFilterChange(payload: {
 </script>
 
 <template>
-  <div class="p-5">
-    <BrandSelectBar @change="onFilterChange" />
+  <div class="sales-page-content">
+    <SalesFilterPanel>
+      <BrandSelectBar @change="onFilterChange" />
+    </SalesFilterPanel>
 
     <DataLoadState
       :error="error"
       :loading="loading"
       @retry="fetchRawData(true)"
     >
-      <Card :title="$t('sales.brand.trend.chartTitle')" class="mb-4">
+      <Card
+        :title="$t('sales.brand.trend.chartTitle')"
+        class="sales-section-card"
+      >
         <ChartCard :option="chartOption" />
       </Card>
 
-      <Card :title="$t('sales.brand.trend.tableTitle')">
+      <Card
+        :title="$t('sales.brand.trend.tableTitle')"
+        class="sales-section-card"
+      >
         <BrandTrendTable
           :data="activeSeries"
           :data-type="dataType"

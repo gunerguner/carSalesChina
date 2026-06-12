@@ -148,10 +148,10 @@ initializeFromMeta();
 </script>
 
 <template>
-  <div class="mb-4 flex flex-col gap-3">
+  <div class="flex flex-col gap-3">
     <div class="flex flex-wrap items-center gap-4">
       <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-600">{{
+        <span class="sales-filter-label">{{
           $t('sales.brand.trend.selectBrands')
         }}</span>
         <Select
@@ -167,7 +167,7 @@ initializeFromMeta();
         />
       </div>
       <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-600">{{
+        <span class="sales-filter-label">{{
           $t('sales.brand.trend.granularity')
         }}</span>
         <RadioGroup v-model="granularity" variant="default-filled">
@@ -183,7 +183,7 @@ initializeFromMeta();
         </RadioGroup>
       </div>
       <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-600">{{
+        <span class="sales-filter-label">{{
           $t('sales.brand.trend.dataType')
         }}</span>
         <RadioGroup v-model="dataType" variant="default-filled">

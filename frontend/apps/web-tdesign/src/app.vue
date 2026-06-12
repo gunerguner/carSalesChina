@@ -36,7 +36,7 @@ const globalConfig = computed<GlobalConfigProvider>(() =>
 </script>
 
 <template>
-  <ConfigProvider :global-config="globalConfig">
+  <ConfigProvider :global-config="globalConfig" class="sales-app">
     <RouterView />
   </ConfigProvider>
 </template>

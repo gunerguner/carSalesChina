@@ -31,7 +31,29 @@ const routes: RouteRecordRaw[] = [
     },
     name: 'DataAnalysis',
     path: '/data-analysis',
-    component: () => import('#/views/sales/analysis/index.vue'),
+    redirect: '/data-analysis/nev',
+    children: [
+      {
+        meta: {
+          icon: 'lucide:activity',
+          order: 31,
+          title: $t('sales.analysis.nevTab'),
+        },
+        name: 'DataAnalysisNev',
+        path: '/data-analysis/nev',
+        component: () => import('#/views/sales/analysis/nev/index.vue'),
+      },
+      {
+        meta: {
+          icon: 'lucide:globe',
+          order: 32,
+          title: $t('sales.analysis.originTab'),
+        },
+        name: 'DataAnalysisOrigin',
+        path: '/data-analysis/origin',
+        component: () => import('#/views/sales/analysis/origin/index.vue'),
+      },
+    ],
   },
 ];
 

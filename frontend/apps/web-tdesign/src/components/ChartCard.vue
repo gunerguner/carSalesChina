@@ -27,7 +27,7 @@ onMounted(draw);
 </script>
 
 <template>
-  <div class="w-full" :class="heightClass">
+  <div class="sales-chart-wrap w-full" :class="heightClass">
     <EchartsUI ref="chartRef" />
   </div>
 </template>

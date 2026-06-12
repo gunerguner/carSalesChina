@@ -13,7 +13,8 @@
       "levelBev": "BEV",
       "dataType": "Data Type",
       "dataTypeRetail": "Retail",
-      "dataTypeProduction": "Production"
+      "dataTypeProduction": "Production",
+      "granularity": "Period"
     },
     "monthly": {
       "title": "Monthly Sales",
@@ -81,6 +82,7 @@
     },
     "origin": {
       "chartTitle": "Origin Share Trend",
+      "tableTitle": "Origin Share Detail",
       "time": "Time",
       "domestic": "Domestic(%)",
       "german": "German(%)",

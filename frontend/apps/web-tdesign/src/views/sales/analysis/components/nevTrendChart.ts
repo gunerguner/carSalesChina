@@ -55,7 +55,7 @@ export function buildNevTrendChartOption(
     percentMaxCap: 100,
     series: [
       {
-        areaStyle: { opacity: 0.15 },
+        areaStyle: { opacity: 0.1 },
         color,
         data: values,
         name: label,
