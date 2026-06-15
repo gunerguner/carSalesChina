@@ -110,6 +110,13 @@
     "refreshSuccess": "Data refresh completed",
     "refreshFailed": "Data refresh failed",
     "refreshPartial": "Data refresh completed with errors",
+    "refreshConfirmTitle": "Confirm full data refresh",
+    "refreshConfirmContent": "This will re-fetch brand metadata, sales, and origin share data from external sources and may take a while. Enter the confirmation code to continue.",
+    "refreshConfirmPlaceholder": "Enter confirmation code",
+    "refreshConfirmCancel": "Cancel",
+    "refreshConfirmSubmit": "Refresh",
+    "refreshConfirmCodeInvalid": "Invalid confirmation code",
+    "refreshConfirmNotConfigured": "Refresh confirmation code is not configured.",
     "sourceOverall": "Yiche overall",
     "sourceBrand": "Yiche brand",
     "sourceOrigin": "CPCA origin"

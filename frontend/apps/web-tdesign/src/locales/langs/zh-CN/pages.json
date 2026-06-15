@@ -110,6 +110,13 @@
     "refreshSuccess": "数据刷新完成",
     "refreshFailed": "数据刷新失败",
     "refreshPartial": "数据刷新未完全成功",
+    "refreshConfirmTitle": "确认刷新全部数据",
+    "refreshConfirmContent": "此操作将从外部数据源重新拉取品牌元数据、销量与国别占比，耗时较长。请输入确认码以继续。",
+    "refreshConfirmPlaceholder": "请输入确认码",
+    "refreshConfirmCancel": "取消",
+    "refreshConfirmSubmit": "确认刷新",
+    "refreshConfirmCodeInvalid": "确认码不正确",
+    "refreshConfirmNotConfigured": "未配置刷新确认码",
     "sourceOverall": "易车总体",
     "sourceBrand": "易车品牌",
     "sourceOrigin": "乘联会国别"

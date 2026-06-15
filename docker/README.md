@@ -54,6 +54,7 @@ cd carSales
    - **`COMPOSE_PROJECT_NAME`**：默认 `carsales`（`.env.example` 已给出）。与 **stockManager** 等同机部署时**勿删**；与 stockManager 的 `stockmanager` 区分开，避免两套栈互相顶替。
    - `MYSQL_ROOT_PASSWORD`
    - `DB_PASSWORD`（与 `MYSQL_USER` / `MYSQL_DATABASE` 对应的应用用户密码）
+   - **`VITE_ADMIN_REFRESH_CONFIRM_CODE`**：页面右上角「刷新全部数据」的二次确认码（构建时写入前端 JS，**务必改成非默认值**）
 
 3. 应用连接数据库：后端容器内使用 `DB_HOST=mysql`（已在 `docker-compose.yml` 中写死），用户名与库名与 `DB_USER`、`DB_NAME` 一致。
 
@@ -224,6 +225,8 @@ location / {
 
 默认 `VITE_GLOB_API_URL=/api`，与容器内 `nginx.conf` 反代一致。标题等见 `docker/.env.example` 中的 `VITE_APP_TITLE`。
 
+**刷新全部数据确认码**：`VITE_ADMIN_REFRESH_CONFIRM_CODE` 在构建时注入前端，点击右上角刷新按钮时需输入与之相同的确认码。改 `docker/.env` 中该值后须 **重新 build frontend**（与上述 `VITE_*` 规则相同）。未配置或仍为示例值 `change-me` 时，页面会提示无法刷新。
+
 **自检（浏览器 F12 → Console）：**
 
 ```js
@@ -263,3 +266,4 @@ docker exec car-sales-frontend grep -o 'VITE_GLOB_API_URL[^,]*' /usr/share/nginx
 - **后端连不上库**：确认 `DB_USER` / `DB_PASSWORD` / `DB_NAME` 与 MySQL 服务环境变量一致，且非 `root` 作为 `MYSQL_USER`（镜像限制）。
 - **前端接口 404**：确认请求路径以 `/api` 开头，与后端路由前缀一致。
 - **页面能开但接口全错、标题为空、反复弹「请求失败」**：多为 Docker 构建未注入 `VITE_*`（`.env` 未打进镜像）。确认 `docker/.env` 含 `VITE_GLOB_API_URL=/api`、`VITE_APP_TITLE`，执行 `build --no-cache frontend` 后 `up -d`；浏览器检查 `window._VBEN_ADMIN_PRO_APP_CONF_`。接口恢复后若仍双份弹窗，拉取最新前端（已去掉与全局拦截器重复的页面级 `message.error`）。
+- **刷新全部数据提示「未配置刷新确认码」或确认码始终不对**：确认 `docker/.env` 已设置 `VITE_ADMIN_REFRESH_CONFIRM_CODE`（勿留 `change-me`），并执行 `build frontend` 后 `up -d`；仅改 `.env` 不重建镜像不会生效。
