@@ -137,7 +137,7 @@ python -m backend.main
 ```bash
 cd frontend
 pnpm install
-pnpm dev:tdesign
+pnpm dev
 ```
 
 前端开发服务默认端口为 `5999`，开发环境接口地址为 `/api`，并由 Vite 代理到 `http://localhost:8001`。
@@ -145,8 +145,8 @@ pnpm dev:tdesign
 常用脚本：
 
 ```bash
-# 启动 TDesign 前端应用
-pnpm dev:tdesign
+# 启动 TDesign 前端应用（dev:tdesign 为兼容别名）
+pnpm dev
 
 # 构建业务前端（直打 Vite，约 5s；见 frontend/docs/build-performance.md）
 pnpm build

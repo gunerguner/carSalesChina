@@ -104,7 +104,7 @@ flowchart LR
 |------|------|------|
 | MySQL | `mysql -u root -p < backend/init_db.sql` | 3306 |
 | 后端 | `cd backend && source .venv/bin/activate && python -m backend.main` | **8001** |
-| 前端 | `cd frontend && pnpm install && pnpm dev:tdesign` | **5999**（代理 `/api` → 8001） |
+| 前端 | `cd frontend && pnpm install && pnpm dev` | **5999**（代理 `/api` → 8001） |
 | 前端构建 | `cd frontend && pnpm build` | 直打 Vite（~5s），见 `frontend/docs/build-performance.md` |
 
 **环境变量**（`backend/.env`）：`DB_*`、`FASTAPI_PORT`、`LOG_LEVEL`、`LOG_DIR`。
