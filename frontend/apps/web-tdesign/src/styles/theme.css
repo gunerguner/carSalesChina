@@ -15,7 +15,7 @@
   --chart-tooltip-text: hsl(var(--foreground));
   --tone-muted: hsl(var(--muted-foreground));
   --tone-destructive: hsl(var(--destructive));
-  --tone-success: hsl(var(--success));
+  --tone-success: hsl(144 50% 38%);
 }
 
 .dark {
@@ -33,6 +33,7 @@
   --chart-tooltip-bg: hsl(var(--popover));
   --chart-tooltip-border: hsl(var(--border));
   --chart-tooltip-text: hsl(var(--popover-foreground));
+  --tone-success: hsl(144 45% 55%);
 }
 
 .app {
