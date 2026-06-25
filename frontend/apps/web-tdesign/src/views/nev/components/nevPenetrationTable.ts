@@ -1,9 +1,6 @@
 import type { PrimaryTableCol } from 'tdesign-vue-next';
 
-import type {
-  NevBreakdownRecord,
-  NevShareTrendRecord,
-} from '#/api/analysis';
+import type { NevBreakdownRecord, NevShareTrendRecord } from '#/api/analysis';
 import type { Translate } from '#/utils/types';
 
 import { toMonthKey } from '#/utils/period';

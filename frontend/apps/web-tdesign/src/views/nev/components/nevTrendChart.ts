@@ -1,9 +1,6 @@
 import type { ECOption } from '@vben/plugins/echarts';
 
-import type {
-  NevBreakdownRecord,
-  NevShareTrendRecord,
-} from '#/api/analysis';
+import type { NevBreakdownRecord, NevShareTrendRecord } from '#/api/analysis';
 import type { LineTooltipParams } from '#/utils/chart';
 import type { YearMonthRecord } from '#/utils/types';
 import type { Translate } from '#/utils/types';

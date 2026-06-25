@@ -1,7 +1,4 @@
-import type {
-  NevBreakdownRecord,
-  NevShareTrendRecord,
-} from '#/api/analysis';
+import type { NevBreakdownRecord, NevShareTrendRecord } from '#/api/analysis';
 
 import { ref } from 'vue';
 

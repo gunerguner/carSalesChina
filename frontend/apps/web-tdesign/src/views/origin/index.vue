@@ -6,9 +6,9 @@ import DataLoadState from '#/components/DataLoadState.vue';
 import SectionCard from '#/components/SectionCard.vue';
 import { $t } from '#/locales';
 
-import { buildOriginShareChartOption } from '../components/originShareChart';
-import OriginShareTable from '../components/OriginShareTable.vue';
-import { useOriginAnalysisData } from '../useOriginAnalysisData';
+import { buildOriginShareChartOption } from './components/originShareChart';
+import OriginShareTable from './components/OriginShareTable.vue';
+import { useOriginAnalysisData } from './useOriginAnalysisData';
 
 const { error, loading, fetchAll, originShareTrend } = useOriginAnalysisData();
 

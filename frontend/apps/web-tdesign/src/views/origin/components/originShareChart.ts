@@ -2,10 +2,7 @@ import type { ECOption } from '@vben/plugins/echarts';
 
 import type { OriginShareTrendRecord } from '#/api/analysis';
 
-import {
-  buildStackedBarChartOption,
-  emptyChartIfNoData,
-} from '#/utils/chart';
+import { buildStackedBarChartOption, emptyChartIfNoData } from '#/utils/chart';
 import { toMonthKey } from '#/utils/period';
 import { getOriginShareColor } from '#/utils/style';
 import { ORIGIN_DIMENSIONS, type Translate } from '#/utils/types';

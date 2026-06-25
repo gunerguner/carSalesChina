@@ -36,36 +36,42 @@ const routes: RouteRecordRaw[] = [
     component: () => import('#/views/brand/index.vue'),
   },
   {
-    meta: {
-      icon: 'lucide:pie-chart',
-      order: 30,
-      title: $t('pages.analysis.title'),
-    },
-    name: 'DataAnalysis',
+    meta: { hideInMenu: true, title: 'DataAnalysis' },
+    name: 'DataAnalysisLegacy',
     path: '/data-analysis',
-    redirect: '/data-analysis/nev',
-    children: [
-      {
-        meta: {
-          icon: 'lucide:activity',
-          order: 31,
-          title: $t('pages.analysis.nevTab'),
-        },
-        name: 'DataAnalysisNev',
-        path: '/data-analysis/nev',
-        component: () => import('#/views/analysis/nev/index.vue'),
-      },
-      {
-        meta: {
-          icon: 'lucide:globe',
-          order: 32,
-          title: $t('pages.analysis.originTab'),
-        },
-        name: 'DataAnalysisOrigin',
-        path: '/data-analysis/origin',
-        component: () => import('#/views/analysis/origin/index.vue'),
-      },
-    ],
+    redirect: '/nev',
+  },
+  {
+    meta: { hideInMenu: true, title: 'Nev' },
+    name: 'DataAnalysisNevLegacy',
+    path: '/data-analysis/nev',
+    redirect: '/nev',
+  },
+  {
+    meta: { hideInMenu: true, title: 'Origin' },
+    name: 'DataAnalysisOriginLegacy',
+    path: '/data-analysis/origin',
+    redirect: '/origin',
+  },
+  {
+    meta: {
+      icon: 'lucide:activity',
+      order: 30,
+      title: $t('pages.analysis.nevTab'),
+    },
+    name: 'Nev',
+    path: '/nev',
+    component: () => import('#/views/nev/index.vue'),
+  },
+  {
+    meta: {
+      icon: 'lucide:globe',
+      order: 40,
+      title: $t('pages.analysis.originTab'),
+    },
+    name: 'Origin',
+    path: '/origin',
+    component: () => import('#/views/origin/index.vue'),
   },
 ];
 

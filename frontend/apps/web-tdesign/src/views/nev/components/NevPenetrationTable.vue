@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import type {
-  NevBreakdownRecord,
-  NevShareTrendRecord,
-} from '#/api/analysis';
+import type { NevBreakdownRecord, NevShareTrendRecord } from '#/api/analysis';
 
 import { computed } from 'vue';
 

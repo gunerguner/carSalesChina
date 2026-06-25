@@ -5,10 +5,7 @@ import type { Translate } from '#/utils/types';
 
 import { toMonthKey, toYearMonthSortKey } from '#/utils/period';
 import { tablePercentCell } from '#/utils/render';
-import {
-  ORIGIN_DIMENSIONS,
-  type OriginShareKey,
-} from '#/utils/types';
+import { ORIGIN_DIMENSIONS, type OriginShareKey } from '#/utils/types';
 
 export type OriginShareRow = Record<OriginShareKey, number> & {
   key: number;

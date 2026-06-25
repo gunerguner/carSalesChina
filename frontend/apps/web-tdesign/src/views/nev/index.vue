@@ -7,9 +7,9 @@ import SectionCard from '#/components/SectionCard.vue';
 import { $t } from '#/locales';
 import { getChartPaletteColor } from '#/utils/style';
 
-import NevPenetrationTable from '../components/NevPenetrationTable.vue';
-import { buildNevTrendChartOption } from '../components/nevTrendChart';
-import { useNevAnalysisData } from '../useNevAnalysisData';
+import NevPenetrationTable from './components/NevPenetrationTable.vue';
+import { buildNevTrendChartOption } from './components/nevTrendChart';
+import { useNevAnalysisData } from './useNevAnalysisData';
 
 const { error, loading, fetchAll, nevShareTrend, nevBreakdown } =
   useNevAnalysisData();

@@ -33,7 +33,8 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 | 路由模块 | `frontend/apps/web-tdesign/src/router/routes/modules/app.ts` |
 | 市场页 | `frontend/apps/web-tdesign/src/views/market/` |
 | 品牌页 | `frontend/apps/web-tdesign/src/views/brand/` |
-| 分析页 | `frontend/apps/web-tdesign/src/views/analysis/` |
+| 分析页（NEV） | `frontend/apps/web-tdesign/src/views/nev/` |
+| 分析页（车系占比） | `frontend/apps/web-tdesign/src/views/origin/` |
 | Docker Compose | `docker/docker-compose.yml` |
 | Nginx | `docker/nginx.conf` |
 | 环境模板 | `backend/.env.example`、`docker/.env.example` |
