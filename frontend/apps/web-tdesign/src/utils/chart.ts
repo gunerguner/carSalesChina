@@ -39,16 +39,19 @@ export function emptyChartIfNoData(
 
 function lineSeriesTooltipFormatter(
   params: LineTooltipParams | LineTooltipParams[],
+  locale?: string,
 ): string {
   const arr = Array.isArray(params) ? params : [params];
   const head = arr[0];
   if (!head) return '';
   const label = head.axisValueLabel ?? head.name ?? '';
   const body = arr
-    .map(
-      (p) =>
-        `${p.marker}${p.seriesName}: ${formatOrDash(Math.round(Number(p.value)))}`,
-    )
+    .map((p) => {
+      const raw = p.value;
+      const num = raw === null || raw === undefined ? null : Number(raw);
+      const value = num === null || Number.isNaN(num) ? null : Math.round(num);
+      return `${p.marker}${p.seriesName}: ${formatOrDash(value, '', locale)}`;
+    })
     .join('<br/>');
   return `${label}<br/>${body}`;
 }
@@ -136,7 +139,7 @@ function valueYAxis(locale: string): ECOption['yAxis'] {
 export interface LineChartSeriesItem {
   areaStyle?: { opacity: number };
   color?: string;
-  data: number[];
+  data: (null | number)[];
   name: string;
 }
 
@@ -171,7 +174,7 @@ export function buildLineChartOption(
     locale = 'zh-CN',
     percentMaxCap = 100,
     series,
-    tooltipFormatter = lineSeriesTooltipFormatter,
+    tooltipFormatter = (params) => lineSeriesTooltipFormatter(params, locale),
     xAxisExtra,
     xData,
     yAxisType = 'value',
@@ -265,7 +268,7 @@ export function buildStackedBarChartOption(
       barMaxWidth: 28,
       data: item.data,
       emphasis: NO_FOCUS_EMPHASIS,
-      itemStyle: { borderRadius: [2, 2, 0, 0], color: item.color },
+      itemStyle: { color: item.color },
       name: item.name,
       stack: 'total',
       type: 'bar',

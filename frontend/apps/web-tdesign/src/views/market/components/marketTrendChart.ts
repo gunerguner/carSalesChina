@@ -34,15 +34,34 @@ function buildMonthlyOption(
   const empty = emptyChartIfNoData(data, t('pages.common.noData'));
   if (empty) return empty;
 
-  const yearDataMap = new Map<number, number[]>();
+  const yearDataMap = new Map<number, (null | number)[]>();
+  const yearLastMonthMap = new Map<number, number>();
   for (const item of data) {
     if (!yearDataMap.has(item.year)) {
-      yearDataMap.set(item.year, Array.from<number>({ length: 12 }).fill(0));
+      yearDataMap.set(item.year, Array.from<null | number>({ length: 12 }).fill(0));
     }
     const yearArr = yearDataMap.get(item.year);
-    if (yearArr) yearArr[item.month - 1] = item.sales;
+    if (yearArr) {
+      yearArr[item.month - 1] = item.sales;
+      yearLastMonthMap.set(
+        item.year,
+        Math.max(yearLastMonthMap.get(item.year) ?? 0, item.month),
+      );
+    }
   }
   const years = [...yearDataMap.keys()].toSorted((a, b) => a - b);
+
+  // 当前年份没有数据的后面月份不显示折线
+  const currentYear = years.at(-1);
+  if (currentYear) {
+    const currentArr = yearDataMap.get(currentYear);
+    const lastMonth = yearLastMonthMap.get(currentYear) ?? 0;
+    if (currentArr) {
+      for (let i = lastMonth; i < 12; i++) {
+        currentArr[i] = null;
+      }
+    }
+  }
 
   return buildLineChartOption({
     locale,
