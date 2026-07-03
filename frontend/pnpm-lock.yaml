@@ -315,6 +315,9 @@ catalogs:
     tailwindcss:
       specifier: ^4.2.2
       version: 4.2.4
+    tdesign-icons-vue-next:
+      specifier: ^0.4.4
+      version: 0.4.4
     tdesign-vue-next:
       specifier: ^1.19.0
       version: 1.19.1
@@ -531,6 +534,9 @@ importers:
       pinia:
         specifier: ^3.0.4
         version: 3.0.4(typescript@6.0.3)(vue@3.5.33(typescript@6.0.3))
+      tdesign-icons-vue-next:
+        specifier: 'catalog:'
+        version: 0.4.4(vue@3.5.33(typescript@6.0.3))
       tdesign-vue-next:
         specifier: 'catalog:'
         version: 1.19.1(vue@3.5.33(typescript@6.0.3))

@@ -73,28 +73,6 @@
   margin-bottom: 1.25rem;
 }
 
-.section-card .t-card {
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-  box-shadow: none;
-}
-
-.section-card .t-card__header {
-  padding: 0.75rem 1.25rem;
-  border-bottom: 1px solid hsl(var(--border));
-}
-
-.section-card .t-card__title {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: hsl(var(--muted-foreground));
-}
-
-.section-card .t-card__body {
-  padding: 1rem 1.25rem;
-}
-
 .chart-grid {
   display: flex;
   gap: 1.25rem;

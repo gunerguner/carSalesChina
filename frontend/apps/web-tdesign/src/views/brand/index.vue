@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import type { BrandTrendGranularity } from './useBrandData';
-
-import type { DataType } from '#/utils/types';
-
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 
 import { preferences } from '@vben/preferences';
 
@@ -30,30 +26,34 @@ const {
   timeLabels,
 } = useBrandData();
 
-const chartOption = computed(() =>
-  buildBrandTrendChartOption(
+const chartOption = computed(() => {
+  // 显式读取主题 mode 以建立响应式依赖；切换 light/dark 时 option 重建
+  void preferences.theme.mode;
+  return buildBrandTrendChartOption(
     { data: activeSeries.value, timeLabels: timeLabels.value },
     preferences.app.locale,
     $t,
-  ),
-);
+  );
+});
 
-async function onFilterChange(payload: {
-  brands: string[];
-  dataType: DataType;
-  granularity: BrandTrendGranularity;
-}) {
-  selectedBrands.value = payload.brands;
-  dataType.value = payload.dataType;
-  granularity.value = payload.granularity;
-  await fetchRawData();
-}
+// 任一筛选条件变化即触发拉取（与原 onFilterChange 行为一致）
+watch(
+  [selectedBrands, dataType, granularity],
+  () => {
+    void fetchRawData();
+  },
+  { deep: true },
+);
 </script>
 
 <template>
   <div class="page-content">
     <FilterPanel>
-      <BrandSelectBar @change="onFilterChange" />
+      <BrandSelectBar
+        v-model:selected-brands="selectedBrands"
+        v-model:data-type="dataType"
+        v-model:granularity="granularity"
+      />
     </FilterPanel>
 
     <DataLoadState

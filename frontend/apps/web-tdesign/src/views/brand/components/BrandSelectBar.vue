@@ -8,6 +8,7 @@ import { ref, watch } from 'vue';
 
 import { Button, RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
 
+import MetricTooltip from '#/components/MetricTooltip.vue';
 import { $t } from '#/locales';
 import { isNil } from '#/utils/format';
 
@@ -19,19 +20,15 @@ import {
 } from '../brand-defaults';
 import { useBrandMetaAll } from '../useBrandMetaAll';
 
-const emit = defineEmits<{
-  change: [
-    payload: {
-      brands: string[];
-      dataType: DataType;
-      granularity: BrandTrendGranularity;
-    },
-  ];
-}>();
+// 单一真相：直接绑到 useBrandData 暴露的 ref，与 market 页风格一致
+const selectedBrands = defineModel<string[]>('selectedBrands', {
+  required: true,
+});
+const dataType = defineModel<DataType>('dataType', { required: true });
+const granularity = defineModel<BrandTrendGranularity>('granularity', {
+  required: true,
+});
 
-const granularity = ref<BrandTrendGranularity>('recentYear');
-const dataType = ref<DataType>('retail');
-const selectedBrands = ref<string[]>([...DEFAULT_SELECTED_BRAND_NAMES]);
 const brandOptionsLoaded = ref(false);
 const activeQuickFilterId = ref<null | string>(null);
 
@@ -74,14 +71,6 @@ function syncActiveQuickFilter() {
   activeQuickFilterId.value = matched?.id ?? null;
 }
 
-function emitFilterChange() {
-  emit('change', {
-    granularity: granularity.value,
-    dataType: dataType.value,
-    brands: selectedBrands.value,
-  });
-}
-
 async function initializeFromMeta() {
   brandOptionsLoaded.value = false;
   try {
@@ -100,7 +89,6 @@ async function initializeFromMeta() {
   } finally {
     brandOptionsLoaded.value = true;
     syncActiveQuickFilter();
-    emitFilterChange();
   }
 }
 
@@ -132,17 +120,11 @@ function applyQuickFilter(filter: BrandQuickFilter) {
   activeQuickFilterId.value = filter.id;
 }
 
-watch(
-  [granularity, dataType, selectedBrands],
-  () => {
-    if (!brandOptionsLoaded.value) {
-      return;
-    }
-    syncActiveQuickFilter();
-    emitFilterChange();
-  },
-  { deep: true },
-);
+// quick filter 仅依赖 selectedBrands；granularity/dataType 变化无需重算
+watch(selectedBrands, () => {
+  if (!brandOptionsLoaded.value) return;
+  syncActiveQuickFilter();
+});
 
 initializeFromMeta();
 </script>
@@ -194,6 +176,7 @@ initializeFromMeta();
             {{ $t('pages.brand.trend.production') }}
           </RadioButton>
         </RadioGroup>
+        <MetricTooltip :content="$t('pages.brand.tooltip.dataType')" />
       </div>
     </div>
     <div class="flex flex-wrap items-center gap-2">
@@ -201,8 +184,8 @@ initializeFromMeta();
         v-for="filter in BRAND_QUICK_FILTERS"
         :key="filter.id"
         size="small"
-        :variant="activeQuickFilterId === filter.id ? 'base' : 'outline'"
-        :theme="activeQuickFilterId === filter.id ? 'primary' : 'default'"
+        variant="outline"
+        :class="{ 'brand-quick-filter--active': activeQuickFilterId === filter.id }"
         :disabled="!brandOptionsLoaded || brandMetaLoading"
         @click="applyQuickFilter(filter)"
       >
@@ -211,3 +194,18 @@ initializeFromMeta();
     </div>
   </div>
 </template>
+
+<style scoped>
+.brand-quick-filter--active {
+  background-color: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.brand-quick-filter--active:hover,
+.brand-quick-filter--active:focus-visible {
+  background-color: hsl(var(--primary) / 85%);
+  border-color: hsl(var(--primary) / 85%);
+  color: hsl(var(--primary-foreground));
+}
+</style>

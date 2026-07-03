@@ -124,6 +124,7 @@ catalog:
   stylelint-scss: ^7.0.0
   tailwind-merge: ^3.5.0
   tailwindcss: ^4.2.2
+  tdesign-icons-vue-next: ^0.4.4
   tdesign-vue-next: ^1.19.0
   theme-colors: ^0.1.0
   tippy.js: ^6.3.7

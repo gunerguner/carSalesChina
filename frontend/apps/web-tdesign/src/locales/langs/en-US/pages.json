@@ -2,6 +2,20 @@
   "market": {
     "title": "Market Sales",
     "timePeriod": "Time period",
+    "tooltip": {
+      "retailSales": "Retail sales: the number of vehicles delivered by dealers to end consumers. Source: Yiche API retail data.",
+      "productionSales": "Production: the number of vehicles produced and shipped by manufacturers. Source: Yiche API production data.",
+      "levelAll": "All vehicle levels, including ICE, BEV, PHEV, EREV and all other powertrain types.",
+      "levelNev": "New Energy Vehicles (NEV), including Battery Electric (BEV), Plug-in Hybrid (PHEV), and Extended-Range EV (EREV).",
+      "levelBev": "Battery Electric Vehicle (BEV), powered solely by an onboard battery without an internal combustion engine.",
+      "yoyGrowth": "Year-over-year growth: change versus the same period last year. Formula: (current period - same period last year) / same period last year × 100%.",
+      "momGrowth": "Month-over-month growth: change versus the previous month. Formula: (current month - previous month) / previous month × 100%.",
+      "qoqGrowth": "Quarter-over-quarter growth: change versus the previous quarter. Formula: (current quarter - previous quarter) / previous quarter × 100%.",
+      "monthlyTrend": "Monthly sales trend chart showing sales changes for each month across recent years.",
+      "quarterlyTrend": "Quarterly aggregated sales trend chart: Q1 (Jan-Mar), Q2 (Apr-Jun), Q3 (Jul-Sep), Q4 (Oct-Dec).",
+      "yearlyTrend": "Yearly aggregated sales trend chart showing total sales by year.",
+      "dataType": "Switch between retail and production metrics.\n· Retail: the number of vehicles delivered by dealers to end consumers. Source: Yiche API retail data.\n· Production: the number of vehicles produced and shipped by manufacturers. Source: Yiche API production data."
+    },
     "column": {
       "retailSales": "Sales",
       "productionSales": "Production"
@@ -38,6 +52,14 @@
   },
   "brand": {
     "title": "Brand sales",
+    "tooltip": {
+      "salesWithYoyRetail": "Brand retail sales and YoY growth. Source: Yiche API brand retail data; YoY = (current period - same period last year) / same period last year × 100%.",
+      "salesWithYoyProduction": "Brand production and YoY growth. Source: Yiche API brand production data; YoY = (current period - same period last year) / same period last year × 100%.",
+      "trendChart": "Sales trend comparison for selected brands, supporting up to 4 brands at the same time.",
+      "dataType": "Switch between retail and production metrics.\n· Retail: the number of vehicles delivered by dealers to end consumers. Source: Yiche API retail data.\n· Production: the number of vehicles produced and shipped by manufacturers. Source: Yiche API production data.",
+      "granularity": "Time aggregation: last 12 months, last 24 months, or yearly.",
+      "selectBrands": "Select brands to compare; up to 4 brands can be compared at once."
+    },
     "trend": {
       "selectBrands": "Brands",
       "selectPlaceholder": "Select up to 4 brands",
@@ -72,6 +94,15 @@
       "penetrationChartTitle": "NEV Penetration Trend Chart",
       "breakdownChartTitle": "BEV Share within NEV Trend",
       "bevInNevTrendLabel": "BEV share within NEV",
+      "tooltip": {
+        "totalSales": "Total passenger vehicle sales, used as the denominator when calculating NEV penetration.",
+        "nevSales": "New Energy Vehicle sales, including BEV, PHEV and EREV.",
+        "penetrationRate": "NEV penetration rate: NEV sales as a share of total passenger vehicle sales. Formula: NEV sales / total sales × 100%.",
+        "bevSales": "Battery Electric Vehicle sales only.",
+        "bevRatioInNev": "BEV share within NEV: BEV sales as a share of total NEV sales. Formula: BEV sales / NEV sales × 100%; PHEV sales = NEV - BEV.",
+        "penetrationChart": "Monthly trend of NEV penetration rate.\nSource: Yiche retail monthly sales.\nFormula: NEV Penetration = NEV sales ÷ total passenger vehicle sales × 100% .",
+        "breakdownChart": "Monthly trend of BEV share within NEV.\nSource: Yiche retail monthly sales.\nFormula: BEV share = BEV sales ÷ NEV sales × 100%; PHEV sales = NEV sales − BEV sales."
+      },
       "time": "Time",
       "totalSales": "Total Sales",
       "nevSales": "NEV Sales",
@@ -83,6 +114,16 @@
     "origin": {
       "chartTitle": "Origin Share Trend",
       "tableTitle": "Origin Share Detail",
+      "tooltip": {
+        "originShare": "Share of each vehicle origin in total passenger vehicle sales, monthly stacked trend.\nSource: CPCA origin classification sales.\nFormula: Origin share = origin sales ÷ total sales of all origins × 100%.",
+        "domestic": "Domestic brand sales share.",
+        "german": "German brand sales share.",
+        "japanese": "Japanese brand sales share.",
+        "american": "American brand sales share.",
+        "european": "European brand sales share.",
+        "korean": "Korean brand sales share.",
+        "french": "French brand sales share."
+      },
       "time": "Time",
       "domestic": "Domestic(%)",
       "german": "German(%)",

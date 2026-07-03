@@ -3,18 +3,15 @@ import { Alert, Button } from 'tdesign-vue-next';
 
 import { $t } from '#/locales';
 
-const props = withDefaults(
-  defineProps<{
-    error?: null | string;
-    loading?: boolean;
-    minHeight?: string;
-  }>(),
-  {
-    error: null,
-    loading: false,
-    minHeight: '200px',
-  },
-);
+const {
+  error = null,
+  loading = false,
+  minHeight = '200px',
+} = defineProps<{
+  error?: null | string;
+  loading?: boolean;
+  minHeight?: string;
+}>();
 
 const emit = defineEmits<{
   retry: [];
@@ -31,7 +28,7 @@ const emit = defineEmits<{
   <div
     v-else-if="loading"
     class="load-skeleton"
-    :style="{ minHeight: props.minHeight }"
+    :style="{ minHeight }"
   >
     <div class="load-skeleton__chart"></div>
     <div class="load-skeleton__table"></div>

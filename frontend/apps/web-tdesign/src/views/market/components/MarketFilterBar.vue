@@ -7,6 +7,7 @@ import { computed } from 'vue';
 
 import { RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
 
+import MetricTooltip from '#/components/MetricTooltip.vue';
 import { $t } from '#/locales';
 
 export type { MarketPeriodGranularity };
@@ -67,9 +68,7 @@ const periodOptions = computed(() => [
       </RadioGroup>
     </div>
     <div class="flex items-center gap-2">
-      <span class="filter-label">{{
-        $t('pages.market.filter.dataType')
-      }}</span>
+      <span class="filter-label">{{ $t('pages.market.filter.dataType') }}</span>
       <RadioGroup v-model="dataType" variant="default-filled">
         <RadioButton
           v-for="opt in dataTypeOptions"
@@ -79,6 +78,7 @@ const periodOptions = computed(() => [
           {{ opt.label }}
         </RadioButton>
       </RadioGroup>
+      <MetricTooltip :content="$t('pages.market.tooltip.dataType')" />
     </div>
   </div>
 </template>

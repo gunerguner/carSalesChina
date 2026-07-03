@@ -2,6 +2,20 @@
   "market": {
     "title": "市场销量",
     "timePeriod": "时间段",
+    "tooltip": {
+      "retailSales": "终端零售量：经销商向最终消费者实际交付的车辆数量。口径：数据来源于易车 API 零售数据。",
+      "productionSales": "厂商产量：汽车制造商生产并出厂的车辆数量。口径：数据来源于易车 API 产量数据。",
+      "levelAll": "全部车型级别，包含燃油车、纯电动、插电混动、增程式等所有动力类型。",
+      "levelNev": "新能源车型，包含纯电动(BEV)、插电混动(PHEV)、增程式等可外接充电的车型。",
+      "levelBev": "纯电动车型(BEV)，仅由动力电池驱动、无外接燃油发动机的新能源车型。",
+      "yoyGrowth": "同比增长率：本期数据与去年同期相比的变化幅度。口径：(本期 - 去年同期) / 去年同期 × 100%。",
+      "momGrowth": "月度环比增长率：本月数据与上月相比的变化幅度。口径：(本月 - 上月) / 上月 × 100%。",
+      "qoqGrowth": "季度环比增长率：本季度数据与上季度相比的变化幅度。口径：(本季度 - 上季度) / 上季度 × 100%。",
+      "monthlyTrend": "按月度统计的销量走势图，展示最近若干年份每个月的销量变化。",
+      "quarterlyTrend": "按季度聚合的销量走势图，每个季度为当年1-3月、4-6月、7-9月、10-12月的销量合计。",
+      "yearlyTrend": "按年度聚合的销量走势图，展示各年度的销量合计。",
+      "dataType": "数据类型切换零售量与产量两种口径。\n· 零售量(retail)：经销商向最终消费者实际交付的车辆数量。数据来源：易车 API 零售数据。\n· 产量(production)：汽车制造商生产并出厂的车辆数量。数据来源：易车 API 产量数据。"
+    },
     "column": {
       "retailSales": "销量",
       "productionSales": "产量"
@@ -38,6 +52,14 @@
   },
   "brand": {
     "title": "品牌销量",
+    "tooltip": {
+      "salesWithYoyRetail": "品牌终端零售量及同比增长。口径：易车 API 品牌零售数据，同比 = (本期 - 去年同期) / 去年同期 × 100%。",
+      "salesWithYoyProduction": "品牌厂商产量及同比增长。口径：易车 API 品牌产量数据，同比 = (本期 - 去年同期) / 去年同期 × 100%。",
+      "trendChart": "选中品牌销量趋势对比图，最多可同时对比 4 个品牌。",
+      "dataType": "数据类型切换零售量与产量两种口径。\n· 零售量(retail)：经销商向最终消费者实际交付的车辆数量。数据来源：易车 API 零售数据。\n· 产量(production)：汽车制造商生产并出厂的车辆数量。数据来源：易车 API 产量数据。",
+      "granularity": "时间聚合粒度：近一年（最近12个月）、近两年（最近24个月）或按年度。",
+      "selectBrands": "选择需要对比分析的品牌，最多支持 4 个品牌同时对比。"
+    },
     "trend": {
       "selectBrands": "选择品牌",
       "selectPlaceholder": "请选择品牌（最多4个）",
@@ -72,6 +94,15 @@
       "penetrationChartTitle": "NEV渗透率",
       "breakdownChartTitle": "BEV在NEV中占比",
       "bevInNevTrendLabel": "纯电在新能源中占比",
+      "tooltip": {
+        "totalSales": "乘用车总销量：作为 NEV 渗透率计算的分母。口径：根据市场销量数据汇总。",
+        "nevSales": "新能源车型销量：包含纯电动(BEV)、插电混动(PHEV)、增程式等。",
+        "penetrationRate": "NEV 渗透率：新能源销量占乘用车总销量的比例。口径：NEV 销量 / 乘用车总销量 × 100%。",
+        "bevSales": "纯电动车型销量：仅包含纯电动车。",
+        "bevRatioInNev": "纯电占新能源比例：BEV 销量在新能源销量中的占比。口径：BEV 销量 / NEV 销量 × 100%；插混销量 = NEV - BEV。",
+        "penetrationChart": "NEV 渗透率月度趋势。\n数据来源：易车零售口径月度销量。\n计算公式：NEV 渗透率 = NEV 销量 ÷ 乘用车总销量 × 100%。",
+        "breakdownChart": "BEV 在新能源中占比月度趋势。\n数据来源：易车零售口径月度销量。\n计算公式：BEV 占比 = BEV 销量 ÷ NEV 销量 × 100%；插混（PHEV，含增程）销量 = NEV 销量 − BEV 销量。"
+      },
       "time": "时间",
       "totalSales": "总销量",
       "nevSales": "新能源销量",
@@ -83,6 +114,16 @@
     "origin": {
       "chartTitle": "车系占比趋势",
       "tableTitle": "车系占比明细",
+      "tooltip": {
+        "originShare": "各车系销量占当期乘用车总销量的比例，月度堆叠趋势。\n数据来源：乘联会（CPCA）国别分类销量。\n计算公式：车系占比 = 该车系销量 ÷ 当期所有车系销量合计 × 100%。",
+        "domestic": "自主品牌销量占比。",
+        "german": "德系品牌销量占比。",
+        "japanese": "日系品牌销量占比。",
+        "american": "美系品牌销量占比。",
+        "european": "欧系品牌销量占比。",
+        "korean": "韩系品牌销量占比。",
+        "french": "法系品牌销量占比。"
+      },
       "time": "时间",
       "domestic": "自主(%)",
       "german": "德系(%)",
