@@ -401,10 +401,12 @@ const headerSlots = computed(() => {
     <!-- 页脚 -->
     <template v-if="preferences.footer.enable" #footer>
       <LayoutFooter>
-        <Copyright
-          v-if="preferences.copyright.enable"
-          v-bind="preferences.copyright"
-        />
+        <slot name="footer">
+          <Copyright
+            v-if="preferences.copyright.enable"
+            v-bind="preferences.copyright"
+          />
+        </slot>
       </LayoutFooter>
     </template>
 

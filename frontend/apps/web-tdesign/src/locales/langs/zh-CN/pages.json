@@ -101,7 +101,7 @@
         "bevSales": "纯电动车型销量：仅包含纯电动车。",
         "bevRatioInNev": "纯电占新能源比例：BEV 销量在新能源销量中的占比。口径：BEV 销量 / NEV 销量 × 100%；插混销量 = NEV - BEV。",
         "penetrationChart": "NEV 渗透率月度趋势。\n数据来源：易车零售口径月度销量。\n计算公式：NEV 渗透率 = NEV 销量 ÷ 乘用车总销量 × 100%。",
-        "breakdownChart": "BEV 在新能源中占比月度趋势。\n数据来源：易车零售口径月度销量。\n计算公式：BEV 占比 = BEV 销量 ÷ NEV 销量 × 100%；插混（PHEV，含增程）销量 = NEV 销量 − BEV 销量。"
+        "breakdownChart": "BEV 在新能源中占比月度趋势。\n数据来源：易车零售口径月度销量。\n计算公式：BEV 占比 = BEV 销量 ÷ NEV 销量 × 100%。"
       },
       "time": "时间",
       "totalSales": "总销量",

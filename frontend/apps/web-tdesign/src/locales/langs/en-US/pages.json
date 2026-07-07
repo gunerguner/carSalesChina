@@ -101,7 +101,7 @@
         "bevSales": "Battery Electric Vehicle sales only.",
         "bevRatioInNev": "BEV share within NEV: BEV sales as a share of total NEV sales. Formula: BEV sales / NEV sales × 100%; PHEV sales = NEV - BEV.",
         "penetrationChart": "Monthly trend of NEV penetration rate.\nSource: Yiche retail monthly sales.\nFormula: NEV Penetration = NEV sales ÷ total passenger vehicle sales × 100% .",
-        "breakdownChart": "Monthly trend of BEV share within NEV.\nSource: Yiche retail monthly sales.\nFormula: BEV share = BEV sales ÷ NEV sales × 100%; PHEV sales = NEV sales − BEV sales."
+        "breakdownChart": "Monthly trend of BEV share within NEV.\nSource: Yiche retail monthly sales.\nFormula: BEV share = BEV sales ÷ NEV sales × 100%."
       },
       "time": "Time",
       "totalSales": "Total Sales",

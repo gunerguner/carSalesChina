@@ -18,4 +18,13 @@ export const overridesPreferences = defineOverridesPreferences({
     refresh: false,
     themeToggle: false,
   },
+  footer: {
+    enable: true,
+    fixed: false,
+    height: 56,
+  },
+  copyright: {
+    enable: false,
+    settingShow: false,
+  },
 });
