@@ -1,86 +1,91 @@
-import type { RefreshOriginPayload, RefreshSalesPayload } from '#/api/admin';
-
 import { ref } from 'vue';
 
-import { NotifyPlugin as notification } from 'tdesign-vue-next';
-
 import {
-  refreshBrandMetaApi,
-  refreshOriginApi,
-  refreshSalesApi,
+  refreshAllDataStream,
+  type RefreshAllResult,
+  type RefreshProgressEvent,
+  type RefreshStreamError,
 } from '#/api/admin';
+import {
+  applyProgressEvent,
+  applyStreamDone,
+  applyStreamError,
+  createInitialProgressState,
+  PHASE_ORDER,
+  type PhaseKey,
+  type RefreshProgressState,
+} from '#/composables/useAdminDataRefresh.types';
 import { $t } from '#/locales';
+import { emitDataRefresh } from '#/utils/data-refresh';
 
-function collectSourceNotes(
-  sales: RefreshSalesPayload,
-  origin: RefreshOriginPayload,
-): string[] {
-  const lines: string[] = [];
-  if (sales.source_errors.overall) {
-    lines.push(
-      `${$t('pages.admin.sourceOverall')}: ${sales.source_errors.overall}`,
-    );
-  }
-  if (sales.source_errors.brand) {
-    lines.push(
-      `${$t('pages.admin.sourceBrand')}: ${sales.source_errors.brand}`,
-    );
-  }
-  if (origin.source_errors.origin) {
-    lines.push(
-      `${$t('pages.admin.sourceOrigin')}: ${origin.source_errors.origin}`,
-    );
-  }
-  return lines;
+const refreshing = ref(false);
+const progressVisible = ref(false);
+const progressState = ref<RefreshProgressState>(createInitialProgressState());
+
+let abortController: AbortController | null = null;
+
+function getPhaseLabels(): Record<PhaseKey, string> {
+  return {
+    brand_meta: $t('pages.admin.progress.phase.brandMeta'),
+    origin: $t('pages.admin.progress.phase.origin'),
+    sales: $t('pages.admin.progress.phase.sales'),
+  };
+}
+
+function initProgressState(): RefreshProgressState {
+  const labels = getPhaseLabels();
+  const state = createInitialProgressState();
+  PHASE_ORDER.forEach((key) => {
+    state.phases[key].label = labels[key];
+  });
+  return state;
 }
 
 export function useAdminDataRefresh() {
-  const refreshing = ref(false);
-
-  async function refreshAdminData() {
-    if (refreshing.value) return;
-    refreshing.value = true;
-
-    try {
-      await refreshBrandMetaApi();
-      const sales = await refreshSalesApi();
-      const origin = await refreshOriginApi();
-
-      const hasFailure = sales.status === 'failed' || origin.status === 'failed';
-      const hasPartial = sales.status === 'partial_failure';
-
-      const detailLines = collectSourceNotes(sales, origin);
-      const content = detailLines.length > 0 ? detailLines.join('\n') : undefined;
-
-      if (hasFailure) {
-        notification.error({
-          title: $t('pages.admin.refreshFailed'),
-          content,
-          duration: 8000,
-        });
-        return;
-      }
-      if (hasPartial) {
-        notification.warning({
-          title: $t('pages.admin.refreshPartial'),
-          content,
-          duration: 8000,
-        });
-        return;
-      }
-      notification.success({
-        title: $t('pages.admin.refreshSuccess'),
-        duration: 3000,
-      });
-    } catch {
-      notification.error({
-        title: $t('pages.admin.refreshFailed'),
-        duration: 3000,
-      });
-    } finally {
-      refreshing.value = false;
-    }
+  function resetProgressState() {
+    progressState.value = initProgressState();
   }
 
-  return { refreshAdminData, refreshing };
+  function refreshAdminData() {
+    if (refreshing.value) return;
+
+    abortController?.abort();
+    resetProgressState();
+    refreshing.value = true;
+    progressVisible.value = true;
+    progressState.value.overallStatus = 'running';
+
+    abortController = refreshAllDataStream({
+      onDone: (result: RefreshAllResult) => {
+        progressState.value = applyStreamDone(progressState.value, result);
+        refreshing.value = false;
+        abortController = null;
+      },
+      onError: (error: RefreshStreamError) => {
+        progressState.value = applyStreamError(progressState.value, error);
+        refreshing.value = false;
+        abortController = null;
+      },
+      onProgress: (event: RefreshProgressEvent) => {
+        progressState.value = applyProgressEvent(progressState.value, event);
+      },
+    });
+  }
+
+  function closeProgressModal() {
+    if (refreshing.value) return;
+    progressVisible.value = false;
+    if (progressState.value.overallStatus === 'done') {
+      emitDataRefresh();
+    }
+    resetProgressState();
+  }
+
+  return {
+    closeProgressModal,
+    progressState,
+    progressVisible,
+    refreshAdminData,
+    refreshing,
+  };
 }

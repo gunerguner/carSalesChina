@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 from importlib.resources import files
 from typing import Any, cast
 
@@ -8,6 +9,7 @@ from sqlmodel import Session, select
 
 from backend.common.types import BrandSalesRecord, BrandSalesUpsertRow
 from backend.core.exceptions import AppError, ExternalSourceAppError
+from backend.core.progress import ProgressReporter
 from backend.models.brand import BrandMeta, BrandSales
 from backend.models.origin import OriginShareData
 from backend.models.overall import SalesData
@@ -150,8 +152,22 @@ def refresh_brand_meta(db: Session) -> dict:
         raise
 
 
-def refresh_sales_data(db: Session) -> dict:
+def refresh_sales_data(
+    db: Session,
+    *,
+    reporter: ProgressReporter | None = None,
+    on_brand_progress: Callable[[int, int], None] | None = None,
+    on_ping: Callable[[], None] | None = None,
+) -> dict:
     try:
+        if reporter:
+            reporter.phase_progress(
+                "sales",
+                0,
+                1,
+                detail="拉取易车总体销量...",
+            )
+
         overall_fr = yiche_overall_client.fetch_overall_sales()
         overall_count = _batch_upsert(
             db,
@@ -166,7 +182,18 @@ def refresh_sales_data(db: Session) -> dict:
         if rows:
             master_id_to_brand_id = {r.master_id: r.id for r in rows}
             master_ids = list(master_id_to_brand_id.keys())
-            brand_fr = yiche_brand_client.fetch_brand_sales(master_ids)
+            if reporter:
+                reporter.phase_progress(
+                    "sales",
+                    0,
+                    1,
+                    detail="总体销量完成，拉取品牌销量...",
+                )
+            brand_fr = yiche_brand_client.fetch_brand_sales(
+                master_ids,
+                on_progress=on_brand_progress,
+                on_ping=on_ping,
+            )
 
             normalized = _normalize_brand_records(
                 cast(list[BrandSalesRecord], brand_fr.records),

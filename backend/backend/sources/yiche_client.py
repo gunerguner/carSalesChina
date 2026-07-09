@@ -7,6 +7,7 @@ import time
 import uuid
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 
@@ -293,6 +294,8 @@ class YicheBrandClient:
         self,
         master_ids: list[int],
         last_sale_time: str = "",
+        on_progress: Callable[[int, int], None] | None = None,
+        on_ping: Callable[[], None] | None = None,
     ) -> SourceFetchResult:
         """并发拉取所有品牌的各维度销量数据；任一批次接口失败则 ok=False。"""
         if not master_ids:
@@ -307,6 +310,8 @@ class YicheBrandClient:
         ]
         aggregated: dict[str, dict[int, list[dict]]] = defaultdict(dict)
         errors: list[str] = []
+        total_tasks = len(BRAND_FETCH_DIMS) * len(batches)
+        completed_tasks = 0
 
         def _run(
             dim: BrandFetchDim, batch: list[int]
@@ -325,6 +330,11 @@ class YicheBrandClient:
                 if not out.ok and out.error:
                     errors.append(out.error)
                 aggregated[out.key].update(out.data)
+                completed_tasks += 1
+                if on_progress:
+                    on_progress(completed_tasks, total_tasks)
+                if on_ping and completed_tasks % 5 == 0:
+                    on_ping()
 
         records: list[BrandSalesRecord] = []
         for dim in BRAND_FETCH_DIMS:

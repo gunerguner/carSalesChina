@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed } from 'vue';
 
 import { preferences } from '@vben/preferences';
 
 import ChartCard from '#/components/ChartCard.vue';
 import DataLoadState from '#/components/DataLoadState.vue';
 import SectionCard from '#/components/SectionCard.vue';
+import { usePageRefresh } from '#/composables/usePageRefresh';
 import { $t } from '#/locales';
 import { getChartPaletteColor } from '#/utils/style';
 
@@ -16,7 +17,7 @@ import { useNevAnalysisData } from './useNevAnalysisData';
 const { error, loading, fetchAll, nevShareTrend, nevBreakdown } =
   useNevAnalysisData();
 
-onMounted(() => fetchAll());
+usePageRefresh(() => fetchAll(true));
 
 const nevPenetrationChartOption = computed(() => {
   // 显式读取主题 mode 以建立响应式依赖；切换 light/dark 时 option 重建

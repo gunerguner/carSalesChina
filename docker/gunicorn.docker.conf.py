@@ -15,5 +15,5 @@ errorlog = "-"
 loglevel = os.getenv("GUNICORN_LOG_LEVEL", "info")
 
 graceful_timeout = 30
-timeout = int(os.getenv("GUNICORN_TIMEOUT", "120"))
+timeout = int(os.getenv("GUNICORN_TIMEOUT", "300"))
 preload_app = True

@@ -6,6 +6,7 @@ import { RotateCw } from '@vben/icons';
 
 import { Dialog, Input, MessagePlugin as message } from 'tdesign-vue-next';
 
+import RefreshProgressModal from '#/components/RefreshProgressModal.vue';
 import { useAdminDataRefresh } from '#/composables/useAdminDataRefresh';
 import { $t } from '#/locales';
 
@@ -70,4 +71,6 @@ function handleConfirm() {
       @enter="handleConfirm"
     />
   </Dialog>
+
+  <RefreshProgressModal />
 </template>

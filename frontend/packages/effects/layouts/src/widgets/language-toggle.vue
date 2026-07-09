@@ -1,20 +1,27 @@
 <script setup lang="ts">
 import type { SupportedLanguagesType } from '@vben/locales';
 
-import { SUPPORT_LANGUAGES } from '@vben/constants';
+import { computed } from 'vue';
+
 import { Languages } from '@vben/icons';
-import { loadLocaleMessages } from '@vben/locales';
+import { $t, loadLocaleMessages } from '@vben/locales';
 import { preferences, updatePreferences } from '@vben/preferences';
 
-import { VbenDropdownRadioMenu, VbenIconButton } from '@vben-core/shadcn-ui';
+import { VbenIconButton } from '@vben-core/shadcn-ui';
 
 defineOptions({
   name: 'LanguageToggle',
 });
 
-async function handleUpdate(value: string | undefined) {
-  if (!value) return;
-  const locale = value as SupportedLanguagesType;
+const localeToggleHint = computed(() =>
+  preferences.app.locale === 'zh-CN'
+    ? $t('preferences.widget.switchToEn')
+    : $t('preferences.widget.switchToZh'),
+);
+
+async function toggleLocale() {
+  const locale: SupportedLanguagesType =
+    preferences.app.locale === 'zh-CN' ? 'en-US' : 'zh-CN';
   updatePreferences({
     app: {
       locale,
@@ -26,14 +33,12 @@ async function handleUpdate(value: string | undefined) {
 
 <template>
   <div>
-    <VbenDropdownRadioMenu
-      :menus="SUPPORT_LANGUAGES"
-      :model-value="preferences.app.locale"
-      @update:model-value="handleUpdate"
+    <VbenIconButton
+      class="hover:animate-[shrink_0.3s_ease-in-out]"
+      :tooltip="localeToggleHint"
+      @click="toggleLocale"
     >
-      <VbenIconButton class="hover:animate-[shrink_0.3s_ease-in-out]">
-        <Languages class="size-4 text-foreground" />
-      </VbenIconButton>
-    </VbenDropdownRadioMenu>
+      <Languages class="size-4 text-foreground" />
+    </VbenIconButton>
   </div>
 </template>

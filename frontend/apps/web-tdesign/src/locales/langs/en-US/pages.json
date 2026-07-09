@@ -160,6 +160,24 @@
     "refreshConfirmNotConfigured": "Refresh confirmation code is not configured.",
     "sourceOverall": "Yiche overall",
     "sourceBrand": "Yiche brand",
-    "sourceOrigin": "CPCA origin"
+    "sourceOrigin": "CPCA origin",
+    "progress": {
+      "title": "Refresh progress",
+      "overall": "Overall",
+      "rows": "rows",
+      "close": "Close",
+      "errorDetails": "Error details",
+      "phase": {
+        "brandMeta": "Brand metadata",
+        "sales": "Sales data",
+        "origin": "Origin share"
+      },
+      "status": {
+        "pending": "Pending",
+        "running": "Running",
+        "done": "Done",
+        "failed": "Failed"
+      }
+    }
   }
 }

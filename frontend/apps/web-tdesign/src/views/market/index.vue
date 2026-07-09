@@ -5,7 +5,7 @@ import type { MarketPeriodGranularity } from './types';
 
 import type { DataType, LevelType } from '#/utils/types';
 
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import { preferences } from '@vben/preferences';
 
@@ -13,6 +13,7 @@ import ChartCard from '#/components/ChartCard.vue';
 import DataLoadState from '#/components/DataLoadState.vue';
 import FilterPanel from '#/components/FilterPanel.vue';
 import SectionCard from '#/components/SectionCard.vue';
+import { usePageRefresh } from '#/composables/usePageRefresh';
 import { $t } from '#/locales';
 
 import MarketFilterBar from './components/MarketFilterBar.vue';
@@ -41,7 +42,7 @@ const {
   getYearlyTrend,
 } = useMarketData();
 
-onMounted(() => fetchAll());
+usePageRefresh(() => fetchAll(true));
 
 const activeMarketView = computed((): MarketPeriodView => {
   const lt = levelType.value;

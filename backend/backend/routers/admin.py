@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 
 from backend.core.csrf import verify_csrf
 from backend.core.deps import DbSession
-from backend.core.decorators import handle_success_response
-from backend.services.import_service import refresh_brand_meta, refresh_origin_data, refresh_sales_data
+from backend.services.refresh_orchestrator import refresh_all_stream
 
 router = APIRouter(
     prefix="/api/v1/admin",
@@ -12,25 +12,14 @@ router = APIRouter(
 )
 
 
-@router.post("/data/refresh/sales")
-@handle_success_response
-def trigger_refresh_sales(
-    db: DbSession,
-):
-    return refresh_sales_data(db)
-
-
-@router.post("/data/refresh/brand-meta")
-@handle_success_response
-def trigger_refresh_brand_meta(
-    db: DbSession,
-):
-    return refresh_brand_meta(db)
-
-
-@router.post("/data/refresh/origin")
-@handle_success_response
-def trigger_refresh_origin(
-    db: DbSession,
-):
-    return refresh_origin_data(db)
+@router.post("/data/refresh/stream")
+def trigger_refresh_stream(db: DbSession):
+    return StreamingResponse(
+        refresh_all_stream(db),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )

@@ -7,6 +7,7 @@ import ChartCard from '#/components/ChartCard.vue';
 import DataLoadState from '#/components/DataLoadState.vue';
 import FilterPanel from '#/components/FilterPanel.vue';
 import SectionCard from '#/components/SectionCard.vue';
+import { usePageRefresh } from '#/composables/usePageRefresh';
 import { $t } from '#/locales';
 
 import BrandSelectBar from './components/BrandSelectBar.vue';
@@ -25,6 +26,8 @@ const {
   tableTimeLabelMaxCount,
   timeLabels,
 } = useBrandData();
+
+usePageRefresh(() => fetchRawData(true), { initialLoad: () => {} });
 
 const chartOption = computed(() => {
   // 显式读取主题 mode 以建立响应式依赖；切换 light/dark 时 option 重建

@@ -167,33 +167,24 @@ pnpm lint
 
 ## 数据初始化与刷新流程
 
-建议首次启动后按以下顺序刷新数据：
+建议首次启动后通过管理刷新接口一次性拉取全部数据（品牌元数据 → 销量 → 国别占比，顺序由服务端编排）：
 
 1. 刷新品牌元数据，将 `meta_data.yaml` 中的品牌与易车 `master_id` 写入 `brand_meta`。
 2. 刷新总体销量与品牌销量数据；品牌销量依赖上一步中的 `master_id`。
 3. 刷新国别/车系占比数据。
 
-可通过 OpenAPI 文档调用。由于管理接口启用了 CSRF 校验，直接使用 `curl` 时需要先获取 `csrf_token` Cookie，再把同一个值放入 `X-CSRF-Token` 请求头：
+前端右上角刷新按钮会打开进度浮层并走 SSE 流式接口。若使用 `curl`，可调用单一 stream 端点（`Accept: text/event-stream`）。由于管理接口启用了 CSRF 校验，直接使用 `curl` 时需要先获取 `csrf_token` Cookie，再把同一个值放入 `X-CSRF-Token` 请求头：
 
 ```bash
 # 获取 CSRF Cookie
 curl -c /tmp/car-sales-cookies.txt http://localhost:8001/docs >/dev/null
 CSRF_TOKEN=$(awk '$6 == "csrf_token" { print $7 }' /tmp/car-sales-cookies.txt)
 
-# 品牌元数据
-curl -b /tmp/car-sales-cookies.txt \
+# 全量刷新（SSE 流式进度）
+curl -N -b /tmp/car-sales-cookies.txt \
   -H "X-CSRF-Token: ${CSRF_TOKEN}" \
-  -X POST http://localhost:8001/api/v1/admin/data/refresh/brand-meta
-
-# 总体销量 + 品牌销量
-curl -b /tmp/car-sales-cookies.txt \
-  -H "X-CSRF-Token: ${CSRF_TOKEN}" \
-  -X POST http://localhost:8001/api/v1/admin/data/refresh/sales
-
-# 国别/车系占比
-curl -b /tmp/car-sales-cookies.txt \
-  -H "X-CSRF-Token: ${CSRF_TOKEN}" \
-  -X POST http://localhost:8001/api/v1/admin/data/refresh/origin
+  -H "Accept: text/event-stream" \
+  -X POST http://localhost:8001/api/v1/admin/data/refresh/stream
 ```
 
 前端请求拦截器会从 `csrf_token` Cookie 读取 token，并在非 GET 请求中自动设置 `X-CSRF-Token`，无需手动处理。
@@ -220,9 +211,7 @@ curl -b /tmp/car-sales-cookies.txt \
 | 分析 | GET | `/api/v1/analysis/nev-share/trend` | `years`：1-10，默认 3；`granularity`：`monthly`/`yearly` | 新能源渗透率趋势 |
 | 分析 | GET | `/api/v1/analysis/nev-breakdown` | `years`：1-10，默认 3；`granularity`：`monthly`/`yearly` | 纯电在新能源中占比，另返回估算插混销量与占比 |
 | 分析 | GET | `/api/v1/analysis/origin-share/trend` | `years`：1-10，默认 3；`granularity`：`monthly`/`yearly` | 国别/车系占比趋势 |
-| 管理 | POST | `/api/v1/admin/data/refresh/sales` | 需要 CSRF Cookie/Header | 刷新总体销量与品牌销量 |
-| 管理 | POST | `/api/v1/admin/data/refresh/brand-meta` | 需要 CSRF Cookie/Header | 刷新品牌元数据 |
-| 管理 | POST | `/api/v1/admin/data/refresh/origin` | 需要 CSRF Cookie/Header | 刷新国别/车系占比数据 |
+| 管理 | POST | `/api/v1/admin/data/refresh/stream` | 需要 CSRF Cookie/Header；`Accept: text/event-stream` | SSE 流式全量刷新（品牌元数据 → 销量 → 国别占比） |
 
 ## 前端页面
 

@@ -1,62 +1,59 @@
-import { requestClient } from '#/api/request';
+import { useAppConfig } from '@vben/hooks';
 
-const REFRESH_TIMEOUT = 5 * 60 * 1000; // 5 分钟
+import { streamPost } from '#/utils/sse-stream';
 
-/** 与后端 import_service 刷新返回值对齐 */
-export type AdminDataRefreshStatus = 'failed' | 'partial_failure' | 'success';
+export type RefreshStatus = 'failed' | 'partial_failure' | 'success';
 
-export interface RefreshBrandMetaPayload {
-  inserted: number;
-  status: 'skipped' | 'success';
-  total?: number;
-  updated?: number;
-  reason?: string;
+export interface RefreshResultItem {
+  imported: number;
+  total: number;
+  status: 'skipped' | RefreshStatus;
+  source_errors?: null | Record<string, null | string>;
+  elapsed?: number;
 }
 
-export interface RefreshSalesPayload {
-  brand_count: number;
-  overall_count: number;
-  records_count: number;
-  status: AdminDataRefreshStatus;
-  source_errors: {
-    brand: null | string;
-    overall: null | string;
-  };
+export interface RefreshAllResult {
+  brand_meta: RefreshResultItem;
+  sales: RefreshResultItem;
+  origin: RefreshResultItem;
+  status: RefreshStatus;
 }
 
-export interface RefreshOriginPayload {
-  origin_count: number;
-  records_count: number;
-  status: 'failed' | 'success';
-  source_errors: { origin: null | string };
+export type RefreshPhaseKey = 'brand_meta' | 'origin' | 'sales';
+
+export interface RefreshProgressEvent {
+  phase: RefreshPhaseKey;
+  label: string;
+  status: 'done' | 'failed' | 'running';
+  current: number;
+  total: number;
+  imported: number;
+  detail?: string;
+  elapsed?: number;
+  source_errors?: null | Record<string, null | string>;
 }
 
-export function refreshBrandMetaApi() {
-  return requestClient.post<RefreshBrandMetaPayload>(
-    '/v1/admin/data/refresh/brand-meta',
-    undefined,
-    {
-      timeout: REFRESH_TIMEOUT,
-    },
-  );
+export interface RefreshStreamError {
+  message: string;
+  phase?: string;
 }
 
-export function refreshSalesApi() {
-  return requestClient.post<RefreshSalesPayload>(
-    '/v1/admin/data/refresh/sales',
-    undefined,
-    {
-      timeout: REFRESH_TIMEOUT,
-    },
-  );
+export interface RefreshStreamHandlers {
+  onProgress?: (event: RefreshProgressEvent) => void;
+  onDone?: (result: RefreshAllResult) => void;
+  onError?: (error: RefreshStreamError) => void;
 }
 
-export function refreshOriginApi() {
-  return requestClient.post<RefreshOriginPayload>(
-    '/v1/admin/data/refresh/origin',
-    undefined,
-    {
-      timeout: REFRESH_TIMEOUT,
-    },
+const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
+const STREAM_URL = `${apiURL}/v1/admin/data/refresh/stream`;
+const REFRESH_STREAM_IDLE_TIMEOUT_MS = 300_000;
+
+export function refreshAllDataStream(
+  handlers: RefreshStreamHandlers,
+): AbortController {
+  return streamPost<RefreshProgressEvent, RefreshAllResult, RefreshStreamError>(
+    STREAM_URL,
+    handlers,
+    { idleTimeoutMs: REFRESH_STREAM_IDLE_TIMEOUT_MS },
   );
 }

@@ -160,6 +160,24 @@
     "refreshConfirmNotConfigured": "未配置刷新确认码",
     "sourceOverall": "易车总体",
     "sourceBrand": "易车品牌",
-    "sourceOrigin": "乘联会国别"
+    "sourceOrigin": "乘联会国别",
+    "progress": {
+      "title": "刷新进度",
+      "overall": "总进度",
+      "rows": "行",
+      "close": "关闭",
+      "errorDetails": "错误详情",
+      "phase": {
+        "brandMeta": "品牌元数据",
+        "sales": "销量数据",
+        "origin": "国别占比"
+      },
+      "status": {
+        "pending": "等待",
+        "running": "进行中",
+        "done": "完成",
+        "failed": "失败"
+      }
+    }
   }
 }

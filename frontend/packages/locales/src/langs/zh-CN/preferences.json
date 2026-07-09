@@ -191,6 +191,8 @@
     "fullscreen": "启用全屏",
     "themeToggle": "启用主题切换",
     "languageToggle": "启用语言切换",
+    "switchToEn": "切换为英文",
+    "switchToZh": "切换为中文",
     "sidebarToggle": "启用侧边栏切换",
     "lockScreen": "启用锁屏",
     "refresh": "启用刷新",
