@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { nextTick, ref } from 'vue';
 
 import { VbenIconButton } from '@vben/common-ui';
 import { RotateCw } from '@vben/icons';
@@ -15,11 +15,18 @@ const CONFIRM_CODE = import.meta.env.VITE_ADMIN_REFRESH_CONFIRM_CODE ?? '';
 const { refreshAdminData, refreshing } = useAdminDataRefresh();
 const dialogVisible = ref(false);
 const inputCode = ref('');
+const inputRef = ref<null | { focus: () => void }>(null);
 
 function openConfirmDialog() {
   if (refreshing.value) return;
   inputCode.value = '';
   dialogVisible.value = true;
+}
+
+function focusConfirmInput() {
+  nextTick(() => {
+    inputRef.value?.focus();
+  });
 }
 
 function handleClose() {
@@ -60,11 +67,13 @@ function handleConfirm() {
     :cancel-btn="$t('pages.admin.refreshConfirmCancel')"
     @confirm="handleConfirm"
     @close="handleClose"
+    @opened="focusConfirmInput"
   >
     <p class="mb-4 text-sm text-muted-foreground">
       {{ $t('pages.admin.refreshConfirmContent') }}
     </p>
     <Input
+      ref="inputRef"
       v-model="inputCode"
       :placeholder="$t('pages.admin.refreshConfirmPlaceholder')"
       clearable
