@@ -22,7 +22,7 @@ quickFilters:
     brands:
       - 奔驰
       - 宝马
-      - 大众
+      - 奥迪
   - id: newForce
     labelKey: pages.brand.trend.quickFilter.newForce
     brands:
