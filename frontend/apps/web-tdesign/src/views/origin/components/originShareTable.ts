@@ -1,11 +1,11 @@
 import type { PrimaryTableCol } from 'tdesign-vue-next';
 
 import type { OriginShareTrendRecord } from '#/api/analysis';
-import type { Translate } from '#/utils/types';
+import type { OriginShareKey, Translate } from '#/utils/types';
 
 import { toMonthKey, toYearMonthSortKey } from '#/utils/period';
 import { tablePercentCell } from '#/utils/render';
-import { ORIGIN_DIMENSIONS, type OriginShareKey } from '#/utils/types';
+import { ORIGIN_DIMENSIONS } from '#/utils/types';
 
 export type OriginShareRow = Record<OriginShareKey, number> & {
   key: number;

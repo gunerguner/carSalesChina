@@ -19,9 +19,7 @@ const {
 // 模板 ref 集中管理：避免与响应式 ref 名字混淆
 const chartRef = useTemplateRef<typeof EchartsUI>('chartRef');
 // useEcharts 期望 Ref<EchartsUIType>，useTemplateRef 返回 ShallowRef<...| null>，做一次类型对齐
-const { renderEcharts } = useEcharts(
-  chartRef as unknown as Ref<EchartsUIType>,
-);
+const { renderEcharts } = useEcharts(chartRef as unknown as Ref<EchartsUIType>);
 
 function draw() {
   // ECOption (compose) is runtime-compatible with renderEcharts; echarts ships duplicate type paths.

@@ -23,6 +23,7 @@
     "@vben-core/preferences": "workspace:*",
     "@vben-core/shared": "workspace:*",
     "@vben-core/typings": "workspace:*",
+    "@vue/devtools-api": "catalog:",
     "pinia": "catalog:",
     "pinia-plugin-persistedstate": "catalog:",
     "secure-ls": "catalog:",

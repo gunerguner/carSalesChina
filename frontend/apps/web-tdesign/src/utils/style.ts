@@ -1,4 +1,6 @@
-import { ORIGIN_KEYS, type OriginShareKey } from '#/utils/types';
+import type { OriginShareKey } from '#/utils/types';
+
+import { ORIGIN_KEYS } from '#/utils/types';
 
 import { formatOrDash, isNil } from './format';
 

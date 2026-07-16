@@ -7,8 +7,7 @@ import type {
   YearlyTrendRecord,
 } from '../useMarketData';
 
-import type { DataType } from '#/utils/types';
-import type { Translate } from '#/utils/types';
+import type { DataType, Translate } from '#/utils/types';
 
 import {
   formatMonthPeriod,
@@ -107,10 +106,7 @@ export function buildMarketTableColumns(
   return base;
 }
 
-export function buildMarketTableRows(
-  input: MarketTableInput,
-  locale: string,
-) {
+export function buildMarketTableRows(input: MarketTableInput, locale: string) {
   const { data, kind } = input;
 
   if (kind === 'monthly') {

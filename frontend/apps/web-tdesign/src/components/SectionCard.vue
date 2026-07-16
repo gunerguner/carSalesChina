@@ -29,8 +29,8 @@ defineProps<{
 
 .section-card__header {
   display: flex;
-  align-items: center;
   gap: 4px;
+  align-items: center;
   padding: 0.75rem 1.25rem;
   border-bottom: 1px solid hsl(var(--border));
 }

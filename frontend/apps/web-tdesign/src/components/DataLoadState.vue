@@ -25,11 +25,7 @@ const emit = defineEmits<{
       {{ $t('pages.common.retry') }}
     </Button>
   </div>
-  <div
-    v-else-if="loading"
-    class="load-skeleton"
-    :style="{ minHeight }"
-  >
+  <div v-else-if="loading" class="load-skeleton" :style="{ minHeight }">
     <div class="load-skeleton__chart"></div>
     <div class="load-skeleton__table"></div>
   </div>

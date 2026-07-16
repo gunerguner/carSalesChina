@@ -1,5 +1,8 @@
-import type { AnalysisGranularity, YearMonthRecord } from '#/utils/types';
-import type { OriginShareKey } from '#/utils/types';
+import type {
+  AnalysisGranularity,
+  OriginShareKey,
+  YearMonthRecord,
+} from '#/utils/types';
 
 import { requestClient } from '#/api/request';
 

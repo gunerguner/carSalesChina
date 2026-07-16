@@ -1,19 +1,22 @@
+import type {
+  RefreshAllResult,
+  RefreshProgressEvent,
+  RefreshStreamError,
+} from '#/api/admin';
+import type {
+  PhaseKey,
+  RefreshProgressState,
+} from '#/composables/useAdminDataRefresh.types';
+
 import { ref } from 'vue';
 
-import {
-  refreshAllDataStream,
-  type RefreshAllResult,
-  type RefreshProgressEvent,
-  type RefreshStreamError,
-} from '#/api/admin';
+import { refreshAllDataStream } from '#/api/admin';
 import {
   applyProgressEvent,
   applyStreamDone,
   applyStreamError,
   createInitialProgressState,
   PHASE_ORDER,
-  type PhaseKey,
-  type RefreshProgressState,
 } from '#/composables/useAdminDataRefresh.types';
 import { $t } from '#/locales';
 import { emitDataRefresh } from '#/utils/data-refresh';

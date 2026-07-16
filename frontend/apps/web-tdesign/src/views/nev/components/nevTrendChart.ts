@@ -2,8 +2,7 @@ import type { ECOption } from '@vben/plugins/echarts';
 
 import type { NevBreakdownRecord, NevShareTrendRecord } from '#/api/analysis';
 import type { LineTooltipParams } from '#/utils/chart';
-import type { YearMonthRecord } from '#/utils/types';
-import type { Translate } from '#/utils/types';
+import type { Translate, YearMonthRecord } from '#/utils/types';
 
 import { buildLineChartOption, emptyChartIfNoData } from '#/utils/chart';
 import { toMonthKey } from '#/utils/period';

@@ -17,18 +17,13 @@ import {
   buildMarketTableRows,
 } from './marketSalesTable';
 
-const props = defineProps<
-  MarketTableInput & { dataType: DataType }
->();
+const props = defineProps<MarketTableInput & { dataType: DataType }>();
 
 const columns = computed(() =>
   buildMarketTableColumns(props.kind, props.dataType, $t),
 );
 const tableData = computed(() =>
-  buildMarketTableRows(
-    props as MarketTableInput,
-    preferences.app.locale,
-  ),
+  buildMarketTableRows(props as MarketTableInput, preferences.app.locale),
 );
 </script>
 

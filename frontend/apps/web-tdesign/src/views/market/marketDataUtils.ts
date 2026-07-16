@@ -1,9 +1,5 @@
 import type { RawSalesRecord } from '#/api/market';
-import type {
-  DataType,
-  LevelType,
-  YearMonthRecord,
-} from '#/utils/types';
+import type { DataType, LevelType, YearMonthRecord } from '#/utils/types';
 
 import { getMarketRawApi } from '#/api/market';
 import { calcGrowthPercent, ensureArray, isNil } from '#/utils/format';

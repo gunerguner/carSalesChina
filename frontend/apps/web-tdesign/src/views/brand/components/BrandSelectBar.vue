@@ -165,9 +165,7 @@ initializeFromMeta();
         </RadioGroup>
       </div>
       <div class="flex items-center gap-2">
-        <span class="filter-label">{{
-          $t('pages.brand.trend.dataType')
-        }}</span>
+        <span class="filter-label">{{ $t('pages.brand.trend.dataType') }}</span>
         <RadioGroup v-model="dataType" variant="default-filled">
           <RadioButton value="retail">
             {{ $t('pages.brand.trend.retail') }}
@@ -185,7 +183,9 @@ initializeFromMeta();
         :key="filter.id"
         size="small"
         variant="outline"
-        :class="{ 'brand-quick-filter--active': activeQuickFilterId === filter.id }"
+        :class="{
+          'brand-quick-filter--active': activeQuickFilterId === filter.id,
+        }"
         :disabled="!brandOptionsLoaded || brandMetaLoading"
         @click="applyQuickFilter(filter)"
       >
@@ -197,15 +197,15 @@ initializeFromMeta();
 
 <style scoped>
 .brand-quick-filter--active {
+  color: hsl(var(--primary-foreground));
   background-color: hsl(var(--primary));
   border-color: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
 }
 
 .brand-quick-filter--active:hover,
 .brand-quick-filter--active:focus-visible {
+  color: hsl(var(--primary-foreground));
   background-color: hsl(var(--primary) / 85%);
   border-color: hsl(var(--primary) / 85%);
-  color: hsl(var(--primary-foreground));
 }
 </style>

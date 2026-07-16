@@ -9,10 +9,7 @@ import type {
 
 import type { Translate } from '#/utils/types';
 
-import {
-  buildLineChartOption,
-  emptyChartIfNoData,
-} from '#/utils/chart';
+import { buildLineChartOption, emptyChartIfNoData } from '#/utils/chart';
 import {
   formatQuarterPeriod,
   formatYearPeriod,
@@ -38,7 +35,10 @@ function buildMonthlyOption(
   const yearLastMonthMap = new Map<number, number>();
   for (const item of data) {
     if (!yearDataMap.has(item.year)) {
-      yearDataMap.set(item.year, Array.from<null | number>({ length: 12 }).fill(0));
+      yearDataMap.set(
+        item.year,
+        Array.from<null | number>({ length: 12 }).fill(0),
+      );
     }
     const yearArr = yearDataMap.get(item.year);
     if (yearArr) {

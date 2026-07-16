@@ -1,14 +1,15 @@
 <script setup lang="ts">
+import type {
+  PhaseKey,
+  PhaseStatus,
+} from '#/composables/useAdminDataRefresh.types';
+
 import { computed } from 'vue';
 
 import { Button, Collapse, CollapsePanel, Dialog } from 'tdesign-vue-next';
 
 import { useAdminDataRefresh } from '#/composables/useAdminDataRefresh';
-import {
-  PHASE_ORDER,
-  type PhaseKey,
-  type PhaseStatus,
-} from '#/composables/useAdminDataRefresh.types';
+import { PHASE_ORDER } from '#/composables/useAdminDataRefresh.types';
 import { $t } from '#/locales';
 
 const { closeProgressModal, progressState, progressVisible, refreshing } =
@@ -52,18 +53,14 @@ function phaseMetric(key: PhaseKey): string {
   if (key === 'sales' && item.total > 0 && item.status === 'running') {
     return `${item.current}/${item.total.toLocaleString()}`;
   }
-  if (
-    item.imported > 0 ||
-    item.status === 'done' ||
-    item.status === 'failed'
-  ) {
+  if (item.imported > 0 || item.status === 'done' || item.status === 'failed') {
     return `${item.imported.toLocaleString()} ${$t('pages.admin.progress.rows')}`;
   }
   return item.detail || '—';
 }
 
 function formatElapsed(elapsed?: number): string {
-  if (elapsed == null) return '—';
+  if (elapsed === undefined || elapsed === null) return '—';
   return `${elapsed.toFixed(1)}s`;
 }
 
@@ -125,7 +122,11 @@ function handleClose() {
       </div>
     </div>
 
-    <Collapse v-if="errorDetails.length > 0" default-expand-all class="error-collapse">
+    <Collapse
+      v-if="errorDetails.length > 0"
+      default-expand-all
+      class="error-collapse"
+    >
       <CollapsePanel
         :header="$t('pages.admin.progress.errorDetails')"
         value="errors"
@@ -174,9 +175,9 @@ function handleClose() {
   gap: 8px;
   align-items: center;
   padding: 8px 10px;
-  border-radius: 6px;
-  background: var(--td-bg-color-secondarycontainer);
   font-size: 14px;
+  background: var(--td-bg-color-secondarycontainer);
+  border-radius: 6px;
 }
 
 .phase-row--running,
@@ -189,8 +190,8 @@ function handleClose() {
 }
 
 .phase-row__icon {
-  text-align: center;
   font-weight: 600;
+  text-align: center;
 }
 
 .phase-row__name {
@@ -211,16 +212,16 @@ function handleClose() {
 
 .error-details {
   margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
   font-size: 12px;
   color: var(--td-text-color-secondary);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .error-message {
   margin-top: 12px;
-  color: var(--td-error-color);
   font-size: 14px;
+  color: var(--td-error-color);
 }
 
 .modal-footer {
