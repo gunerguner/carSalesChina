@@ -25,17 +25,28 @@ export function buildOriginShareTableColumns(t: Translate): PrimaryTableCol[] {
   ];
 }
 
+function toOriginShareRow(
+  item: OriginShareTrendRecord,
+  index: number,
+): OriginShareRow {
+  return {
+    key: index,
+    time: toMonthKey(item.year, item.month),
+    sortKey: toYearMonthSortKey(item.year, item.month),
+    domestic: item.domestic,
+    german: item.german,
+    japanese: item.japanese,
+    american: item.american,
+    european: item.european,
+    korean: item.korean,
+    french: item.french,
+  };
+}
+
 export function buildOriginShareTableRows(
   data: OriginShareTrendRecord[],
 ): OriginShareRow[] {
   return data
-    .map((item, index) => ({
-      key: index,
-      time: toMonthKey(item.year, item.month),
-      sortKey: toYearMonthSortKey(item.year, item.month),
-      ...Object.fromEntries(
-        ORIGIN_DIMENSIONS.map(({ key }) => [key, item[key]]),
-      ),
-    }))
-    .toSorted((a, b) => b.sortKey - a.sortKey) as OriginShareRow[];
+    .map((item, index) => toOriginShareRow(item, index))
+    .toSorted((a, b) => b.sortKey - a.sortKey);
 }

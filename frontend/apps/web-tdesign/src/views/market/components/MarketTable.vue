@@ -23,7 +23,7 @@ const columns = computed(() =>
   buildMarketTableColumns(props.kind, props.dataType, $t),
 );
 const tableData = computed(() =>
-  buildMarketTableRows(props as MarketTableInput, preferences.app.locale),
+  buildMarketTableRows(props, preferences.app.locale),
 );
 </script>
 

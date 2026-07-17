@@ -35,7 +35,7 @@ export interface RefreshProgressEvent {
 
 export interface RefreshStreamError {
   message: string;
-  phase?: string;
+  phase?: RefreshPhaseKey;
 }
 
 export interface RefreshStreamHandlers {

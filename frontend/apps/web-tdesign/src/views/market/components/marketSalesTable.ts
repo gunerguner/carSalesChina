@@ -1,4 +1,4 @@
-import type { TableRowData } from 'tdesign-vue-next';
+import type { PrimaryTableCol, TableRowData } from 'tdesign-vue-next';
 
 import type { MarketPeriodInput } from '../types';
 import type {
@@ -27,28 +27,33 @@ export type MarketTableInput = MarketPeriodInput<{
 
 const PERIOD_WIDTHS = { monthly: 120, quarterly: 130, yearly: 110 } as const;
 
-function monthlySorter(a: TableRowData, b: TableRowData): number {
-  const ra = a as MonthlyDetailRecord;
-  const rb = b as MonthlyDetailRecord;
+type TableSorter = NonNullable<PrimaryTableCol['sorter']>;
+
+function asTableSorter<T extends TableRowData>(
+  fn: (a: T, b: T) => number,
+): TableSorter {
+  return fn as TableSorter;
+}
+
+function monthlySorter(a: MonthlyDetailRecord, b: MonthlyDetailRecord): number {
   return (
-    toYearMonthSortKey(ra.year, ra.monthNum) -
-    toYearMonthSortKey(rb.year, rb.monthNum)
+    toYearMonthSortKey(a.year, a.monthNum) -
+    toYearMonthSortKey(b.year, b.monthNum)
   );
 }
 
-function quarterlySorter(a: TableRowData, b: TableRowData): number {
-  const ra = a as QuarterlyTrendRecord;
-  const rb = b as QuarterlyTrendRecord;
+function quarterlySorter(
+  a: QuarterlyTrendRecord,
+  b: QuarterlyTrendRecord,
+): number {
   return (
-    toYearQuarterSortKey(ra.year, ra.quarter) -
-    toYearQuarterSortKey(rb.year, rb.quarter)
+    toYearQuarterSortKey(a.year, a.quarter) -
+    toYearQuarterSortKey(b.year, b.quarter)
   );
 }
 
-function yearlySorter(a: TableRowData, b: TableRowData): number {
-  const ra = a as YearlyTrendRecord;
-  const rb = b as YearlyTrendRecord;
-  return ra.year - rb.year;
+function yearlySorter(a: YearlyTrendRecord, b: YearlyTrendRecord): number {
+  return a.year - b.year;
 }
 
 export function buildMarketTableColumns(
@@ -56,9 +61,9 @@ export function buildMarketTableColumns(
   dataType: DataType,
   t: Translate,
 ) {
-  let sorter = yearlySorter;
-  if (kind === 'monthly') sorter = monthlySorter;
-  else if (kind === 'quarterly') sorter = quarterlySorter;
+  let sorter: TableSorter = asTableSorter(yearlySorter);
+  if (kind === 'monthly') sorter = asTableSorter(monthlySorter);
+  else if (kind === 'quarterly') sorter = asTableSorter(quarterlySorter);
 
   const salesTitle =
     dataType === 'production'

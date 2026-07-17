@@ -119,9 +119,9 @@ export function applyStreamError(
   state: RefreshProgressState,
   error: RefreshStreamError,
 ): RefreshProgressState {
-  const errorPhase = (error.phase as PhaseKey | undefined) ?? null;
+  const errorPhase = error.phase ?? null;
   const nextPhases = { ...state.phases };
-  if (errorPhase && nextPhases[errorPhase]) {
+  if (errorPhase) {
     nextPhases[errorPhase] = {
       ...nextPhases[errorPhase],
       status: 'failed',

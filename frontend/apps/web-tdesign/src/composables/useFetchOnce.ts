@@ -76,7 +76,7 @@ export function createKeyedFetchController<T>(
 ) {
   const loading = ref(false);
   const error = ref<null | string>(null);
-  const data = ref<null | T>(null) as { value: null | T };
+  const data: Ref<null | T> = ref(null);
   const cache = new Map<string, T>();
   let gen = 0;
 
