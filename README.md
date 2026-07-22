@@ -222,8 +222,6 @@ curl -N -b /tmp/car-sales-cookies.txt \
 | `/nev` | NEV 覆盖率 | 新能源渗透率、纯电占新能源比例 |
 | `/origin` | 车系占比 | 国别/车系份额趋势 |
 
-> 历史路径 `/market-sales`、`/brand-sales`、`/data-analysis/nev`、`/data-analysis/origin` 已重定向至上述新路径。
-
 ## 配置说明
 
 ### 后端 `.env`

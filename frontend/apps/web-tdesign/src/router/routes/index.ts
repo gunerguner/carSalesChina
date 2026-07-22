@@ -3,12 +3,9 @@ import type { RouteRecordRaw } from 'vue-router';
 import { coreRoutes, fallbackNotFoundRoute } from './core';
 import appRoutes from './modules/app';
 
-const routes: RouteRecordRaw[] = [
-  ...coreRoutes,
-  ...appRoutes,
-  fallbackNotFoundRoute,
-];
+const routes: RouteRecordRaw[] = [...coreRoutes, fallbackNotFoundRoute];
 
-const permissionRoutes = appRoutes;
+/** 用于生成侧栏菜单的业务路由（与 Root.children 一致） */
+const menuRoutes = appRoutes;
 
-export { permissionRoutes, routes };
+export { menuRoutes, routes };

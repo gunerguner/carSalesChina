@@ -4,18 +4,6 @@ import { $t } from '#/locales';
 
 const routes: RouteRecordRaw[] = [
   {
-    meta: { hideInMenu: true, title: 'Market' },
-    name: 'MarketSalesLegacy',
-    path: '/market-sales',
-    redirect: '/market',
-  },
-  {
-    meta: { hideInMenu: true, title: 'Brand' },
-    name: 'BrandSalesLegacy',
-    path: '/brand-sales',
-    redirect: '/brand',
-  },
-  {
     meta: {
       icon: 'lucide:trending-up',
       order: 10,
@@ -34,24 +22,6 @@ const routes: RouteRecordRaw[] = [
     name: 'Brand',
     path: '/brand',
     component: () => import('#/views/brand/index.vue'),
-  },
-  {
-    meta: { hideInMenu: true, title: 'DataAnalysis' },
-    name: 'DataAnalysisLegacy',
-    path: '/data-analysis',
-    redirect: '/nev',
-  },
-  {
-    meta: { hideInMenu: true, title: 'Nev' },
-    name: 'DataAnalysisNevLegacy',
-    path: '/data-analysis/nev',
-    redirect: '/nev',
-  },
-  {
-    meta: { hideInMenu: true, title: 'Origin' },
-    name: 'DataAnalysisOriginLegacy',
-    path: '/data-analysis/origin',
-    redirect: '/origin',
   },
   {
     meta: {

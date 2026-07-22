@@ -10,6 +10,7 @@ import { $t, setupI18n } from '#/locales';
 
 import App from './app.vue';
 import { router } from './router';
+import { setupMenus } from './router/guard';
 
 import 'tdesign-vue-next/es/style/index.css';
 import '#/styles/theme.css';
@@ -20,6 +21,8 @@ async function bootstrap(namespace: string) {
   await setupI18n(app);
 
   await initStores(app, { namespace });
+
+  setupMenus(router);
 
   app.use(router);
 
