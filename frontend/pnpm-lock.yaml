@@ -486,9 +486,6 @@ importers:
 
   apps/web-tdesign:
     dependencies:
-      '@vben/access':
-        specifier: workspace:*
-        version: link:../../packages/effects/access
       '@vben/common-ui':
         specifier: workspace:*
         version: link:../../packages/effects/common-ui
