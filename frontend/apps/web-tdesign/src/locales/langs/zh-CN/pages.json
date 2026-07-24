@@ -26,7 +26,7 @@
       "levelType": "车型级别",
       "levelAll": "全部",
       "levelNev": "新能源",
-      "levelBev": "纯电动(BEV)",
+      "levelBev": "纯电动",
       "dataType": "数据类型",
       "dataTypeRetail": "零售量",
       "dataTypeProduction": "产量",

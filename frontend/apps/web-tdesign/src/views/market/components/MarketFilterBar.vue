@@ -5,7 +5,7 @@ import type { DataType, LevelType } from '#/utils/types';
 
 import { computed } from 'vue';
 
-import { RadioButton, RadioGroup, Select } from 'tdesign-vue-next';
+import { RadioButton, RadioGroup } from 'tdesign-vue-next';
 
 import MetricTooltip from '#/components/MetricTooltip.vue';
 import { $t } from '#/locales';
@@ -51,11 +51,15 @@ const periodOptions = computed(() => [
       <span class="filter-label">{{
         $t('pages.market.filter.levelType')
       }}</span>
-      <Select
-        v-model="levelType"
-        :options="levelOptions"
-        style="width: 180px"
-      />
+      <RadioGroup v-model="levelType" variant="default-filled">
+        <RadioButton
+          v-for="opt in levelOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          {{ opt.label }}
+        </RadioButton>
+      </RadioGroup>
     </div>
     <div class="flex items-center gap-2">
       <span class="filter-label">{{
