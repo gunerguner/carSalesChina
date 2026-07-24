@@ -5,6 +5,7 @@
     "tooltip": {
       "retailSales": "Retail sales: the number of vehicles delivered by dealers to end consumers. Source: Yiche API retail data.",
       "productionSales": "Production: the number of vehicles produced and shipped by manufacturers. Source: Yiche API production data.",
+      "exportSales": "Export: the number of vehicles exported from China to overseas markets. Source: Yiche API export data.",
       "levelAll": "All vehicle levels, including ICE, BEV, PHEV, EREV and all other powertrain types.",
       "levelNev": "New Energy Vehicles (NEV), including Battery Electric (BEV), Plug-in Hybrid (PHEV), and Extended-Range EV (EREV).",
       "levelBev": "Battery Electric Vehicle (BEV), powered solely by an onboard battery without an internal combustion engine.",
@@ -14,11 +15,12 @@
       "monthlyTrend": "Monthly sales trend chart showing sales changes for each month across recent years.",
       "quarterlyTrend": "Quarterly aggregated sales trend chart: Q1 (Jan-Mar), Q2 (Apr-Jun), Q3 (Jul-Sep), Q4 (Oct-Dec).",
       "yearlyTrend": "Yearly aggregated sales trend chart showing total sales by year.",
-      "dataType": "Switch between retail and production metrics.\n· Retail: the number of vehicles delivered by dealers to end consumers. Source: Yiche API retail data.\n· Production: the number of vehicles produced and shipped by manufacturers. Source: Yiche API production data."
+      "dataType": "Switch between retail, production and export metrics.\n· Retail: the number of vehicles delivered by dealers to end consumers. Source: Yiche API retail data.\n· Production: the number of vehicles produced and shipped by manufacturers. Source: Yiche API production data.\n· Export: the number of vehicles exported from China to overseas markets. Source: Yiche API export data."
     },
     "column": {
       "retailSales": "Sales",
-      "productionSales": "Production"
+      "productionSales": "Production",
+      "exportSales": "Export"
     },
     "filter": {
       "levelType": "Vehicle Level",
@@ -28,6 +30,7 @@
       "dataType": "Data Type",
       "dataTypeRetail": "Retail",
       "dataTypeProduction": "Production",
+      "dataTypeExport": "Export",
       "granularity": "Period"
     },
     "monthly": {

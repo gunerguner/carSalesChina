@@ -17,7 +17,7 @@ class SalesData(SQLModel, table=True):
     sales: float | None = Field(default=None, sa_column=Column(Numeric(15, 2)))
     data_type: str | None = Field(
         default="retail",
-        sa_column=Column(SAEnum("retail", "production"), default="retail"),
+        sa_column=Column(SAEnum("retail", "production", "export"), default="retail"),
     )
     date_type: str | None = Field(
         default="monthly",

@@ -80,7 +80,7 @@ flowchart LR
 | 数据刷新 | `import_service.py`，`routers/admin.py` | 品牌元数据 → 总体+品牌销量 → 国别占比（顺序有依赖） |
 | 品牌元数据 | `meta_data.yaml` → `brand_meta` | YAML 维护中文名、英文标识、易车 master_id |
 
-**维度枚举**：`data_type` retail/production；`level_type` all/nev/bev；`date_type` monthly/quarterly/yearly（库表支持，采集以月度为主）；分析读 API 另用 `granularity` monthly/yearly（`AnalysisTrendQuery`）。
+**维度枚举**：`data_type` retail/production/export（出口仅总体销量；品牌接口无独立出口维度）；`level_type` all/nev/bev；`date_type` monthly/quarterly/yearly（库表支持，采集以月度为主）；分析读 API 另用 `granularity` monthly/yearly（`AnalysisTrendQuery`）。
 
 ## 修改导航（最常改哪里）
 

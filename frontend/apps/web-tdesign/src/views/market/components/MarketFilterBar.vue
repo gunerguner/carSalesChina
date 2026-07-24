@@ -32,6 +32,10 @@ const dataTypeOptions = computed(() => [
     label: $t('pages.market.filter.dataTypeProduction'),
     value: 'production' as const,
   },
+  {
+    label: $t('pages.market.filter.dataTypeExport'),
+    value: 'export' as const,
+  },
 ]);
 
 const periodOptions = computed(() => [

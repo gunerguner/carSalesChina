@@ -1,6 +1,6 @@
 from typing import Literal, TypedDict
 
-DataType = Literal["retail", "production"]
+DataType = Literal["retail", "production", "export"]
 DateType = Literal["monthly", "quarterly", "yearly"]
 LevelType = Literal["all", "nev", "bev"]
 Granularity = Literal["monthly", "yearly"]

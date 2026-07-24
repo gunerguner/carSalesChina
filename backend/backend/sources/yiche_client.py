@@ -1,4 +1,4 @@
-"""易车销量采集。overall salesType: 1=零售,3=产量；brand saleType: 1=零售,4=产量（3/4 顺序相反）。"""
+"""易车销量采集。overall salesType: 1=零售,3=产量,4=出口；brand saleType: 1=零售,4=产量（3/4 顺序相反）。"""
 
 import hashlib
 import json
@@ -36,6 +36,7 @@ _BRAND_WORKERS = 8
 
 _OVERALL_SALE_RETAIL = 1
 _OVERALL_SALE_PRODUCTION = 3
+_OVERALL_SALE_EXPORT = 4
 _OVERALL_LEVEL = {"all": -1, "nev": 4, "bev": 5}
 
 _BRAND_SALE_RETAIL = 1
@@ -112,6 +113,7 @@ def _overall_dims(sale_type: int, data_type: str) -> list[OverallFetchDim]:
 OVERALL_FETCH_DIMS = (
     _overall_dims(_OVERALL_SALE_RETAIL, "retail")
     + _overall_dims(_OVERALL_SALE_PRODUCTION, "production")
+    + _overall_dims(_OVERALL_SALE_EXPORT, "export")
 )
 
 
@@ -184,10 +186,14 @@ class YicheOverallClient:
         sales_num = raw.get("salesNum")
         if sales_num is None:
             return None
+        # 出口口径 API 返回原始台数（辆），零售/产量已是万辆；统一换算为万辆入库
+        sales = float(sales_num)
+        if dim.data_type == "export":
+            sales = sales / 10000
         return {
             "year": raw.get("year"),
             "month": raw.get("month", 0),
-            "sales": float(sales_num),
+            "sales": sales,
             "data_type": dim.data_type,
             "date_type": "monthly",
             "level_type": dim.level_label,

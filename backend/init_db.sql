@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS sales_data (
     year INT NOT NULL,
     month INT NOT NULL,
     sales DECIMAL(15,2) COMMENT '销量（万辆）',
-    data_type ENUM('retail','production') NOT NULL DEFAULT 'retail' COMMENT '零售/产量口径',
+    data_type ENUM('retail','production','export') NOT NULL DEFAULT 'retail' COMMENT '零售/产量/出口口径',
     date_type ENUM('monthly','quarterly','yearly') NOT NULL DEFAULT 'monthly' COMMENT '时间维度',
     level_type ENUM('all','nev','bev') NOT NULL DEFAULT 'all' COMMENT '车型级别',
     UNIQUE KEY uk_sales_data_unique (year, month, data_type, date_type, level_type)

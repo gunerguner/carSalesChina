@@ -5,6 +5,7 @@
     "tooltip": {
       "retailSales": "终端零售量：经销商向最终消费者实际交付的车辆数量。口径：数据来源于易车 API 零售数据。",
       "productionSales": "厂商产量：汽车制造商生产并出厂的车辆数量。口径：数据来源于易车 API 产量数据。",
+      "exportSales": "出口量：中国汽车出口至海外市场的车辆数量。口径：数据来源于易车 API 出口数据。",
       "levelAll": "全部车型级别，包含燃油车、纯电动、插电混动、增程式等所有动力类型。",
       "levelNev": "新能源车型，包含纯电动(BEV)、插电混动(PHEV)、增程式等可外接充电的车型。",
       "levelBev": "纯电动车型(BEV)，仅由动力电池驱动、无外接燃油发动机的新能源车型。",
@@ -14,11 +15,12 @@
       "monthlyTrend": "按月度统计的销量走势图，展示最近若干年份每个月的销量变化。",
       "quarterlyTrend": "按季度聚合的销量走势图，每个季度为当年1-3月、4-6月、7-9月、10-12月的销量合计。",
       "yearlyTrend": "按年度聚合的销量走势图，展示各年度的销量合计。",
-      "dataType": "数据类型切换零售量与产量两种口径。\n· 零售量(retail)：经销商向最终消费者实际交付的车辆数量。数据来源：易车 API 零售数据。\n· 产量(production)：汽车制造商生产并出厂的车辆数量。数据来源：易车 API 产量数据。"
+      "dataType": "数据类型切换零售量、产量与出口量三种口径。\n· 零售量(retail)：经销商向最终消费者实际交付的车辆数量。数据来源：易车 API 零售数据。\n· 产量(production)：汽车制造商生产并出厂的车辆数量。数据来源：易车 API 产量数据。\n· 出口量(export)：中国汽车出口至海外市场的车辆数量。数据来源：易车 API 出口数据。"
     },
     "column": {
       "retailSales": "销量",
-      "productionSales": "产量"
+      "productionSales": "产量",
+      "exportSales": "出口量"
     },
     "filter": {
       "levelType": "车型级别",
@@ -28,6 +30,7 @@
       "dataType": "数据类型",
       "dataTypeRetail": "零售量",
       "dataTypeProduction": "产量",
+      "dataTypeExport": "出口量",
       "granularity": "统计周期"
     },
     "monthly": {

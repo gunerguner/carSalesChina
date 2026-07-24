@@ -68,7 +68,9 @@ export function buildMarketTableColumns(
   const salesTitle =
     dataType === 'production'
       ? t('pages.market.column.productionSales')
-      : t('pages.market.column.retailSales');
+      : (dataType === 'export'
+        ? t('pages.market.column.exportSales')
+        : t('pages.market.column.retailSales'));
 
   const base = [
     {
