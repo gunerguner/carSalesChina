@@ -1,4 +1,4 @@
-import { initPreferences } from '@vben/preferences';
+import { initPreferences, updatePreferences } from '@vben/preferences';
 import { unmountGlobalLoading } from '@vben/utils';
 
 import { overridesPreferences } from './preferences';
@@ -18,6 +18,11 @@ async function initApplication() {
     namespace,
     overrides: overridesPreferences,
   });
+
+  // 强制覆盖本地缓存里可能残留的 Vben 默认 logo
+  if (overridesPreferences.logo) {
+    updatePreferences({ logo: overridesPreferences.logo });
+  }
 
   // 启动应用并挂载
   // vue应用主要逻辑及视图

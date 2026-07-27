@@ -5,6 +5,11 @@ export const overridesPreferences = defineOverridesPreferences({
     name: import.meta.env.VITE_APP_TITLE || '中国市场汽车销量',
     defaultHomePath: '/market',
   },
+  logo: {
+    // lucide:car，白天/暗夜分别用深色与浅色描边，保证对比度
+    source: '/logo.svg',
+    sourceDark: '/logo-dark.svg',
+  },
   tabbar: {
     enable: false,
   },
