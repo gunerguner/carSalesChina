@@ -3,7 +3,7 @@ import type { ECOption } from '@vben/plugins/echarts';
 import type { OriginShareTrendRecord } from '#/api/analysis';
 import type { Translate } from '#/utils/types';
 
-import { buildStackedBarChartOption, emptyChartIfNoData } from '#/utils/chart';
+import { buildStackedAreaChartOption, emptyChartIfNoData } from '#/utils/chart';
 import { toMonthKey } from '#/utils/period';
 import { getOriginShareColor } from '#/utils/style';
 import { ORIGIN_DIMENSIONS } from '#/utils/types';
@@ -22,7 +22,7 @@ export function buildOriginShareChartOption(
     name: t(chartLabelKey),
   }));
 
-  return buildStackedBarChartOption({
+  return buildStackedAreaChartOption({
     legend: {
       bottom: 0,
       data: series.map((item) => item.name),

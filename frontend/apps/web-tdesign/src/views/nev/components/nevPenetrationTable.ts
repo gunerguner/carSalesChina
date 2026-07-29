@@ -4,7 +4,7 @@ import type { NevBreakdownRecord, NevShareTrendRecord } from '#/api/analysis';
 import type { Translate } from '#/utils/types';
 
 import { toMonthKey } from '#/utils/period';
-import { tableNumberCell, tablePercentCell } from '#/utils/render';
+import { tableNumberCell } from '#/utils/render';
 
 export interface NevPenetrationRow {
   bevRatio: number;
@@ -37,7 +37,7 @@ export function buildNevPenetrationTableColumns(
       colKey: 'penetrationRate',
       title: t('pages.analysis.nev.penetrationRate'),
       width: 140,
-      cell: tablePercentCell('penetrationRate'),
+      cell: tableNumberCell('penetrationRate', '%'),
     },
     {
       colKey: 'bevSales',
@@ -49,7 +49,7 @@ export function buildNevPenetrationTableColumns(
       colKey: 'bevRatio',
       title: t('pages.analysis.nev.bevRatioInNev'),
       width: 170,
-      cell: tablePercentCell('bevRatio'),
+      cell: tableNumberCell('bevRatio', '%'),
     },
   ];
 }

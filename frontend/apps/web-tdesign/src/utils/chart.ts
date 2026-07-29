@@ -229,21 +229,21 @@ export function buildLineChartOption(
   };
 }
 
-export interface StackedBarSeriesItem {
+export interface StackedAreaSeriesItem {
   color: string;
   data: number[];
   name: string;
 }
 
-export interface BuildStackedBarChartOptionParams {
+export interface BuildStackedAreaChartOptionParams {
   grid?: ECOption['grid'];
   legend: ECOption['legend'];
-  series: StackedBarSeriesItem[];
+  series: StackedAreaSeriesItem[];
   xData: string[];
   yMax?: number;
 }
 
-const DEFAULT_BAR_GRID = {
+const DEFAULT_AREA_GRID = {
   bottom: '15%',
   containLabel: true,
   left: '3%',
@@ -251,10 +251,35 @@ const DEFAULT_BAR_GRID = {
   top: '8%',
 };
 
-export function buildStackedBarChartOption(
-  params: BuildStackedBarChartOptionParams,
+function percentSeriesTooltipFormatter(
+  params: LineTooltipParams | LineTooltipParams[],
+): string {
+  const arr = Array.isArray(params) ? params : [params];
+  const head = arr[0];
+  if (!head) return '';
+  const label = head.axisValueLabel ?? head.name ?? '';
+  const body = arr
+    .map((p) => {
+      const raw = p.value;
+      const num = raw === null || raw === undefined ? null : Number(raw);
+      const value =
+        num === null || Number.isNaN(num) ? '-' : `${num.toFixed(1)}%`;
+      return `${p.marker}${p.seriesName}: ${value}`;
+    })
+    .join('<br/>');
+  return `${label}<br/>${body}`;
+}
+
+export function buildStackedAreaChartOption(
+  params: BuildStackedAreaChartOptionParams,
 ): ECOption {
-  const { grid = DEFAULT_BAR_GRID, legend, series, xData, yMax = 100 } = params;
+  const {
+    grid = DEFAULT_AREA_GRID,
+    legend,
+    series,
+    xData,
+    yMax = 100,
+  } = params;
   const theme = getChartTheme();
 
   return {
@@ -265,16 +290,20 @@ export function buildStackedBarChartOption(
       textStyle: { color: theme.axis, fontSize: 11 },
     },
     series: series.map((item) => ({
-      barMaxWidth: 28,
+      areaStyle: { opacity: 0.85 },
       data: item.data,
       emphasis: NO_FOCUS_EMPHASIS,
       itemStyle: { color: item.color },
+      lineStyle: { width: 1.5 },
       name: item.name,
+      showSymbol: false,
+      smooth: true,
       stack: 'total',
-      type: 'bar',
+      type: 'line',
     })),
-    tooltip: themedTooltip(undefined, 'shadow'),
+    tooltip: themedTooltip(percentSeriesTooltipFormatter, 'line'),
     xAxis: {
+      boundaryGap: false,
       data: xData,
       type: 'category',
       ...themedCategoryAxis(),

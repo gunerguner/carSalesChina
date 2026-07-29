@@ -1,3 +1,5 @@
+import { requestClient } from '#/api/request';
+
 export interface SSEHandlers<
   TProgress = unknown,
   TDone = unknown,
@@ -16,11 +18,6 @@ export interface StreamPostOptions {
   signal?: AbortSignal;
   idleTimeoutMs?: number;
   headers?: Record<string, string>;
-}
-
-function getCsrfToken(): string | undefined {
-  const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/);
-  return match?.[1];
 }
 
 function parseSSEFrame(raw: string): null | { data: string; event: string } {
@@ -59,22 +56,14 @@ export function streamPost<
   const search = options.params
     ? `?${new URLSearchParams(options.params).toString()}`
     : '';
-  const csrfToken = getCsrfToken();
 
   let idleTimer: null | ReturnType<typeof setTimeout> = null;
+  let receivedTerminalEvent = false;
+  let buffer = '';
+  let opened = false;
 
   const emitError = (error: TError | { message: string }) => {
     handlers.onError?.(error);
-  };
-
-  const resetIdleTimer = () => {
-    if (idleTimer) {
-      clearTimeout(idleTimer);
-    }
-    idleTimer = setTimeout(() => {
-      controller.abort();
-      emitError({ message: '连接超时' });
-    }, idleTimeoutMs);
   };
 
   const clearIdleTimer = () => {
@@ -84,129 +73,101 @@ export function streamPost<
     }
   };
 
-  const run = async () => {
+  const resetIdleTimer = () => {
+    clearIdleTimer();
+    idleTimer = setTimeout(() => {
+      controller.abort();
+      emitError({ message: '连接超时' });
+    }, idleTimeoutMs);
+  };
+
+  const dispatchFrame = (event: string, payload: string) => {
     resetIdleTimer();
-    let receivedTerminalEvent = false;
-
-    const dispatchFrame = (event: string, payload: string) => {
-      resetIdleTimer();
-      let parsed: unknown = payload;
-      if (payload) {
-        try {
-          parsed = JSON.parse(payload);
-        } catch {
-          parsed = payload;
-        }
+    let parsed: unknown = payload;
+    if (payload) {
+      try {
+        parsed = JSON.parse(payload);
+      } catch {
+        parsed = payload;
       }
+    }
 
-      switch (event) {
-        case 'done': {
-          receivedTerminalEvent = true;
-          handlers.onDone?.(parsed as TDone);
-          break;
-        }
-        case 'error': {
-          receivedTerminalEvent = true;
-          handlers.onError?.(parsed as TError);
-          break;
-        }
-        case 'ping': {
-          handlers.onPing?.();
-          break;
-        }
-        case 'progress': {
-          handlers.onProgress?.(parsed as TProgress);
-          break;
-        }
-        default: {
-          break;
-        }
-      }
-    };
-
-    try {
-      const response = await fetch(`${url}${search}`, {
-        credentials: 'include',
-        headers: {
-          Accept: 'text/event-stream',
-          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-          ...options.headers,
-        },
-        method: 'POST',
-        signal: options.signal ?? controller.signal,
-      });
-
-      if (!response.ok) {
-        let message = `请求失败 (${response.status})`;
-        try {
-          const body = await response.json();
-          message = body.message || message;
-        } catch {
-          // ignore parse error
-        }
+    switch (event) {
+      case 'done': {
         receivedTerminalEvent = true;
-        emitError({ message });
-        return;
+        handlers.onDone?.(parsed as TDone);
+        break;
       }
+      case 'error': {
+        receivedTerminalEvent = true;
+        handlers.onError?.(parsed as TError);
+        break;
+      }
+      case 'ping': {
+        handlers.onPing?.();
+        break;
+      }
+      case 'progress': {
+        handlers.onProgress?.(parsed as TProgress);
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+  };
 
+  const processChunk = (content: string) => {
+    if (!opened) {
+      opened = true;
       handlers.onOpen?.();
+    }
+    buffer += content;
+    const frames = buffer.split('\n\n');
+    buffer = frames.pop() ?? '';
 
-      const reader = response.body?.getReader();
-      if (!reader) {
-        receivedTerminalEvent = true;
-        emitError({ message: '无法读取响应流' });
-        return;
-      }
+    frames.forEach((frame) => {
+      const trimmed = frame.trim();
+      if (!trimmed) return;
+      const parsed = parseSSEFrame(trimmed);
+      if (!parsed) return;
+      dispatchFrame(parsed.event, parsed.data);
+    });
+  };
 
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let streamDone = false;
+  const flushTail = () => {
+    const tail = buffer.trim();
+    if (!tail) return;
+    const parsed = parseSSEFrame(tail);
+    if (parsed) {
+      dispatchFrame(parsed.event, parsed.data);
+    }
+  };
 
-      while (!streamDone) {
-        const { done, value } = await reader.read();
-        streamDone = done;
-        if (done) {
-          break;
+  resetIdleTimer();
+
+  requestClient
+    .postSSE(`${url}${search}`, undefined, {
+      credentials: 'include',
+      headers: options.headers,
+      signal: options.signal ?? controller.signal,
+      onMessage: processChunk,
+      onEnd: () => {
+        flushTail();
+        if (!receivedTerminalEvent) {
+          emitError({ message: '连接意外断开' });
         }
-
-        buffer += decoder.decode(value, { stream: true });
-        const frames = buffer.split('\n\n');
-        buffer = frames.pop() ?? '';
-
-        frames.forEach((frame) => {
-          const trimmed = frame.trim();
-          if (!trimmed) return;
-          const parsed = parseSSEFrame(trimmed);
-          if (!parsed) return;
-          dispatchFrame(parsed.event, parsed.data);
-        });
-      }
-
-      const tail = buffer.trim();
-      if (tail) {
-        const parsed = parseSSEFrame(tail);
-        if (parsed) {
-          dispatchFrame(parsed.event, parsed.data);
-        }
-      }
-
-      if (!receivedTerminalEvent) {
-        emitError({ message: '连接意外断开' });
-      }
-    } catch (error) {
+        clearIdleTimer();
+      },
+    })
+    .catch((error: unknown) => {
+      clearIdleTimer();
       if (controller.signal.aborted) {
         return;
       }
       const message = error instanceof Error ? error.message : '网络请求失败';
       emitError({ message });
-    } finally {
-      clearIdleTimer();
-    }
-  };
-
-  run().catch(() => {
-    // run() 内部已处理错误回调
-  });
+    });
 
   return controller;
 }

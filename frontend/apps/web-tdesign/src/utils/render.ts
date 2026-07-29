@@ -3,16 +3,10 @@ import { h } from 'vue';
 import { formatOrDash, isNil } from './format';
 import { growthStyle } from './style';
 
-/** TDesign table `cell`: formatted number from row field. */
-export function tableNumberCell<K extends string>(key: K) {
+/** TDesign table `cell`: formatted number from row field; pass `%` for percent. */
+export function tableNumberCell<K extends string>(key: K, suffix = '') {
   return (_: unknown, { row }: { row: Record<string, null | number> }) =>
-    formatOrDash(row[key] ?? null);
-}
-
-/** TDesign table `cell`: formatted percent from row field. */
-export function tablePercentCell<K extends string>(key: K) {
-  return (_: unknown, { row }: { row: Record<string, null | number> }) =>
-    formatOrDash(row[key] ?? null, '%');
+    formatOrDash(row[key] ?? null, suffix);
 }
 
 /** TDesign table `cell`: "149,985（+10.38%）" with colored YoY from row `${salesKey}` / `${yoyKey}`. */

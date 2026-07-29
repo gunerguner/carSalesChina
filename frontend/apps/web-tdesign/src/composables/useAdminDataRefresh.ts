@@ -58,20 +58,30 @@ export function useAdminDataRefresh() {
     progressVisible.value = true;
     progressState.value.overallStatus = 'running';
 
-    abortController = refreshAllDataStream({
-      onDone: (result: RefreshAllResult) => {
-        progressState.value = applyStreamDone(progressState.value, result);
-        refreshing.value = false;
-        abortController = null;
+    abortController = new AbortController();
+    refreshAllDataStream(
+      {
+        onDone: (result: RefreshAllResult) => {
+          progressState.value = applyStreamDone(progressState.value, result);
+          refreshing.value = false;
+          abortController = null;
+        },
+        onError: (error: RefreshStreamError) => {
+          progressState.value = applyStreamError(progressState.value, error);
+          refreshing.value = false;
+          abortController = null;
+        },
+        onProgress: (event: RefreshProgressEvent) => {
+          progressState.value = applyProgressEvent(progressState.value, event);
+        },
       },
-      onError: (error: RefreshStreamError) => {
-        progressState.value = applyStreamError(progressState.value, error);
-        refreshing.value = false;
-        abortController = null;
-      },
-      onProgress: (event: RefreshProgressEvent) => {
-        progressState.value = applyProgressEvent(progressState.value, event);
-      },
+      abortController.signal,
+    ).catch((error: unknown) => {
+      if (abortController?.signal.aborted) return;
+      const message = error instanceof Error ? error.message : '网络请求失败';
+      progressState.value = applyStreamError(progressState.value, { message });
+      refreshing.value = false;
+      abortController = null;
     });
   }
 

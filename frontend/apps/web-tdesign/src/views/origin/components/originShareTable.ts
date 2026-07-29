@@ -4,7 +4,7 @@ import type { OriginShareTrendRecord } from '#/api/analysis';
 import type { OriginShareKey, Translate } from '#/utils/types';
 
 import { toMonthKey, toYearMonthSortKey } from '#/utils/period';
-import { tablePercentCell } from '#/utils/render';
+import { tableNumberCell } from '#/utils/render';
 import { ORIGIN_DIMENSIONS } from '#/utils/types';
 
 export type OriginShareRow = Record<OriginShareKey, number> & {
@@ -20,7 +20,7 @@ export function buildOriginShareTableColumns(t: Translate): PrimaryTableCol[] {
       colKey: key,
       title: t(tableLabelKey),
       width: 100,
-      cell: tablePercentCell(key),
+      cell: tableNumberCell(key, '%'),
     })),
   ];
 }

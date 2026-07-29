@@ -1,6 +1,4 @@
-import { useAppConfig } from '@vben/hooks';
-
-import { streamPost } from '#/utils/sse-stream';
+import { requestClient } from '#/api/request';
 
 export type RefreshStatus = 'failed' | 'partial_failure' | 'success';
 
@@ -44,16 +42,46 @@ export interface RefreshStreamHandlers {
   onError?: (error: RefreshStreamError) => void;
 }
 
-const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
-const STREAM_URL = `${apiURL}/v1/admin/data/refresh/stream`;
-const REFRESH_STREAM_IDLE_TIMEOUT_MS = 300_000;
+const STREAM_PATH = '/v1/admin/data/refresh/stream';
+
+function createMessageHandler(handlers: RefreshStreamHandlers) {
+  let buffer = '';
+  return (chunk: string) => {
+    buffer += chunk;
+    const frames = buffer.split('\n\n');
+    buffer = frames.pop() ?? '';
+
+    frames.forEach((frame) => {
+      const event = /^event:\s*(\w+)/m.exec(frame)?.[1];
+      const data = /^data:\s*(.+)$/m.exec(frame)?.[1];
+      if (!event || !data) return;
+
+      const payload: unknown = JSON.parse(data);
+      switch (event) {
+        case 'done': {
+          handlers.onDone?.(payload as RefreshAllResult);
+          break;
+        }
+        case 'error': {
+          handlers.onError?.(payload as RefreshStreamError);
+          break;
+        }
+        case 'progress': {
+          handlers.onProgress?.(payload as RefreshProgressEvent);
+          break;
+        }
+      }
+    });
+  };
+}
 
 export function refreshAllDataStream(
   handlers: RefreshStreamHandlers,
-): AbortController {
-  return streamPost<RefreshProgressEvent, RefreshAllResult, RefreshStreamError>(
-    STREAM_URL,
-    handlers,
-    { idleTimeoutMs: REFRESH_STREAM_IDLE_TIMEOUT_MS },
-  );
+  signal?: AbortSignal,
+) {
+  return requestClient.postSSE(STREAM_PATH, undefined, {
+    credentials: 'include',
+    signal,
+    onMessage: createMessageHandler(handlers),
+  });
 }
