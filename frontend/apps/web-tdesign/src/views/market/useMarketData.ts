@@ -49,15 +49,13 @@ export function useMarketData() {
     });
   }
 
-  /** 月度趋势（近 N 年），供折线图使用 */
+  /** 月度趋势（近 3 年），供折线图使用 */
   function getMonthlyTrend(
     levelType: LevelType,
     dataType: DataType,
-    years = 3,
   ): MonthlyTrendRecord[] {
     return calcMonthlyTrend(
       getSeriesCache(seriesCacheIndex, levelType, dataType),
-      years,
     );
   }
 
@@ -73,16 +71,14 @@ export function useMarketData() {
 
   /**
    * 季度聚合（环比：上一季度，同比：去年同期季度）。
-   * 先用全量原始数据汇总，再取最近 N 个季度展示（默认 12）。
+   * 先用全量原始数据汇总，再取最近 12 个季度展示。
    */
   function getQuarterlyTrend(
     levelType: LevelType,
     dataType: DataType,
-    quarters = 12,
   ): QuarterlyTrendRecord[] {
     return calcQuarterlyTrend(
       getSeriesCache(seriesCacheIndex, levelType, dataType),
-      quarters,
     );
   }
 

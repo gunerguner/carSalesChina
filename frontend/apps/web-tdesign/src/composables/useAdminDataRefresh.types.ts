@@ -1,10 +1,11 @@
 import type {
   RefreshAllResult,
+  RefreshPhaseKey,
   RefreshProgressEvent,
   RefreshStreamError,
 } from '#/api/admin';
 
-export type PhaseKey = 'brand_meta' | 'origin' | 'sales';
+export type PhaseKey = RefreshPhaseKey;
 
 export type PhaseStatus = 'done' | 'failed' | 'pending' | 'running';
 
@@ -27,9 +28,7 @@ export interface RefreshProgressState {
   completedCount: number;
   totalPhases: number;
   overallStatus: RefreshOverallStatus;
-  finalResult: null | RefreshAllResult;
   errorMessage: null | string;
-  errorPhase: null | PhaseKey;
 }
 
 export const PHASE_ORDER: PhaseKey[] = ['brand_meta', 'sales', 'origin'];
@@ -65,9 +64,7 @@ export function createInitialProgressState(): RefreshProgressState {
     completedCount: 0,
     totalPhases: PHASE_ORDER.length,
     overallStatus: 'idle',
-    finalResult: null,
     errorMessage: null,
-    errorPhase: null,
   };
 }
 
@@ -133,7 +130,6 @@ export function applyStreamError(
     phases: nextPhases,
     overallStatus: 'error',
     errorMessage: error.message,
-    errorPhase,
   };
 }
 
@@ -160,8 +156,6 @@ export function applyStreamDone(
     phases: nextPhases,
     completedCount: PHASE_ORDER.length,
     overallStatus: 'done',
-    finalResult: result,
     errorMessage: null,
-    errorPhase: null,
   };
 }

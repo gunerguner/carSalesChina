@@ -6,7 +6,6 @@ from backend.core.error_codes import (
     DATABASE_ERROR,
     EXTERNAL_SOURCE_ERROR,
     INTERNAL_ERROR,
-    PERMISSION_DENIED,
     RESOURCE_NOT_FOUND,
     VALIDATION_ERROR,
 )
@@ -25,15 +24,6 @@ class ValidationAppError(AppError):
             message=message,
             code=VALIDATION_ERROR,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        )
-
-
-class PermissionAppError(AppError):
-    def __init__(self, message: str = "权限不足"):
-        super().__init__(
-            message=message,
-            code=PERMISSION_DENIED,
-            status_code=status.HTTP_403_FORBIDDEN,
         )
 
 

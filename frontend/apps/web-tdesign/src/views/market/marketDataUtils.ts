@@ -77,10 +77,8 @@ function getWindowStartYear(
   return isNil(maxYear) ? null : maxYear - years + 1;
 }
 
-export async function fetchMarketRawData(
-  fetcher: () => Promise<RawSalesRecord[]> = getMarketRawApi,
-): Promise<RawSalesRecord[]> {
-  const data = await fetcher();
+export async function fetchMarketRawData(): Promise<RawSalesRecord[]> {
+  const data = await getMarketRawApi();
   return ensureArray(data);
 }
 
@@ -130,11 +128,8 @@ export function buildMarketSeriesCache(
   return cacheMap;
 }
 
-export function calcMonthlyTrend(
-  cache: SeriesCache,
-  years = 3,
-): MonthlyTrendRecord[] {
-  const startYear = getWindowStartYear(cache.maxYear, years);
+export function calcMonthlyTrend(cache: SeriesCache): MonthlyTrendRecord[] {
+  const startYear = getWindowStartYear(cache.maxYear, 3);
   if (isNil(startYear)) return [];
   return cache.sortedRows.filter((r) => r.year >= startYear);
 }
@@ -162,11 +157,8 @@ export function calcMonthlyDetail(cache: SeriesCache): MonthlyDetailRecord[] {
     .toReversed();
 }
 
-export function calcQuarterlyTrend(
-  cache: SeriesCache,
-  quarters = 12,
-): QuarterlyTrendRecord[] {
-  const keys = cache.sortedQuarterKeys.slice(-quarters);
+export function calcQuarterlyTrend(cache: SeriesCache): QuarterlyTrendRecord[] {
+  const keys = cache.sortedQuarterKeys.slice(-12);
 
   const getQuarterSales = (year: number, quarter: number): null | number => {
     const key = `${year}-${quarter}`;

@@ -35,12 +35,14 @@ BRAND_SALES_FIELDS = [
 ORIGIN_SHARE_FIELDS = ["year", "month", "origin", "sales_volume"]
 
 
+_BATCH_SIZE = 500
+
+
 def _batch_upsert(
     db: Session,
     model: type,
     records: list[dict[str, Any]],
     fields: list[str],
-    batch_size: int = 500,
 ) -> int:
     if not records:
         return 0
@@ -55,8 +57,8 @@ def _batch_upsert(
     )
 
     total = 0
-    for i in range(0, len(records), batch_size):
-        batch = records[i : i + batch_size]
+    for i in range(0, len(records), _BATCH_SIZE):
+        batch = records[i : i + _BATCH_SIZE]
         db.execute(sql, [{field: rec.get(field) for field in fields} for rec in batch])
         db.commit()
         total += len(batch)
@@ -157,7 +159,6 @@ def refresh_sales_data(
     *,
     reporter: ProgressReporter | None = None,
     on_brand_progress: Callable[[int, int], None] | None = None,
-    on_ping: Callable[[], None] | None = None,
 ) -> dict:
     try:
         if reporter:
@@ -192,7 +193,6 @@ def refresh_sales_data(
             brand_fr = yiche_brand_client.fetch_brand_sales(
                 master_ids,
                 on_progress=on_brand_progress,
-                on_ping=on_ping,
             )
 
             normalized = _normalize_brand_records(

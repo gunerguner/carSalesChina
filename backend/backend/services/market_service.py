@@ -4,10 +4,10 @@ from backend.common.types import MarketRawRow
 from backend.models.overall import SalesData
 
 
-def get_raw_market_data(db: Session, *, date_type: str = "monthly") -> list[MarketRawRow]:
+def get_raw_market_data(db: Session) -> list[MarketRawRow]:
     rows = db.exec(
         select(SalesData)
-        .where(SalesData.date_type == date_type)
+        .where(SalesData.date_type == "monthly")
         .order_by(SalesData.year, SalesData.month, SalesData.level_type)
     ).all()
     return [

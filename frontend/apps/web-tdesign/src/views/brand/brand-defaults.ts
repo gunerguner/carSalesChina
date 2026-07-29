@@ -58,13 +58,12 @@ function readQuickFilters(): BrandQuickFilter[] {
     .filter((item): item is BrandQuickFilter => !isNil(item));
 }
 
-/** 从配置名列表中筛出元数据存在的品牌并截断至 max */
+/** 从配置名列表中筛出元数据存在的品牌并截断至 MAX_BRAND_COMPARE */
 export function resolveBrandNames(
   names: string[],
   allowed: Set<string>,
-  max = MAX_BRAND_COMPARE,
 ): string[] {
-  return names.filter((name) => allowed.has(name)).slice(0, max);
+  return names.filter((name) => allowed.has(name)).slice(0, MAX_BRAND_COMPARE);
 }
 
 /** 自模块加载时解析 YAML，最多 MAX_BRAND_COMPARE 个 */

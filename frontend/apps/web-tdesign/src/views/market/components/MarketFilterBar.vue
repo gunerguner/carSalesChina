@@ -10,8 +10,6 @@ import { RadioButton, RadioGroup } from 'tdesign-vue-next';
 import MetricTooltip from '#/components/MetricTooltip.vue';
 import { $t } from '#/locales';
 
-export type { MarketPeriodGranularity };
-
 const levelType = defineModel<LevelType>('levelType', { required: true });
 const dataType = defineModel<DataType>('dataType', {
   required: true,
