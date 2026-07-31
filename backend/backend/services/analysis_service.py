@@ -6,14 +6,14 @@ import yaml
 from sqlalchemy import func
 from sqlmodel import Session, select
 
-from backend.common.periods import (
+from backend.services.analysis_periods import (
     LevelSalesByPeriod,
     PeriodKey,
     period_columns,
     period_entry,
     period_key,
 )
-from backend.common.types import (
+from backend.types import (
     Granularity,
     NevBreakdownRow,
     NevShareTrendRow,

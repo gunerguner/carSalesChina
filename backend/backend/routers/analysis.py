@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 
-from backend.core.decorators import handle_success_response
+from backend.routers.decorators import handle_success_response
 from backend.core.deps import DbSession
 from backend.schemas.analysis import AnalysisTrendQuery
 from backend.services import analysis_service

@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 
-from backend.core.decorators import handle_success_response
+from backend.routers.decorators import handle_success_response
 from backend.core.deps import DbSession
 from backend.schemas.brand import TrendAllPeriodsQuery
 from backend.services.brand_service import get_all_brand_meta, get_brand_trend_all_periods

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from backend.common.types import AnalysisPeriodRow, Granularity, LevelType
+from backend.types import AnalysisPeriodRow, Granularity, LevelType
 
 
 @dataclass(frozen=True, slots=True, order=True)

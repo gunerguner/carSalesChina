@@ -10,11 +10,13 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 | 配置 | `backend/backend/config.py` |
 | 数据库会话 | `backend/backend/core/database.py` |
 | CSRF | `backend/backend/core/csrf.py` |
-| 异常处理 | `backend/backend/core/exception_handlers.py`（全局映射） |
+| 异常处理 | `backend/backend/routers/exception_handlers.py`（全局映射） |
 | 业务异常类 | `backend/backend/core/exceptions.py`（`AppError`、`ExternalSourceAppError` 等） |
 | 错误码 | `backend/backend/core/error_codes.py` |
-| 管理装饰器 | `backend/backend/core/decorators.py`（`@handle_try_catch_action`、`@handle_success_response`） |
-| 公共工具 | `backend/backend/common/`（见下节） |
+| 响应装饰器 | `backend/backend/routers/decorators.py`（`@handle_success_response`） |
+| 跨层类型契约 | `backend/backend/types.py`（见下节） |
+| SSE 进度 | `backend/backend/services/progress.py` |
+| 分析周期工具 | `backend/backend/services/analysis_periods.py` |
 | 分析查询 schema | `backend/backend/schemas/analysis.py`（`AnalysisTrendQuery`：`years`、`granularity`） |
 | 模型 | `backend/backend/models/`（`overall.py`、`brand.py`、`origin.py`） |
 | 路由 | `backend/backend/routers/` |
@@ -39,9 +41,9 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 | Nginx | `docker/nginx.conf` |
 | 环境模板 | `backend/.env.example`、`docker/.env.example` |
 
-## 公共类型与周期聚合（`common/`）
+## 跨层类型契约（`types.py`）
 
-**`types.py`**：`DataType`、`DateType`、`LevelType`、`Granularity` 等 `Literal`；以及 API/入库行 `TypedDict`：
+`DataType`、`DateType`、`LevelType`、`Granularity` 等 `Literal`；以及 API/入库行 `TypedDict`：
 
 | TypedDict | 用途 |
 |-----------|------|
@@ -50,7 +52,9 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 | `AnalysisPeriodRow` | 分析周期基类（`year`、可选 `month`） |
 | `NevShareTrendRow`、`NevBreakdownRow`、`OriginShareTrendRow` | 分析 API 响应行 |
 
-**`periods.py`**：分析读路径共用周期键与 SQL 分组列：
+## 分析周期工具（`services/analysis_periods.py`）
+
+分析读路径专用（仅 `analysis_service` 消费）的周期键与 SQL 分组列：
 
 - `PeriodKey(year, month?)`：年度粒度时 `month=None`
 - `period_columns(model_cls, granularity)` → `(year,)` 或 `(year, month)`

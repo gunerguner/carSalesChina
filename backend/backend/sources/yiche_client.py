@@ -13,7 +13,7 @@ from datetime import date
 
 import httpx
 
-from backend.common.types import BrandSalesRecord, OverallSalesRecord
+from backend.types import BrandSalesRecord, OverallSalesRecord
 from backend.sources.fetch_result import (
     HttpJsonResult,
     KeyedSliceResult,
@@ -175,8 +175,7 @@ class YicheOverallClient:
         )
         if not resp.ok:
             return SliceResult(data=[], error=resp.error)
-        err = _api_error(resp.body or {}, tag, expect_int=True)
-        if err:
+        if err := _api_error(resp.body or {}, tag, expect_int=True):
             logger.warning("易车总体 API 返回异常 (%s): %s", tag, err.split(": ", 1)[-1])
             return SliceResult(data=[], error=err)
         return SliceResult(data=resp.body.get("data") or [])
@@ -249,8 +248,7 @@ class YicheBrandClient:
         )
         if not resp.ok:
             return SliceResult(data={}, error=resp.error)
-        err = _api_error(resp.body or {}, tag, expect_int=False)
-        if err:
+        if err := _api_error(resp.body or {}, tag, expect_int=False):
             logger.warning("品牌销量 API 异常 (%s): %s", tag, err.split(": ", 1)[-1])
             return SliceResult(data={}, error=err)
         series_list: list[list[dict]] = resp.body.get("data") or []

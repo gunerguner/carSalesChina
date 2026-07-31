@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from backend.common.types import Granularity
+from backend.types import Granularity
 
 
 class AnalysisTrendQuery(BaseModel):

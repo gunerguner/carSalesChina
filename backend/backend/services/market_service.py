@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
 
-from backend.common.types import MarketRawRow
+from backend.types import MarketRawRow
 from backend.models.overall import SalesData
 
 

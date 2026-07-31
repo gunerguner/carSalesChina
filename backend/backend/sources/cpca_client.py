@@ -5,7 +5,7 @@ from typing import Any
 import akshare as ak
 import pandas as pd
 
-from backend.common.types import OriginShareUpsertRow
+from backend.types import OriginShareUpsertRow
 from backend.sources.fetch_result import SliceResult, SourceFetchResult
 
 logger = logging.getLogger(__name__)
@@ -13,13 +13,12 @@ logger = logging.getLogger(__name__)
 
 def _parse_month(date_str: str) -> tuple[int | None, int]:
     clean = str(date_str).strip().replace(" ", "")
-    year_match = re.search(r"(20\d{2})", clean)
-    year = int(year_match.group(1)) if year_match else None
-
-    if year_match:
+    if year_match := re.search(r"(20\d{2})", clean):
+        year = int(year_match.group(1))
         tail = clean[year_match.end():]
         month_match = re.search(r"[-年/]?(1[0-2]|0?[1-9])月?", tail)
     else:
+        year = None
         month_match = re.search(r"^(1[0-2]|0?[1-9])月?$", clean)
     if not month_match:
         raise ValueError(f"无法解析月份: {date_str}")

@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.config import FASTAPI_PORT
 from backend.core.csrf import CSRF_HEADER_NAME, CSRFCookieMiddleware
-from backend.core.exception_handlers import register_exception_handlers
+from backend.routers.exception_handlers import register_exception_handlers
 from backend.core.logging_config import setup_logging
 
 setup_logging()

@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterator
 
 from sqlmodel import Session
 
-from backend.core.progress import ProgressReporter, SSEBridge
+from backend.services.progress import ProgressReporter, SSEBridge
 from backend.services.import_service import (
     refresh_brand_meta,
     refresh_origin_data,

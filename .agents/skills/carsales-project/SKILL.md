@@ -15,12 +15,12 @@ carSales/                     # Git 根
 ├── README.md                 # 产品说明、接口、本地启动
 ├── backend/
 │   ├── backend/              # FastAPI 应用包
-│   │   ├── core/             # 数据库、CSRF、异常、日志
-│   │   ├── common/           # 公共类型（types.py）、周期聚合（periods.py）
+│   │   ├── types.py          # 跨层类型契约（Literal / TypedDict）
+│   │   ├── core/             # 基建：DB、CSRF、异常类型、日志（不依赖 schemas）
 │   │   ├── models/           # SQLModel 模型
-│   │   ├── routers/          # 路由（market/brand/analysis/admin）
+│   │   ├── routers/          # 路由 + 异常映射/响应装饰器
 │   │   ├── schemas/          # 请求/响应结构
-│   │   ├── services/         # 业务与 import 编排
+│   │   ├── services/         # 业务、import 编排、SSE 进度、分析周期工具
 │   │   ├── sources/          # 易车、乘联会客户端
 │   │   ├── meta_data.yaml    # 品牌元数据（master_id 映射）
 │   │   └── origin_field_map.yaml
@@ -50,17 +50,29 @@ carSales/                     # Git 根
 
 ## 架构要点
 
+**分层口径**：
+
+| 包 | 职责 | 约束 |
+|----|------|------|
+| `types.py` | 跨层稳定契约（`Literal` / `TypedDict`） | 可被 schemas/services/sources 共用 |
+| `core/` | 应用基建（DB、deps、日志、CSRF、错误码/异常类型） | 不感知业务阶段名；**不依赖** `schemas` |
+| `routers/` | HTTP 入口；含 `exception_handlers`、`decorators` | 薄转发到 service |
+| `services/` | 业务逻辑；含 `progress`（SSE）、`analysis_periods` | 可依赖 models/types/core/sources |
+| `schemas/` | API 请求/响应 DTO 与信封 | 可依赖 types |
+| `sources/` | 外部源客户端 | 不写库；可依赖 types |
+| `models/` | SQLModel 表 | 不依赖其他 backend 包 |
+
 **请求路径**：Vue SPA → `/api/*` → FastAPI routers → services → MySQL；管理刷新经 `import_service` → `sources/`。
 
 **统一响应**：`{ code, message, data }`；成功 `code=0`。封装：`schemas/response.py` 的 `success()` / `error()`。
 
 **CSRF**：`CSRFCookieMiddleware` 下发 `csrf_token` Cookie；非 GET 管理接口需 `X-CSRF-Token` 与 Cookie 一致（`core/csrf.py`）。前端 `api/request.ts` 自动注入。
 
-**错误码**：`core/error_codes.py`（1001 校验、1002 权限、1003 资源不存在、2001 外部源、3001 数据库、9000 内部）；业务异常类在 `core/exceptions.py`，全局映射在 `core/exception_handlers.py`。
+**错误码**：`core/error_codes.py`（1001 校验、1002 权限、1003 资源不存在、2001 外部源、3001 数据库、9000 内部）；业务异常类在 `core/exceptions.py`，全局映射在 `routers/exception_handlers.py`。
 
-**数据刷新**：`import_service._batch_upsert` 用 MySQL `ON DUPLICATE KEY UPDATE`；外部源客户端内部分层返回 `HttpJsonResult` → `SliceResult`/`KeyedSliceResult`，对外统一 `SourceFetchResult`（`records`/`ok`/`errors`）；销量刷新可返回 `success` / `partial_failure` / `failed`。
+**数据刷新**：`import_service._batch_upsert` 用 MySQL `ON DUPLICATE KEY UPDATE`；外部源客户端内部分层返回 `HttpJsonResult` → `SliceResult`/`KeyedSliceResult`，对外统一 `SourceFetchResult`（`records`/`ok`/`errors`）；销量刷新可返回 `success` / `partial_failure` / `failed`；SSE 进度在 `services/progress.py`。
 
-**类型契约**：`common/types.py` 定义 `Literal` 维度枚举与 API/入库行 `TypedDict`（如 `NevShareTrendRow`、`OverallSalesRecord`）；分析接口按 `common/periods.py` 的 `PeriodKey` 做月度/年度聚合。
+**类型契约**：`types.py` 定义 `Literal` 维度枚举与 API/入库行 `TypedDict`（如 `NevShareTrendRow`、`OverallSalesRecord`）；分析接口按 `services/analysis_periods.py` 的 `PeriodKey` 做月度/年度聚合。
 
 ```mermaid
 flowchart LR
@@ -89,7 +101,7 @@ flowchart LR
 | 新读 API | `routers/*.py` → `services/*.py` → `schemas/*.py` → `frontend/apps/web-tdesign/src/api/` |
 | 新刷新/写 API | 同上 + `import_service.py`；路由加 `Depends(verify_csrf)` |
 | 新外部源 | `sources/` 新客户端；内部可用 `HttpJsonResult`/`SliceResult`，对外返回 `SourceFetchResult` |
-| 分析周期/粒度 | `common/periods.py` + `common/types.py` + `schemas/analysis.py` → `analysis_service.py` → `api/analysis.ts` |
+| 分析周期/粒度 | `services/analysis_periods.py` + `types.py` + `schemas/analysis.py` → `analysis_service.py` → `api/analysis.ts` |
 | 新表/字段 | `models/` + **`init_db.sql` 唯一索引**（upsert 依赖） |
 | 新前端页 | `router/routes/modules/app.ts` + `views/` + `locales/langs/*/pages.json` |
 | 市场本地聚合 | `views/market/marketDataUtils.ts`（优先复用，勿为每个筛选项打 API） |
@@ -160,8 +172,9 @@ OpenAPI：`http://localhost:8001/docs`。curl 需先取 `csrf_token` Cookie 再�
 
 ## 编码约定
 
-- 路由薄、逻辑在 `services/`；管理写操作用 `@handle_try_catch_action`
-- 新增外部源勿在 router 直接 httpx，走 `sources/` + `SourceFetchResult`；行结构优先在 `common/types.py` 用 `TypedDict` 声明
+- 路由薄、逻辑在 `services/`；读接口用 `@handle_success_response`（`routers/decorators.py`）包装信封
+- `core` 只放基建；HTTP 胶水放 `routers/`，SSE/业务编排工具放 `services/`
+- 新增外部源勿在 router 直接 httpx，走 `sources/` + `SourceFetchResult`；行结构优先在 `types.py` 用 `TypedDict` 声明
 - 表结构变更同步 `models/` 与 `init_db.sql`，检查 UNIQUE 与 upsert 字段一致
 - 前端 API 基址来自 `VITE_GLOB_API_URL`；生产 Docker 默认 `/api`（同源 nginx 反代）
 - 业务文案 i18n：`locales/langs/zh-CN/pages.json`、`en-US/pages.json`

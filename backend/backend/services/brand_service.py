@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
 
-from backend.common.types import BrandMetaRow, BrandTrendSeries, DataType
+from backend.types import BrandMetaRow, BrandTrendSeries, DataType
 from backend.core.exceptions import NotFoundAppError
 from backend.models.brand import BrandMeta, BrandSales
 
@@ -44,8 +44,7 @@ def get_brand_trend_all_periods(
         name: {"brand_name": name, "monthly_data": []} for name in brand_names
     }
     for row in rows:
-        brand_name = id_to_name.get(row.brand_id)
-        if brand_name is None:
+        if (brand_name := id_to_name.get(row.brand_id)) is None:
             continue
         data[brand_name]["monthly_data"].append(
             {

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from backend.core.decorators import handle_success_response
+from backend.routers.decorators import handle_success_response
 from backend.core.deps import DbSession
 from backend.services.market_service import get_raw_market_data
 

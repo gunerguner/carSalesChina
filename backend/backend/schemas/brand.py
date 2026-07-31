@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 
-from backend.common.types import DataType
+from backend.types import DataType
 
 MAX_BRAND_COMPARE = 4
 

@@ -7,9 +7,9 @@ import yaml
 from sqlalchemy import text
 from sqlmodel import Session, select
 
-from backend.common.types import BrandSalesRecord, BrandSalesUpsertRow
+from backend.types import BrandSalesRecord, BrandSalesUpsertRow
 from backend.core.exceptions import AppError, ExternalSourceAppError
-from backend.core.progress import ProgressReporter
+from backend.services.progress import ProgressReporter
 from backend.models.brand import BrandMeta, BrandSales
 from backend.models.origin import OriginShareData
 from backend.models.overall import SalesData
@@ -122,8 +122,7 @@ def refresh_brand_meta(db: Session) -> dict:
             master_id = info.get("master_id") if isinstance(info, dict) else None
             if not cn_name:
                 continue
-            if cn_name in existing_map:
-                row = existing_map[cn_name]
+            if row := existing_map.get(cn_name):
                 changed = False
                 if en_name and row.brand_name_en != en_name:
                     row.brand_name_en = en_name
