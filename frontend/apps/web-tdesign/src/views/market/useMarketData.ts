@@ -82,7 +82,7 @@ export function useMarketData() {
     );
   }
 
-  /** 年度聚合（含同比），供年度柱状图和年度汇总表使用 */
+  /** 年度聚合（最新不完整年用同期累计比，完整年用全年同比），供年度图和表使用 */
   function getYearlyTrend(
     levelType: LevelType,
     dataType: DataType,

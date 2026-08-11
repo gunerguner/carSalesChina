@@ -50,7 +50,7 @@
       "title": "年度",
       "chartTitle": "年度销量趋势",
       "sales": "销量",
-      "yoyGrowth": "同比增长(%)"
+      "yoyGrowth": "同期比(%)"
     }
   },
   "brand": {
@@ -80,6 +80,9 @@
       "salesWithYoyRetail": "（销量+同比）",
       "salesWithYoyProduction": "（产量+同比）",
       "salesWithYoyExport": "（出口量+同比）",
+      "salesWithSamePeriodRetail": "（销量+同期比）",
+      "salesWithSamePeriodProduction": "（产量+同期比）",
+      "salesWithSamePeriodExport": "（出口量+同期比）",
       "time": "时间",
       "noData": "请选择至少1个品牌",
       "quickFilter": {

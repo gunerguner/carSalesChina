@@ -68,3 +68,16 @@ export function sumByYear<T extends YearMonthRecord>(
 ): Map<number, number> {
   return groupSumBy(items, (item) => item.year, valueFn);
 }
+
+/** 对 year 的 1..maxMonth 从月度 Map（YYYY-MM → 数值）累加；缺失月份按 0 */
+export function sumMonthsUpTo(
+  monthlyMap: Map<string, number>,
+  year: number,
+  maxMonth: number,
+): number {
+  let total = 0;
+  for (let month = 1; month <= maxMonth; month += 1) {
+    total += monthlyMap.get(toMonthKey(year, month)) ?? 0;
+  }
+  return total;
+}

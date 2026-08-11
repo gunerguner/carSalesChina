@@ -72,6 +72,7 @@ watch(
         <BrandTrendTable
           :data="activeSeries"
           :data-type="dataType"
+          :granularity="granularity"
           :time-label-max-count="tableTimeLabelMaxCount"
           :time-labels="timeLabels"
         />

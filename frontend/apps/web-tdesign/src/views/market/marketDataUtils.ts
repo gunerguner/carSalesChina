@@ -9,6 +9,7 @@ import {
   groupSumBy,
   sortByYearMonth,
   sumByYear,
+  sumMonthsUpTo,
 } from '#/utils/timeSeries';
 
 export interface MonthlyTrendRecord extends YearMonthRecord {
@@ -42,6 +43,7 @@ export interface QuarterlyTrendRecord {
 }
 
 export interface SeriesCache {
+  maxMonthByYear: Map<number, number>;
   maxYear: null | number;
   monthlySalesMap: Map<string, number>;
   quarterSalesMap: Map<string, number>;
@@ -59,6 +61,7 @@ export const EMPTY_SERIES_CACHE: SeriesCache = {
   yearSalesMap: new Map(),
   sortedYears: [],
   maxYear: null,
+  maxMonthByYear: new Map(),
 };
 
 function getSeriesKey(levelType: LevelType, dataType: DataType) {
@@ -108,6 +111,13 @@ export function buildMarketSeriesCache(
       (r) => r.sales,
     );
     const yearSalesMap = sumByYear(sortedRows, (r) => r.sales);
+    const maxMonthByYear = new Map<number, number>();
+    for (const r of sortedRows) {
+      maxMonthByYear.set(
+        r.year,
+        Math.max(maxMonthByYear.get(r.year) ?? 0, r.month),
+      );
+    }
     const sortedQuarterKeys = [...quarterSalesMap.keys()].toSorted((a, b) => {
       const A = parseQuarterKey(a);
       const B = parseQuarterKey(b);
@@ -123,6 +133,7 @@ export function buildMarketSeriesCache(
       yearSalesMap,
       sortedYears,
       maxYear: getLatestYearMonth(sortedRows)?.year ?? null,
+      maxMonthByYear,
     });
   }
   return cacheMap;
@@ -181,13 +192,25 @@ export function calcQuarterlyTrend(cache: SeriesCache): QuarterlyTrendRecord[] {
 }
 
 export function calcYearlyTrend(cache: SeriesCache): YearlyTrendRecord[] {
+  const latestYear = cache.sortedYears.at(-1);
   return cache.sortedYears.map((year, i) => {
     const sales = Math.round(cache.yearSalesMap.get(year) ?? 0);
-    const prevYear = i > 0 ? cache.sortedYears[i - 1] : undefined;
-    const prevSales = isNil(prevYear)
-      ? 0
-      : Math.round(cache.yearSalesMap.get(prevYear) ?? 0);
-    const yoyGrowth = calcGrowthPercent(sales, prevSales);
+    const maxMonth = cache.maxMonthByYear.get(year) ?? 12;
+    const isPartialLatest = year === latestYear && maxMonth < 12;
+
+    let yoyGrowth: null | number;
+    if (isPartialLatest) {
+      const prevYtd = Math.round(
+        sumMonthsUpTo(cache.monthlySalesMap, year - 1, maxMonth),
+      );
+      yoyGrowth = calcGrowthPercent(sales, prevYtd);
+    } else {
+      const prevYear = i > 0 ? cache.sortedYears[i - 1] : undefined;
+      const prevSales = isNil(prevYear)
+        ? 0
+        : Math.round(cache.yearSalesMap.get(prevYear) ?? 0);
+      yoyGrowth = calcGrowthPercent(sales, prevSales);
+    }
     return { key: `${year}-${i}`, year, sales, yoyGrowth };
   });
 }

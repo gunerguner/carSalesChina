@@ -2,6 +2,7 @@
 import type { PrimaryTableCol } from 'tdesign-vue-next';
 
 import type { BrandSeriesRecord } from '../types';
+import type { BrandTrendGranularity } from '../useBrandData';
 
 import type { DataType } from '#/utils/types';
 
@@ -17,6 +18,7 @@ import { DEFAULT_TABLE_PROPS } from '#/utils/style';
 const props = defineProps<{
   data: BrandSeriesRecord[];
   dataType: DataType;
+  granularity: BrandTrendGranularity;
   /** 最多展示多少条时间行；null 表示与 timeLabels 一致（如年度全部年份） */
   timeLabelMaxCount?: null | number;
   timeLabels: string[];
@@ -37,12 +39,19 @@ const columns = computed<PrimaryTableCol[]>(() => {
   const base: PrimaryTableCol[] = [
     { colKey: 'time', title: $t('pages.brand.trend.time'), width: 120 },
   ];
-  const salesWithYoySuffix =
-    props.dataType === 'production'
-      ? $t('pages.brand.trend.salesWithYoyProduction')
-      : (props.dataType === 'export'
-        ? $t('pages.brand.trend.salesWithYoyExport')
-        : $t('pages.brand.trend.salesWithYoyRetail'));
+  const useSamePeriod = props.granularity === 'yearly';
+  const suffixKeys = {
+    export: useSamePeriod
+      ? 'pages.brand.trend.salesWithSamePeriodExport'
+      : 'pages.brand.trend.salesWithYoyExport',
+    production: useSamePeriod
+      ? 'pages.brand.trend.salesWithSamePeriodProduction'
+      : 'pages.brand.trend.salesWithYoyProduction',
+    retail: useSamePeriod
+      ? 'pages.brand.trend.salesWithSamePeriodRetail'
+      : 'pages.brand.trend.salesWithYoyRetail',
+  } as const;
+  const salesWithYoySuffix = $t(suffixKeys[props.dataType]);
   for (const brand of props.data) {
     const salesKey = `brand_${brand.brand_name}_sales`;
     const yoyKey = `brand_${brand.brand_name}_yoy`;

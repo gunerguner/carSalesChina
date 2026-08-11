@@ -50,7 +50,7 @@
       "title": "Yearly Sales",
       "chartTitle": "Yearly Sales Trend",
       "sales": "Sales",
-      "yoyGrowth": "YoY Growth(%)"
+      "yoyGrowth": "Same-period(%)"
     }
   },
   "brand": {
@@ -80,6 +80,9 @@
       "salesWithYoyRetail": " (Sales, YoY)",
       "salesWithYoyProduction": " (Production, YoY)",
       "salesWithYoyExport": " (Export, YoY)",
+      "salesWithSamePeriodRetail": " (Sales, Same-period)",
+      "salesWithSamePeriodProduction": " (Production, Same-period)",
+      "salesWithSamePeriodExport": " (Export, Same-period)",
       "time": "Time",
       "noData": "Select at least one brand",
       "quickFilter": {

@@ -14,6 +14,7 @@ import {
   getLastNMonthKeysEndingAt,
   getLatestYearMonth,
   sumByYear,
+  sumMonthsUpTo,
 } from '#/utils/timeSeries';
 
 /** 品牌趋势统计周期：近一年/近两年（按月）与年度汇总 */
@@ -89,19 +90,32 @@ export function useBrandData() {
 
   const yearlySeries = computed<BrandSeriesRecord[]>(() => {
     return rawData.value.map((brand) => {
-      const yearMap = sumByYear(
-        brand.monthly_data ?? [],
-        (point) => point.sales ?? 0,
-      );
+      const monthlyData = brand.monthly_data ?? [];
+      const yearMap = sumByYear(monthlyData, (point) => point.sales ?? 0);
+      const monthlyMap = new Map<string, number>();
+      const maxMonthByYear = new Map<number, number>();
+      for (const point of monthlyData) {
+        monthlyMap.set(toMonthKey(point.year, point.month), point.sales ?? 0);
+        maxMonthByYear.set(
+          point.year,
+          Math.max(maxMonthByYear.get(point.year) ?? 0, point.month),
+        );
+      }
       const sortedYears = [...yearMap.keys()].toSorted((a, b) => a - b);
+      const latestYear = sortedYears.at(-1);
       return {
         brand_name: brand.brand_name,
         points: sortedYears.map((year) => {
           const sales = yearMap.get(year) ?? 0;
+          const maxMonth = maxMonthByYear.get(year) ?? 12;
+          const isPartialLatest = year === latestYear && maxMonth < 12;
+          const base = isPartialLatest
+            ? sumMonthsUpTo(monthlyMap, year - 1, maxMonth)
+            : (yearMap.get(year - 1) ?? null);
           return {
             time: String(year),
             sales,
-            yoyGrowth: calcGrowthPercent(sales, yearMap.get(year - 1) ?? null),
+            yoyGrowth: calcGrowthPercent(sales, base),
           };
         }),
       };
