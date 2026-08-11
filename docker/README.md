@@ -39,7 +39,7 @@ cd carSales
 ## 前置条件
 
 - 已安装 [Docker](https://docs.docker.com/get-docker/) 与 [Docker Compose V2](https://docs.docker.com/compose/)
-- 首次启动会执行 `../backend/init_db.sql` 初始化库表（挂载到 MySQL `docker-entrypoint-initdb.d`）。**数据卷 `mysql_data` 已存在时不会再次执行**；若需重建库，请自行备份后删除 volume。
+- 首次启动会执行 `../backend/init_db.sql` 初始化库表（挂载到 MySQL `docker-entrypoint-initdb.d`）。**数据卷 `mysql_data` 已存在时不会再次执行**；若需重建库（例如表结构已变更），请自行备份后删除 volume，再 `up` 后于页面触发一次「刷新全部数据」拉全量。
 
 ## 配置
 

@@ -29,7 +29,10 @@ class BrandSales(SQLModel, table=True):
     month: int
     brand_id: int = Field(foreign_key="brand_meta.id")
     sales_volume: float | None = Field(default=None, sa_column=Column(Numeric(15, 2)))
-    data_type: str = Field(default="retail", sa_column=Column(SAEnum("retail", "production"), default="retail"))
+    data_type: str = Field(
+        default="retail",
+        sa_column=Column(SAEnum("retail", "production", "export"), default="retail"),
+    )
     date_type: str = Field(
         default="monthly",
         sa_column=Column(SAEnum("monthly", "quarterly", "yearly"), default="monthly"),

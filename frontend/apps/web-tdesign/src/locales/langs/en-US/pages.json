@@ -58,8 +58,9 @@
     "tooltip": {
       "salesWithYoyRetail": "Brand retail sales and YoY growth. Source: Yiche API brand retail data; YoY = (current period - same period last year) / same period last year × 100%.",
       "salesWithYoyProduction": "Brand production and YoY growth. Source: Yiche API brand production data; YoY = (current period - same period last year) / same period last year × 100%.",
+      "salesWithYoyExport": "Brand export volume and YoY growth. Source: Yiche API brand export data; YoY = (current period - same period last year) / same period last year × 100%.",
       "trendChart": "Sales trend comparison for selected brands, supporting up to 4 brands at the same time.",
-      "dataType": "Switch between retail and production metrics.\n· Retail: the number of vehicles delivered by dealers to end consumers. Source: Yiche API retail data.\n· Production: the number of vehicles produced and shipped by manufacturers. Source: Yiche API production data.",
+      "dataType": "Switch between retail, production and export metrics.\n· Retail: the number of vehicles delivered by dealers to end consumers. Source: Yiche API retail data.\n· Production: the number of vehicles produced and shipped by manufacturers. Source: Yiche API production data.\n· Export: the number of vehicles exported overseas by brand. Source: Yiche API brand export data.",
       "granularity": "Time aggregation: last 12 months, last 24 months, or yearly.",
       "selectBrands": "Select brands to compare; up to 4 brands can be compared at once."
     },
@@ -73,10 +74,12 @@
       "dataType": "Data type",
       "retail": "Retail",
       "production": "Production",
+      "export": "Export",
       "chartTitle": "Brand sales trend",
       "tableTitle": "Brand sales detail",
       "salesWithYoyRetail": " (Sales, YoY)",
       "salesWithYoyProduction": " (Production, YoY)",
+      "salesWithYoyExport": " (Export, YoY)",
       "time": "Time",
       "noData": "Select at least one brand",
       "quickFilter": {

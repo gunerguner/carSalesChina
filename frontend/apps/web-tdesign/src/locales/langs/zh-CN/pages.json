@@ -58,8 +58,9 @@
     "tooltip": {
       "salesWithYoyRetail": "品牌终端零售量及同比增长。口径：易车 API 品牌零售数据，同比 = (本期 - 去年同期) / 去年同期 × 100%。",
       "salesWithYoyProduction": "品牌厂商产量及同比增长。口径：易车 API 品牌产量数据，同比 = (本期 - 去年同期) / 去年同期 × 100%。",
+      "salesWithYoyExport": "品牌出口量及同比增长。口径：易车 API 品牌出口数据，同比 = (本期 - 去年同期) / 去年同期 × 100%。",
       "trendChart": "选中品牌销量趋势对比图，最多可同时对比 4 个品牌。",
-      "dataType": "数据类型切换零售量与产量两种口径。\n· 零售量(retail)：经销商向最终消费者实际交付的车辆数量。数据来源：易车 API 零售数据。\n· 产量(production)：汽车制造商生产并出厂的车辆数量。数据来源：易车 API 产量数据。",
+      "dataType": "数据类型切换零售量、产量与出口量三种口径。\n· 零售量(retail)：经销商向最终消费者实际交付的车辆数量。数据来源：易车 API 零售数据。\n· 产量(production)：汽车制造商生产并出厂的车辆数量。数据来源：易车 API 产量数据。\n· 出口量(export)：品牌出口至海外市场的车辆数量。数据来源：易车 API 品牌出口数据。",
       "granularity": "时间聚合粒度：近一年（最近12个月）、近两年（最近24个月）或按年度。",
       "selectBrands": "选择需要对比分析的品牌，最多支持 4 个品牌同时对比。"
     },
@@ -73,10 +74,12 @@
       "dataType": "数据类型",
       "retail": "零售量",
       "production": "产量",
+      "export": "出口量",
       "chartTitle": "品牌销量趋势",
       "tableTitle": "品牌销量明细",
       "salesWithYoyRetail": "（销量+同比）",
       "salesWithYoyProduction": "（产量+同比）",
+      "salesWithYoyExport": "（出口量+同比）",
       "time": "时间",
       "noData": "请选择至少1个品牌",
       "quickFilter": {

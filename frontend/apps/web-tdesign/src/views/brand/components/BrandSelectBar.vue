@@ -173,6 +173,9 @@ initializeFromMeta();
           <RadioButton value="production">
             {{ $t('pages.brand.trend.production') }}
           </RadioButton>
+          <RadioButton value="export">
+            {{ $t('pages.brand.trend.export') }}
+          </RadioButton>
         </RadioGroup>
         <MetricTooltip :content="$t('pages.brand.tooltip.dataType')" />
       </div>

@@ -40,7 +40,9 @@ const columns = computed<PrimaryTableCol[]>(() => {
   const salesWithYoySuffix =
     props.dataType === 'production'
       ? $t('pages.brand.trend.salesWithYoyProduction')
-      : $t('pages.brand.trend.salesWithYoyRetail');
+      : (props.dataType === 'export'
+        ? $t('pages.brand.trend.salesWithYoyExport')
+        : $t('pages.brand.trend.salesWithYoyRetail'));
   for (const brand of props.data) {
     const salesKey = `brand_${brand.brand_name}_sales`;
     const yoyKey = `brand_${brand.brand_name}_yoy`;

@@ -1,4 +1,4 @@
-"""易车销量采集。overall salesType: 1=零售,3=产量,4=出口；brand saleType: 1=零售,4=产量（3/4 顺序相反）。"""
+"""易车销量采集。overall salesType: 1=零售,3=产量,4=出口；brand saleType: 1=零售,3=出口,4=产量（3/4 与总体相反）。"""
 
 import hashlib
 import json
@@ -40,6 +40,7 @@ _OVERALL_SALE_EXPORT = 4
 _OVERALL_LEVEL = {"all": -1, "nev": 4, "bev": 5}
 
 _BRAND_SALE_RETAIL = 1
+_BRAND_SALE_EXPORT = 3
 _BRAND_SALE_PRODUCTION = 4
 _BRAND_ENERGY = {"all": -1, "nev": 1, "bev": 3}
 
@@ -154,6 +155,7 @@ def _brand_dims(sale_type: int, data_type: str) -> list[BrandFetchDim]:
 BRAND_FETCH_DIMS = [
     *_brand_dims(_BRAND_SALE_RETAIL, "retail"),
     BrandFetchDim(_BRAND_SALE_PRODUCTION, _BRAND_ENERGY["all"], "production", "all"),
+    BrandFetchDim(_BRAND_SALE_EXPORT, _BRAND_ENERGY["all"], "export", "all"),
 ]
 
 

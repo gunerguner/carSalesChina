@@ -80,23 +80,23 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 |----|------|------------|
 | `sales_data` | 总体销量（易车） | year, month, data_type, date_type, level_type |
 | `brand_meta` | 品牌元数据 | brand_name |
-| `brand_sales` | 品牌销量 | year, month, brand_id, data_type, date_type, level_type |
+| `brand_sales` | 品牌销量（零售/产量/出口） | year, month, brand_id, data_type, date_type, level_type |
 | `origin_share_data` | 国别/车系占比（乘联会） | year, month, origin |
 
 - 引擎 InnoDB，charset utf8mb4
-- **无 Alembic**：结构变更改 `init_db.sql` + SQLModel 模型，已有库需手动迁移
-- Docker 首次初始化：`init_db.sql` 挂到 MySQL `docker-entrypoint-initdb.d`
+- **无 Alembic**：结构变更改 `init_db.sql` + SQLModel 模型；已有 Docker 卷需删卷重建后再「刷新全部数据」
+- Docker 首次初始化：`init_db.sql` 挂到 MySQL `docker-entrypoint-initdb.d`；**已有 `mysql_data` 卷不会重跑**
 
 ## 外部数据源
 
 | 数据 | 客户端 | 接口/方式 |
 |------|--------|-----------|
-| 总体销量 | `YicheOverallClient` | 易车 `carserialsalestrend/search`；零售/产量 × all/nev/bev 六维切片 |
-| 品牌销量 | `YicheBrandClient` | 易车 `get_master_sales_history`（按 master_id 批次并发，默认 5/批、8 worker） |
+| 总体销量 | `YicheOverallClient` | 易车 `carserialsalestrend/search`；零售/产量/出口 × all/nev/bev |
+| 品牌销量 | `YicheBrandClient` | 易车 `get_master_sales_history`（按 master_id 批次并发，默认 5/批、8 worker）；零售×all/nev/bev，产量/出口仅 all（`saleType` 1/4/3） |
 | 品牌元数据 | YAML | `meta_data.yaml` → upsert `brand_meta` |
 | 国别占比 | `CpcaClient` | AkShare `car_market_country_cpca()` |
 
-客户端类（`yiche_client.py`）：`YicheOverallClient`、`YicheBrandClient`，组合类 `YicheClient(YicheOverallClient, YicheBrandClient)`；`import_service.py` 实际实例化 `YicheOverallClient()`、`YicheBrandClient()`、`CpcaClient()`（非 `YicheClient`）。易车 retail/production 的 saleType 编码在 overall 与 brand 接口中**顺序相反**（见 `yiche_client.py` 模块注释）。
+客户端类（`yiche_client.py`）：`YicheOverallClient`、`YicheBrandClient`，组合类 `YicheClient(YicheOverallClient, YicheBrandClient)`；`import_service.py` 实际实例化 `YicheOverallClient()`、`YicheBrandClient()`、`CpcaClient()`（非 `YicheClient`）。易车 saleType 编码在 overall 与 brand 接口中**顺序相反**（overall：1 零售 / 3 产量 / 4 出口；brand：1 零售 / 3 出口 / 4 产量，见 `yiche_client.py` 模块注释）。
 
 刷新返回值（销量示例）：`status`、`overall_count`、`brand_count`、`records_count`、`source_errors: { overall, brand }`（`SourceFetchResult.to_error_map()` 生成摘要）。
 
