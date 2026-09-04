@@ -17,7 +17,9 @@
     "lint": "vsh lint",
     "postinstall": "pnpm -r run stub --if-present",
     "preinstall": "npx only-allow pnpm",
-    "reinstall": "pnpm clean --del-lock && pnpm install"
+    "reinstall": "pnpm clean --del-lock && pnpm install",
+    "test": "turbo run test",
+    "test:watch": "pnpm -F @vben/web-tdesign run test:watch"
   },
   "devDependencies": {
     "@tsdown/css": "catalog:",

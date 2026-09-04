@@ -136,7 +136,7 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 - tooltip 设 `confine: true`，背景/边框读 `--chart-tooltip-*`，保证 light/dark 对比度
 - 改配色或交互优先改 `chart.ts`，各页 builder 只负责数据与 legend/grid
 
-### UI 验证清单
+### UI 手动验证清单（自动化未覆盖的补充项，AI coding 后按需抽检）
 
 1. 三页顶部无重复大标题块（无 PageShell）
 2. light/dark 切换后图表轴、tooltip、系列色均清晰
@@ -178,3 +178,9 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 ## backend 依赖（requirements.txt 摘要）
 
 fastapi、uvicorn、gunicorn、sqlmodel、pymysql、cryptography、akshare、pandas、httpx、python-dotenv、pyyaml
+
+测试依赖见 `requirements-dev.txt`（pytest、pytest-cov，含全部运行时依赖）。
+
+## 自动化测试
+
+见 [SKILL.md 测试章节](SKILL.md#测试)：根目录 `make test`（后端 245 用例 / 前端 131 用例）；`make test-cov` 看覆盖率；CI 见 `.github/workflows/test.yml`。后端 SQLite 内存库不需要 MySQL；前端 vitest 用例在 `apps/web-tdesign/tests/`。lint/typecheck 需 Node ≥22.18。

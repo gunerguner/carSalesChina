@@ -1,0 +1,6 @@
+---
+description: 较大改动必须实际跑测试；约定正文在 .agents/AGENTS.md
+alwaysApply: true
+---
+
+遵守 [`.agents/AGENTS.md`](.agents/AGENTS.md)。较大改动必须用 Shell 实际执行 `make test` / `make test-backend` / `make test-frontend`，全绿才算完成。

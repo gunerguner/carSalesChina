@@ -20,10 +20,14 @@
     "build:analyze": "pnpm vite build --mode analyze",
     "dev": "pnpm vite --mode development",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
     "typecheck": "vue-tsc --noEmit --skipLibCheck"
   },
   "imports": {
-    "#/*": "./src/*"
+    "#/*": "./src/*",
+    "#tests/*": "./tests/*"
   },
   "dependencies": {
     "@vben/common-ui": "workspace:*",
@@ -50,6 +54,11 @@
   },
   "devDependencies": {
     "@vben/tsconfig": "workspace:*",
-    "typescript": "catalog:"
+    "@vitejs/plugin-vue": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "@vue/test-utils": "catalog:",
+    "happy-dom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

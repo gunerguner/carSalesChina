@@ -7,12 +7,12 @@ carSales 是一个 **中国汽车市场销量** 数据采集与分析平台：�
 ## 功能一览
 
 
-| 页面      | 路径        | 做什么                                     |
-| ------- | --------- | --------------------------------------- |
+| 页面      | 路径        | 做什么                                        |
+| ------- | --------- | ------------------------------------------ |
 | 市场销量    | `/market` | 全量月度市场数据；前端本地筛选与月/季/年聚合；零售/产量/出口，全部/新能源/纯电 |
-| 品牌销量    | `/brand`  | 品牌元数据 + 最多 4 个品牌对比趋势与明细（零售/产量/出口） |
-| NEV 覆盖率 | `/nev`    | 新能源渗透率、纯电占新能源比例                         |
-| 车系占比    | `/origin` | 自主、德系、日系等国别/车系份额趋势                      |
+| 品牌销量    | `/brand`  | 品牌元数据 + 最多 4 个品牌对比趋势与明细（零售/产量/出口）          |
+| NEV 覆盖率 | `/nev`    | 新能源渗透率、纯电占新能源比例                            |
+| 车系占比    | `/origin` | 自主、德系、日系等国别/车系份额趋势                         |
 
 
 数据首次为空；本地跑起来后需在页面上触发一次「刷新全部数据」（见下文）。
@@ -69,25 +69,29 @@ flowchart TB
 ## 数据来源
 
 
-| 数据                            | 来源                                     | 落库                  |
-| ----------------------------- | -------------------------------------- | ------------------- |
-| 总体销量（零售/产量/出口 × 全部/新能源/纯电，月度） | 易车销量趋势接口                               | `sales_data`        |
-| 品牌销量（零售/产量/出口，依赖品牌 `master_id`）   | 易车品牌销量历史接口（`saleType` 1/4/3）         | `brand_sales`       |
-| 品牌元数据（中文名 / 英文标识 / master_id） | `meta_data.yaml`                       | `brand_meta`        |
-| 国别/车系占比                       | 乘联会（AkShare `car_market_country_cpca`） | `origin_share_data` |
+| 数据                              | 来源                                     | 落库                  |
+| ------------------------------- | -------------------------------------- | ------------------- |
+| 总体销量（零售/产量/出口 × 全部/新能源/纯电，月度）   | 易车销量趋势接口                               | `sales_data`        |
+| 品牌销量（零售/产量/出口，依赖品牌 `master_id`） | 易车品牌销量历史接口（`saleType` 1/4/3）           | `brand_sales`       |
+| 品牌元数据（中文名 / 英文标识 / master_id）   | `meta_data.yaml`                       | `brand_meta`        |
+| 国别/车系占比                         | 乘联会（AkShare `car_market_country_cpca`） | `origin_share_data` |
 
 
 需能访问易车与乘联会/AkShare 相关外网。外部源偶发失败时，刷新可能返回 `partial_failure`，可在进度结果里查看错误摘要。
 
 ---
 
+
+
 ## 本地开发：从零跑起来
+
+
 
 ### 0. 环境要求
 
 - Python **3.10+**
 - MySQL **8.x**（或兼容版本），本机可连
-- Node.js **^20.19 / ^22.18 / ^24**，包管理器用 **pnpm ≥10**（建议 `corepack enable` 后使用仓库锁定的 pnpm）
+- Node.js **^20.19 / ^22.18 / ^24**，包管理器用 **pnpm ≥10**（建议 `corepack enable` 后使用仓库锁定的 pnpm）。前端 lint/typecheck（oxfmt TS 配置）需要 **Node ≥22.18**，建议按 `.node-version`（22.22.0）使用 nvm
 - 能访问易车、乘联会/AkShare 相关外网
 
 本项目**不依赖 Redis**。
@@ -98,6 +102,8 @@ flowchart TB
 git clone https://github.com/gunerguner/carSalesChina.git
 cd carSalesChina
 ```
+
+
 
 ### 2. 初始化 MySQL
 
@@ -114,6 +120,9 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+
+# 跑自动化测试还需（pytest 等，见「自动化测试」）：
+pip install -r requirements-dev.txt
 
 cp .env.example .env
 ```
@@ -144,6 +153,8 @@ python -m backend.main
 
 - API：`http://127.0.0.1:8001`
 - OpenAPI（调试用）：`http://127.0.0.1:8001/docs`
+
+
 
 ### 4. 前端：依赖 + 配置 + 启动
 
@@ -193,12 +204,5 @@ pnpm dev
 
 日常浏览四个菜单页即可验证功能，无需先记 API。需要调试接口时再打开 `http://127.0.0.1:8001/docs`。
 
-### 6. 本地开发检查清单
 
-- [ ] MySQL 已启动，并已执行 `backend/init_db.sql`
-- [ ] `backend/.env` 已配置正确的 `DB_*`
-- [ ] `python -m backend.main` 无报错，`:8001` 可访问
-- [ ] `apps/web-tdesign/.env` 已设置 `VITE_ADMIN_REFRESH_CONFIRM_CODE`
-- [ ] `pnpm dev` 已起，页面能打开（约 `:5999`）
-- [ ] 已用右上角刷新拉过至少一次数据
-- [ ] `/market`、`/brand`、`/nev`、`/origin` 等页面有图表或表格数据
+

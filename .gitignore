@@ -46,6 +46,12 @@ apps/*/*.war
 coverage
 apps/*/coverage
 packages/*/coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+coverage.xml
+coverage.json
 
 # TypeScript 构建缓存
 *.tsbuildinfo
@@ -86,3 +92,6 @@ Thumbs.db
 
 # Logs
 *.log
+# ZCode 会话本地产物
+.zcode/
+

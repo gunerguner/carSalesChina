@@ -41,6 +41,10 @@
     },
     "typecheck": {
       "outputs": []
+    },
+    "test": {
+      "dependsOn": [],
+      "outputs": []
     }
   }
 }

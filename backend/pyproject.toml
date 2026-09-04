@@ -1,0 +1,26 @@
+[tool.pytest.ini_options]
+# 从 backend/ 目录运行 pytest，使 `backend.` 包可直接导入
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = [
+    "-q",
+    "-W",
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated:DeprecationWarning",
+    "-W",
+    "ignore:'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated:DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["backend"]
+branch = true
+omit = ["backend/tests/*"]
+
+[tool.coverage.report]
+# database.py / main.lifespan 绑定生产 MySQL，单测刻意不覆盖
+fail_under = 90
+show_missing = true
+skip_covered = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == [\"']__main__[\"']:",
+]

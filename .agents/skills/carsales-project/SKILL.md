@@ -12,7 +12,12 @@ disable-model-invocation: false
 
 ```
 carSales/                     # Git 根
+├── Makefile                  # make test / test-backend / test-frontend / check
 ├── README.md                 # 产品说明、接口、本地启动
+├── .agents/                  # 给 AI 看的约定与技能（人类文档不放这里）
+│   ├── AGENTS.md             # Agent 完成标准（较大改动须跑测试）
+│   └── skills/carsales-project/
+├── .cursor/rules/run-tests.mdc  # Cursor 注入钩子（alwaysApply）；正文只在 .agents/AGENTS.md
 ├── backend/
 │   ├── backend/              # FastAPI 应用包
 │   │   ├── types.py          # 跨层类型契约（Literal / TypedDict）
@@ -24,11 +29,17 @@ carSales/                     # Git 根
 │   │   ├── sources/          # 易车、乘联会客户端
 │   │   ├── meta_data.yaml    # 品牌元数据（master_id 映射）
 │   │   └── origin_field_map.yaml
+│   ├── tests/                # pytest：conftest（SQLite 内存库夹具）+ 14 个用例文件
+│   ├── requirements.txt      # 运行时依赖
+│   ├── requirements-dev.txt  # 测试依赖（-r requirements.txt + pytest/pytest-cov）
+│   ├── pyproject.toml        # pytest 配置（pythonpath=., testpaths=tests）
 │   ├── init_db.sql           # MySQL 建表（唯一 schema 来源）
-│   ├── requirements.txt
 │   └── .env.example
 ├── frontend/                 # Vben Admin Monorepo
 │   ├── apps/web-tdesign/     # 业务前端（唯一业务 app）
+│   │   ├── src/              # 业务代码（不含测试）
+│   │   ├── tests/            # vitest：与 src 镜像的独立测试树
+│   │   └── vitest.config.ts  # 项目自建，非 Vben vite-config
 │   ├── packages/             # 工作区公共包
 │   ├── internal/             # Vben 工具层（lint/vite-config/tailwind）
 │   └── package.json
@@ -168,7 +179,42 @@ OpenAPI：`http://localhost:8001/docs`。curl 需先取 `csrf_token` Cookie 再�
 
 ## 测试
 
-**无自动化单元测试**。改完后手动验证：三看板加载 → 筛选/聚合 → 管理刷新（若有 UI）→ Docker 下 `/api` 反代。前端可跑 `pnpm check:type`、`pnpm lint`。
+**有自动化测试（2026-09 引入）**。较大改动的完成标准见 [`.agents/AGENTS.md`](../../AGENTS.md)（Agent 必须用 Shell **实际跑测**、全绿才算完成）。GitHub Actions（`.github/workflows/test.yml`）在 push/PR 再挡一层。
+
+| 命令（仓库根） | 内容 |
+|------|------|
+| `make test` | 前后端全量（AI coding 回归首选） |
+| `make test-backend` | 后端 pytest：245 用例，~1s，SQLite 内存库，无需 MySQL |
+| `make test-frontend` | 前端 vitest（turbo）：131 用例 / 17 文件，~3s |
+| `make test-cov` | 同上 + 覆盖率：后端 fail-under=90（当前 ~99%）；前端只出报告、不设门槛 |
+| `make check` | `make test` + 前端 lint/typecheck |
+
+**后端**（`backend/tests/`，pytest；`backend/.venv` 需装 `requirements-dev.txt`）：
+- conftest 自建 SQLite 内存库 + `StaticPool`（TestClient 线程安全）；**不连 MySQL**
+- `_batch_upsert`（ON DUPLICATE KEY UPDATE 方言）用编译断言守护；外部源（易车 httpx / akshare）用 monkeypatch，akshare 已本地安装不做 stub
+- 覆盖：analysis_periods / progress / schemas 校验器 / 分析服务（phev=nev−bev 等规则）/ market/brand 查询 / import_service（幂等刷新、批 upsert）/ SSE 编排帧序 / 易车签名与出口÷10000 / 乘联会解析 / API 信封与 CSRF 三态 / 全局异常映射（HTTPException/SQLAlchemy/httpx）
+- 覆盖率配置在 `backend/pyproject.toml`（`[tool.coverage.*]`）；`database.py` / `main.lifespan` 绑定生产 MySQL，单测刻意不覆盖
+
+**前端**（vitest + happy-dom，用例在 `apps/web-tdesign/tests/`，与 `src/` 镜像；**不是** Vben 内置测试能力，只用了 catalog 里的 vitest / happy-dom / @vue/test-utils）：
+- 纯函数优先：`marketDataUtils`（含不完整年同期累计）、`useAdminDataRefresh.types` reducer、`useFetchOnce`（去重/缓存/过期响应）、`api/admin` SSE 帧解析、`utils/{format,period,timeSeries,chart,style,render}`、各页 chart/table builder（i18n 传假 `t`）
+- 断言工具 `#tests/testUtils`：`itemAt`/`mustGet`（仓库禁 `!` 非空断言 + tsconfig noUncheckedIndexedAccess，用运行时守卫解包）
+- `.vue` 测试 mock `#/locales` 的 `$t`；禁止 `!`、字面量 ≥5 位数字加 `_` 分隔符（lint 强制）
+- 覆盖率只统计 `src/**/*.ts`（不含 Vue SFC）；`pnpm -F @vben/web-tdesign test:cov`
+
+**修改导航对照**（改什么 → 跑哪个）：
+
+| 改动 | 回归 |
+|------|------|
+| 后端 services/models/routers/schemas | `make test-backend` |
+| 后端刷新/SSE/外部源 | `tests/test_import_service.py`、`test_refresh_orchestrator.py`、`test_sources_*.py` |
+| 后端异常信封/CSRF | `tests/test_exception_handlers.py`、`test_api_admin.py` |
+| 前端市场聚合/图表 | `frontend/apps/web-tdesign/tests/views/market/` |
+| 前端 NEV/车系/品牌 builder | `tests/views/{nev,origin,brand}/` |
+| 前端进度状态机/管理刷新 | `tests/composables/useAdminDataRefresh.types.test.ts`、`tests/api/admin.test.ts` |
+| 前端数据加载/去重 | `tests/composables/useFetchOnce.test.ts` |
+| 通用前端 utils | `tests/utils/*.test.ts` |
+
+**验证标准**：`pnpm test` + `pnpm check:type` 必须过；新增/修改逻辑须补或更新对应用例；不要用 `!` 非空断言。已知例外：`pnpm lint` 的 oxfmt 阶段会报 `views/market/components/marketSalesTable.ts` 历史格式漂移（git HEAD 即如此，勿顺手格式化整仓）。前端 lint/typecheck 需 **Node ≥22.18**（oxfmt TS 配置限制，.node-version 为 22.22.0）。
 
 ## 编码约定
 

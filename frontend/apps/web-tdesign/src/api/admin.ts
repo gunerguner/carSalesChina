@@ -44,7 +44,7 @@ export interface RefreshStreamHandlers {
 
 const STREAM_PATH = '/v1/admin/data/refresh/stream';
 
-function createMessageHandler(handlers: RefreshStreamHandlers) {
+export function createMessageHandler(handlers: RefreshStreamHandlers) {
   let buffer = '';
   return (chunk: string) => {
     buffer += chunk;
