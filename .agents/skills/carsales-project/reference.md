@@ -183,4 +183,4 @@ fastapi、uvicorn、gunicorn、sqlmodel、pymysql、cryptography、akshare、pan
 
 ## 自动化测试
 
-见 [SKILL.md 测试章节](SKILL.md#测试)：根目录 `make test`（后端 245 用例 / 前端 131 用例）；`make test-cov` 看覆盖率；CI 见 `.github/workflows/test.yml`。后端 SQLite 内存库不需要 MySQL；前端 vitest 用例在 `apps/web-tdesign/tests/`。lint/typecheck 需 Node ≥22.18。
+细节见 [references/testing.md](references/testing.md)：根目录 `make test`（后端 245 用例 / 前端 131 用例）；`make test-cov` 看覆盖率。后端 SQLite 内存库不需要 MySQL；前端 vitest 用例在 `apps/web-tdesign/tests/`（与 `src/` 镜像）。lint/typecheck 需 Node ≥22.18。无 GitHub Actions。

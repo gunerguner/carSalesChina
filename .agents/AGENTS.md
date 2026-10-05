@@ -1,8 +1,6 @@
 # Agent 约定
 
-给 AI 看的仓库约定与技能都在 **`.agents/`**（不要写到仓库根）。本文件是完成标准，项目细节在 `skills/carsales-project/SKILL.md`。
-
-Cursor 的 `.cursor/rules/run-tests.mdc` 只是 always-apply 钩子，约定以本文件为准。
+给 AI 看的仓库约定与技能都在 **`.agents/`**（不要写到仓库根）。本文件是完成标准，项目细节在 `skills/carsales-project/SKILL.md`，测试细节在 `skills/carsales-project/references/testing.md`。
 
 ## 较大改动必须跑测试
 
@@ -31,4 +29,4 @@ Cursor 的 `.cursor/rules/run-tests.mdc` 只是 always-apply 钩子，约定以�
 - 后端：`backend/tests/`
 - 前端：`frontend/apps/web-tdesign/tests/`（与 `src/` 镜像，不要把 `*.test.ts` 放进 `src/`）
 
-禁止用 `!` 非空断言。CI：`.github/workflows/test.yml`。
+禁止用 `!` 非空断言。无 GitHub Actions，回归靠完成前主动跑 `make test`（全绿才算完成）。
