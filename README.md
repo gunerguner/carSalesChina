@@ -64,7 +64,7 @@ flowchart TB
 
 
 
-管理类写操作（数据刷新）启用 CSRF：浏览器会带 `csrf_token` Cookie，前端自动附加 `X-CSRF-Token`，页面内操作无需手写。
+管理类写操作（数据刷新）需要两层校验：CSRF（浏览器自动带 `csrf_token` Cookie，前端附加 `X-CSRF-Token`），以及请求头 `X-Admin-Password`。密码只存在后端环境变量 `ADMIN_REFRESH_PASSWORD`；未配置时接口返回 503，密码错误返回 401，连续 5 次错误会锁定 15 分钟（429）。
 
 ## 数据来源
 
@@ -90,7 +90,7 @@ flowchart TB
 ### 0. 环境要求
 
 - Python **3.10+**
-- MySQL **8.x**（或兼容版本），本机可连
+- MySQL **8.x / 9.x**（Docker 部署使用 `mysql:9.0` 镜像），本机可连
 - Node.js **^20.19 / ^22.18 / ^24**，包管理器用 **pnpm ≥10**（建议 `corepack enable` 后使用仓库锁定的 pnpm）。前端 lint/typecheck（oxfmt TS 配置）需要 **Node ≥22.18**，建议按 `.node-version`（22.22.0）使用 nvm
 - 能访问易车、乘联会/AkShare 相关外网
 
@@ -139,9 +139,8 @@ cp .env.example .env
 | `DB_NAME`               | `car_sales`           | 库名，需与 `init_db.sql` 一致 |
 | `FASTAPI_PORT`          | `8001`                | 后端端口（前端代理指向此端口）        |
 | `LOG_LEVEL` / `LOG_DIR` | `INFO` / 启动目录下 `logs` | 日志                     |
-
-
-> `.env.example` 里的 `REDIS_*` 当前后端未使用，可忽略。
+| `ADMIN_REFRESH_PASSWORD` | 空 | 页面「刷新全部数据」的密码。留空时刷新接口拒绝 |
+| `CORS_ORIGINS` | `*` | 逗号分隔的允许来源。为 `*` 时不携带跨域凭证 |
 
 启动后端（在已激活的 venv、且 cwd 为 `backend/`）：
 
@@ -178,7 +177,7 @@ cp apps/web-tdesign/.env.example apps/web-tdesign/.env
 | 文件                 | 说明                                                                             |
 | ------------------ | ------------------------------------------------------------------------------ |
 | `.env.development` | 端口 `5999`、`VITE_GLOB_API_URL=/api` 等；仓库已有，一般不用改                                |
-| `.env`             | 含 `VITE_ADMIN_REFRESH_CONFIRM_CODE`（页面「刷新全部数据」确认码）；从 `.env.example` 复制后可改成自己的值 |
+| `.env`             | 可选的本地覆盖；刷新密码不在这里，而在 `backend/.env` 的 `ADMIN_REFRESH_PASSWORD` |
 
 
 `/api` 由 Vite 代理到 `http://localhost:8001`。
@@ -196,7 +195,7 @@ pnpm dev
 刚启动时各页多为空，需要先导入数据：
 
 1. 打开前端页面，点导航栏右上角的 **刷新** 按钮（「刷新全部数据」）。
-2. 输入 `frontend/apps/web-tdesign/.env` 里配置的 `VITE_ADMIN_REFRESH_CONFIRM_CODE`（示例默认为 `change-me`，若你已改过则用新值）。
+2. 输入 `backend/.env` 里配置的 `ADMIN_REFRESH_PASSWORD`。未配置时页面会提示「未配置刷新密码」。
 3. 确认后会出现 SSE 进度浮层；服务端按顺序执行：**品牌元数据 → 总体/品牌销量 → 国别占比**。首次全量可能较久，请保持网络畅通。
 4. 完成后各业务页会自动 reload；之后可按需再刷新做增量。
 

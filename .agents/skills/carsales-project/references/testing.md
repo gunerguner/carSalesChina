@@ -7,7 +7,7 @@
 仓库根：
 
 ```bash
-make test            # 全量：后端 pytest（245 用例）+ 前端 vitest（131 用例 / 17 文件）
+make test            # 全量：后端 pytest（250 用例）+ 前端 vitest（133 用例 / 18 文件）
 make test-backend    # 仅后端（~1s，SQLite 内存库，无需 MySQL）
 make test-frontend   # 仅前端（turbo run test）
 make test-cov        # 同 test + 覆盖率：后端 fail-under=90（当前 ~99%）；前端只出报告、不设门槛
@@ -40,7 +40,7 @@ cd frontend && pnpm install
 
 | 层 | 用例位置 | 被测代码 |
 |----|----------|----------|
-| 后端 | `backend/tests/`（`conftest.py` + 14 个 `test_*.py`） | `backend/backend/` |
+| 后端 | `backend/tests/`（`conftest.py` + 15 个 `test_*.py`） | `backend/backend/` |
 | 前端 | `apps/web-tdesign/tests/`（与 `src/` 镜像的独立测试树） | `apps/web-tdesign/src/` |
 
 - 前端 vitest 只收集 `tests/**/*.test.ts`（`apps/web-tdesign/vitest.config.ts`），**不要**把 `*.test.ts` 放进 `src/`，也不要建别的目录

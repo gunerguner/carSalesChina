@@ -27,6 +27,22 @@ const progressState = ref<RefreshProgressState>(createInitialProgressState());
 
 let abortController: AbortController | null = null;
 
+export type RefreshStartResult =
+  | { accepted: false; message: string }
+  | { accepted: true };
+
+function errorStatus(error: unknown): number | undefined {
+  if (typeof error === 'object' && error !== null && 'status' in error) {
+    const status = (error as { status: unknown }).status;
+    return typeof status === 'number' ? status : undefined;
+  }
+  return undefined;
+}
+
+function isAuthRejection(status: number | undefined): boolean {
+  return status === 401 || status === 429 || status === 503;
+}
+
 function getPhaseLabels(): Record<PhaseKey, string> {
   return {
     brand_meta: $t('pages.admin.progress.phase.brandMeta'),
@@ -49,39 +65,68 @@ export function useAdminDataRefresh() {
     progressState.value = initProgressState();
   }
 
-  function refreshAdminData() {
-    if (refreshing.value) return;
+  function refreshAdminData(password: string): Promise<RefreshStartResult> {
+    if (refreshing.value) {
+      return Promise.resolve({ accepted: false, message: '' });
+    }
 
-    abortController?.abort();
-    resetProgressState();
-    refreshing.value = true;
-    progressVisible.value = true;
-    progressState.value.overallStatus = 'running';
+    return new Promise((resolve) => {
+      let accepted = false;
+      const accept = () => {
+        if (accepted) return;
+        accepted = true;
+        progressVisible.value = true;
+        progressState.value.overallStatus = 'running';
+        resolve({ accepted: true });
+      };
 
-    abortController = new AbortController();
-    refreshAllDataStream(
-      {
-        onDone: (result: RefreshAllResult) => {
-          progressState.value = applyStreamDone(progressState.value, result);
+      abortController?.abort();
+      resetProgressState();
+      refreshing.value = true;
+
+      abortController = new AbortController();
+      refreshAllDataStream(
+        {
+          onDone: (result: RefreshAllResult) => {
+            accept();
+            progressState.value = applyStreamDone(progressState.value, result);
+            refreshing.value = false;
+            abortController = null;
+          },
+          onError: (error: RefreshStreamError) => {
+            accept();
+            progressState.value = applyStreamError(progressState.value, error);
+            refreshing.value = false;
+            abortController = null;
+          },
+          onProgress: (event: RefreshProgressEvent) => {
+            accept();
+            progressState.value = applyProgressEvent(
+              progressState.value,
+              event,
+            );
+          },
+        },
+        password,
+        abortController.signal,
+      ).catch((error: unknown) => {
+        if (abortController?.signal.aborted) return;
+        const message = error instanceof Error ? error.message : '网络请求失败';
+        if (!accepted && isAuthRejection(errorStatus(error))) {
           refreshing.value = false;
+          progressVisible.value = false;
           abortController = null;
-        },
-        onError: (error: RefreshStreamError) => {
-          progressState.value = applyStreamError(progressState.value, error);
-          refreshing.value = false;
-          abortController = null;
-        },
-        onProgress: (event: RefreshProgressEvent) => {
-          progressState.value = applyProgressEvent(progressState.value, event);
-        },
-      },
-      abortController.signal,
-    ).catch((error: unknown) => {
-      if (abortController?.signal.aborted) return;
-      const message = error instanceof Error ? error.message : '网络请求失败';
-      progressState.value = applyStreamError(progressState.value, { message });
-      refreshing.value = false;
-      abortController = null;
+          resetProgressState();
+          resolve({ accepted: false, message });
+          return;
+        }
+        accept();
+        progressState.value = applyStreamError(progressState.value, {
+          message,
+        });
+        refreshing.value = false;
+        abortController = null;
+      });
     });
   }
 

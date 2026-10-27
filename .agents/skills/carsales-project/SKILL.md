@@ -45,14 +45,14 @@ carSales/                     # Git 根
 └── docker/                   # Compose、Dockerfile、nginx、.env.example
 ```
 
-版本：前端 Monorepo **5.7.0**（`frontend/package.json`）；后端 FastAPI app **1.0.0**（`backend/backend/main.py`）。
+版本：产品版本 **1.0.0**（`frontend/package.json`、`apps/web-tdesign/package.json`、`backend/backend/main.py` 三处一致）；`frontend/internal`、`frontend/packages` 下的 Vben 上游基础包保留其自身版本号。
 
 ## 技术栈
 
 | 层 | 技术 |
 |----|------|
 | 后端 | Python ≥3.10，FastAPI，SQLModel/SQLAlchemy，Uvicorn/Gunicorn |
-| 数据库 | **MySQL**（PyMySQL；Docker 镜像 `mysql:9.0`）；**无 Redis**（`.env.example` 中 REDIS 未使用） |
+| 数据库 | **MySQL**（PyMySQL；Docker 镜像 `mysql:9.0`）；**无 Redis** |
 | 外部源 | 易车 HTTP API（`yiche_client.py`）；乘联会 via AkShare（`cpca_client.py`） |
 | 前端 | Vue 3 + Vite，TDesign Vue Next，Vben Admin Monorepo，Pinia，ECharts |
 | 包管理 | pnpm ≥10（`packageManager: pnpm@10.33.0`），Node ^20.19 \|\| ^22.18 \|\| ^24 |
@@ -77,6 +77,10 @@ carSales/                     # Git 根
 **统一响应**：`{ code, message, data }`；成功 `code=0`。封装：`schemas/response.py` 的 `success()` / `error()`。
 
 **CSRF**：`CSRFCookieMiddleware` 下发 `csrf_token` Cookie；非 GET 管理接口需 `X-CSRF-Token` 与 Cookie 一致（`core/csrf.py`）。前端 `api/request.ts` 自动注入。
+
+**刷新密码**：只存在后端环境变量 `ADMIN_REFRESH_PASSWORD`。未配置时刷新接口返回 503；缺失或不匹配返回 401；连续 5 次错误锁定 15 分钟返回 429（`core/rate_limit.py`）。前端把输入放进请求头 `X-Admin-Password`，不把密码打进构建产物。
+
+**CORS**：`CORS_ORIGINS` 默认 `*`，此时关闭 `allow_credentials`。需要跨域携带 Cookie 时改成具体源。
 
 **错误码**：`core/error_codes.py`（1001 校验、1002 权限、1003 资源不存在、2001 外部源、3001 数据库、9000 内部）；业务异常类在 `core/exceptions.py`，全局映射在 `routers/exception_handlers.py`。
 
@@ -137,7 +141,7 @@ flowchart LR
 
 1. `POST /api/v1/admin/data/refresh/stream`（SSE，顺序执行 brand-meta → sales → origin）
 
-OpenAPI：`http://localhost:8001/docs`。curl 需先取 `csrf_token` Cookie 再设 `X-CSRF-Token`。
+OpenAPI：`http://localhost:8001/docs`。curl 需先取 `csrf_token` Cookie，再同时设置 `X-CSRF-Token` 与 `X-Admin-Password`（值为 `ADMIN_REFRESH_PASSWORD`）。
 
 ## Docker 部署要点
 
@@ -158,7 +162,7 @@ OpenAPI：`http://localhost:8001/docs`。curl 需先取 `csrf_token` Cookie 再�
 | GET | `/api/v1/analysis/nev-share/trend` | `years` 1–10（默认 3）、`granularity` monthly/yearly |
 | GET | `/api/v1/analysis/nev-breakdown` | 同上；返回 bev/phev 销量与占比（phev=nev−bev） |
 | GET | `/api/v1/analysis/origin-share/trend` | 同上；国别字段经 `origin_field_map.yaml` 映射为英文键 |
-| POST | `/api/v1/admin/data/refresh/stream` | CSRF；`text/event-stream` |
+| POST | `/api/v1/admin/data/refresh/stream` | CSRF + `X-Admin-Password`；`text/event-stream` |
 
 ## 前端路由
 
@@ -183,8 +187,8 @@ OpenAPI：`http://localhost:8001/docs`。curl 需先取 `csrf_token` Cookie 再�
 | 命令（仓库根） | 内容 |
 |------|------|
 | `make test` | 前后端全量（AI coding 回归首选） |
-| `make test-backend` | 后端 pytest：245 用例，~1s，SQLite 内存库，无需 MySQL |
-| `make test-frontend` | 前端 vitest：131 用例 / 17 文件，~3s |
+| `make test-backend` | 后端 pytest：250 用例，~1s，SQLite 内存库，无需 MySQL |
+| `make test-frontend` | 前端 vitest：133 用例 / 18 文件，~3s |
 | `make test-cov` | 同上 + 覆盖率：后端 fail-under=90（当前 ~99%）；前端只出报告、不设门槛 |
 | `make check` | `make test` + 前端 lint/typecheck |
 
@@ -200,7 +204,7 @@ OpenAPI：`http://localhost:8001/docs`。curl 需先取 `csrf_token` Cookie 再�
 - 表结构变更同步 `models/` 与 `init_db.sql`，检查 UNIQUE 与 upsert 字段一致
 - 前端 API 基址来自 `VITE_GLOB_API_URL`；生产 Docker 默认 `/api`（同源 nginx 反代）
 - 业务文案 i18n：`locales/langs/zh-CN/pages.json`、`en-US/pages.json`
-- **无用户登录**；仅 CSRF 保护管理 POST
+- **无用户登录**；管理 POST 同时校验 CSRF 与 `ADMIN_REFRESH_PASSWORD`
 
 ## 更多细节
 

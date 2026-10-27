@@ -34,6 +34,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
       DB_NAME: ${DB_NAME:-car_sales}
       FASTAPI_PORT: "8001"
+      ADMIN_REFRESH_PASSWORD: ${ADMIN_REFRESH_PASSWORD:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
     depends_on:
       mysql:
         condition: service_healthy
@@ -49,7 +51,6 @@ services:
         VITE_APP_TITLE: ${VITE_APP_TITLE:-中国市场汽车销量}
         VITE_APP_NAMESPACE: ${VITE_APP_NAMESPACE:-vben-web-tdesign}
         VITE_APP_STORE_SECURE_KEY: ${VITE_APP_STORE_SECURE_KEY:-please-replace-me-with-your-own-key}
-        VITE_ADMIN_REFRESH_CONFIRM_CODE: ${VITE_ADMIN_REFRESH_CONFIRM_CODE:-change-me}
     image: car-sales-frontend:local
     container_name: car-sales-frontend
     restart: unless-stopped

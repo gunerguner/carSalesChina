@@ -77,10 +77,12 @@ export function createMessageHandler(handlers: RefreshStreamHandlers) {
 
 export function refreshAllDataStream(
   handlers: RefreshStreamHandlers,
+  password: string,
   signal?: AbortSignal,
 ) {
   return requestClient.postSSE(STREAM_PATH, undefined, {
     credentials: 'include',
+    headers: { 'X-Admin-Password': password },
     signal,
     onMessage: createMessageHandler(handlers),
   });

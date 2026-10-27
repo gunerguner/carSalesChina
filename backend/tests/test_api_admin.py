@@ -2,9 +2,13 @@
 
 import json
 
+import pytest
 from starlette.requests import Request
 
 from backend.core.csrf import CSRF_COOKIE_NAME, CSRF_HEADER_NAME, verify_csrf
+from backend.core.rate_limit import import_password_lock
+
+_ADMIN_PASSWORD = "test-admin-password"
 
 
 def _get_token(client) -> str:
@@ -46,6 +50,21 @@ class TestCsrfCookieMiddleware:
 class TestAdminRefreshStreamCsrf:
     URL = "/api/v1/admin/data/refresh/stream"
 
+    @pytest.fixture(autouse=True)
+    def _reset_password_lock(self):
+        import_password_lock._failures.clear()
+        import_password_lock._locked_until.clear()
+        yield
+        import_password_lock._failures.clear()
+        import_password_lock._locked_until.clear()
+
+    def _csrf_headers(self, client, password: str | None = None) -> dict[str, str]:
+        token = _get_token(client)
+        headers = {CSRF_HEADER_NAME: token}
+        if password is not None:
+            headers["X-Admin-Password"] = password
+        return headers
+
     def test_post_without_csrf_rejected(self, client):
         resp = client.post(self.URL)
         assert resp.status_code == 403
@@ -65,10 +84,32 @@ class TestAdminRefreshStreamCsrf:
         resp = client.post(self.URL, headers={CSRF_HEADER_NAME: "not-the-token"})
         assert resp.status_code == 403
 
+    def test_missing_password_config_returns_503(self, client, monkeypatch):
+        monkeypatch.setattr("backend.config.ADMIN_REFRESH_PASSWORD", "")
+        resp = client.post(self.URL, headers=self._csrf_headers(client, "anything"))
+        assert resp.status_code == 503
+        body = resp.json()
+        assert body["code"] == 1002
+        assert body["message"] == "未配置刷新密码"
+
+    def test_missing_password_header_returns_401(self, client, monkeypatch):
+        monkeypatch.setattr("backend.config.ADMIN_REFRESH_PASSWORD", _ADMIN_PASSWORD)
+        resp = client.post(self.URL, headers=self._csrf_headers(client))
+        assert resp.status_code == 401
+        assert resp.json()["code"] == 1002
+        assert resp.json()["message"] == "密码错误"
+
+    def test_wrong_password_returns_401(self, client, monkeypatch):
+        monkeypatch.setattr("backend.config.ADMIN_REFRESH_PASSWORD", _ADMIN_PASSWORD)
+        resp = client.post(self.URL, headers=self._csrf_headers(client, "wrong"))
+        assert resp.status_code == 401
+        assert resp.json()["message"] == "密码错误"
+
     def test_post_with_matching_token_streams_sse(self, client, monkeypatch):
         from backend.routers import admin as admin_router
         from backend.services.progress import format_sse
 
+        monkeypatch.setattr("backend.config.ADMIN_REFRESH_PASSWORD", _ADMIN_PASSWORD)
         frames = [
             format_sse("progress", {"phase": "brand_meta", "status": "running"}),
             format_sse("done", {"status": "success"}),
@@ -77,8 +118,9 @@ class TestAdminRefreshStreamCsrf:
             admin_router, "refresh_all_stream", lambda db: iter(frames)
         )
 
-        token = _get_token(client)
-        resp = client.post(self.URL, headers={CSRF_HEADER_NAME: token})
+        resp = client.post(
+            self.URL, headers=self._csrf_headers(client, _ADMIN_PASSWORD)
+        )
         assert resp.status_code == 200
         assert resp.headers["content-type"].startswith("text/event-stream")
         assert resp.headers["cache-control"] == "no-cache"

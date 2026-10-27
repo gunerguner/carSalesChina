@@ -169,6 +169,7 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 |------|----------|
 | 库连接失败 | MySQL 进程、`backend/.env` 或 `docker/.env` 密码一致 |
 | POST 403 | CSRF Cookie + Header；前端非 GET 自动带 token |
+| 刷新 401 / 429 / 503 | `ADMIN_REFRESH_PASSWORD` 是否已配置；错误密码连续 5 次锁 15 分钟 |
 | 品牌销量空 | 是否先刷新 brand-meta；`master_id` 是否存在 |
 | 国别占比空/字段缺失 | 是否先刷新 origin；`origin_field_map.yaml` 是否与 AkShare 列名一致 |
 | 刷新 partial_failure | 日志 `source_errors`、外网与易车/AkShare 可用性 |
@@ -183,4 +184,4 @@ fastapi、uvicorn、gunicorn、sqlmodel、pymysql、cryptography、akshare、pan
 
 ## 自动化测试
 
-细节见 [references/testing.md](references/testing.md)：根目录 `make test`（后端 245 用例 / 前端 131 用例）；`make test-cov` 看覆盖率。后端 SQLite 内存库不需要 MySQL；前端 vitest 用例在 `apps/web-tdesign/tests/`（与 `src/` 镜像）。lint/typecheck 需 Node ≥22.18。无 GitHub Actions。
+细节见 [references/testing.md](references/testing.md)：根目录 `make test`（后端 250 用例 / 前端 133 用例）；`make test-cov` 看覆盖率。后端 SQLite 内存库不需要 MySQL；前端 vitest 用例在 `apps/web-tdesign/tests/`（与 `src/` 镜像）。lint/typecheck 需 Node ≥22.18。无 GitHub Actions。

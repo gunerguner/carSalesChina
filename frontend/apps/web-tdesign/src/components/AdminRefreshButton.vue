@@ -10,16 +10,15 @@ import RefreshProgressModal from '#/components/RefreshProgressModal.vue';
 import { useAdminDataRefresh } from '#/composables/useAdminDataRefresh';
 import { $t } from '#/locales';
 
-const CONFIRM_CODE = import.meta.env.VITE_ADMIN_REFRESH_CONFIRM_CODE ?? '';
-
 const { refreshAdminData, refreshing } = useAdminDataRefresh();
 const dialogVisible = ref(false);
-const inputCode = ref('');
+const inputPassword = ref('');
+const submitting = ref(false);
 const inputRef = ref<null | { focus: () => void }>(null);
 
 function openConfirmDialog() {
   if (refreshing.value) return;
-  inputCode.value = '';
+  inputPassword.value = '';
   dialogVisible.value = true;
 }
 
@@ -31,20 +30,29 @@ function focusConfirmInput() {
 
 function handleClose() {
   dialogVisible.value = false;
-  inputCode.value = '';
+  inputPassword.value = '';
 }
 
-function handleConfirm() {
-  if (!CONFIRM_CODE) {
-    message.error($t('pages.admin.refreshConfirmNotConfigured'));
+async function handleConfirm() {
+  if (submitting.value) return;
+  const password = inputPassword.value.trim();
+  if (!password) {
+    message.error($t('pages.admin.refreshConfirmPlaceholder'));
     return;
   }
-  if (inputCode.value !== CONFIRM_CODE) {
-    message.error($t('pages.admin.refreshConfirmCodeInvalid'));
-    return;
+  submitting.value = true;
+  try {
+    const result = await refreshAdminData(password);
+    if (!result.accepted) {
+      if (result.message) {
+        message.error(result.message);
+      }
+      return;
+    }
+    handleClose();
+  } finally {
+    submitting.value = false;
   }
-  handleClose();
-  void refreshAdminData();
 }
 </script>
 
@@ -63,6 +71,7 @@ function handleConfirm() {
     :confirm-btn="{
       content: $t('pages.admin.refreshConfirmSubmit'),
       theme: 'danger',
+      loading: submitting,
     }"
     :cancel-btn="$t('pages.admin.refreshConfirmCancel')"
     @confirm="handleConfirm"
@@ -74,7 +83,8 @@ function handleConfirm() {
     </p>
     <Input
       ref="inputRef"
-      v-model="inputCode"
+      v-model="inputPassword"
+      type="password"
       :placeholder="$t('pages.admin.refreshConfirmPlaceholder')"
       clearable
       @enter="handleConfirm"

@@ -3,8 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.config import FASTAPI_PORT
-from backend.core.csrf import CSRF_HEADER_NAME, CSRFCookieMiddleware
+from backend.config import CORS_HEADERS, CORS_METHODS, CORS_ORIGINS, FASTAPI_PORT
+from backend.core.csrf import CSRFCookieMiddleware
 from backend.routers.exception_handlers import register_exception_handlers
 from backend.core.logging_config import setup_logging
 
@@ -22,13 +22,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="中国汽车销售数据平台", version="1.0.0", lifespan=lifespan)
 
+# * 与 allow_credentials 不能同时成立：通配来源时浏览器会拒绝携带 Cookie。
+allow_credentials = "*" not in CORS_ORIGINS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*", CSRF_HEADER_NAME],
-    expose_headers=[],
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=allow_credentials,
+    allow_methods=CORS_METHODS,
+    allow_headers=CORS_HEADERS,
 )
 
 app.add_middleware(CSRFCookieMiddleware)

@@ -4,10 +4,6 @@ pythonpath = ["."]
 testpaths = ["tests"]
 addopts = [
     "-q",
-    "-W",
-    "ignore:Using `httpx` with `starlette.testclient` is deprecated:DeprecationWarning",
-    "-W",
-    "ignore:'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated:DeprecationWarning",
 ]
 
 [tool.coverage.run]
