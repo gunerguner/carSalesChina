@@ -158,7 +158,7 @@ OpenAPI：`http://localhost:8001/docs`。curl 需先取 `csrf_token` Cookie，�
 |------|------|------|
 | GET | `/api/v1/market/raw` | 全量月度市场原始数据 |
 | GET | `/api/v1/brands/meta/all` | 全部品牌元数据 |
-| GET | `/api/v1/brands/trend-all-periods` | `brand_names`（逗号，≤3）、`data_type` |
+| GET | `/api/v1/brands/trend-all-periods` | `brand_names`（逗号，≤4）、`data_type` |
 | GET | `/api/v1/analysis/nev-share/trend` | `years` 1–10（默认 3）、`granularity` monthly/yearly |
 | GET | `/api/v1/analysis/nev-breakdown` | 同上；返回 bev/phev 销量与占比（phev=nev−bev） |
 | GET | `/api/v1/analysis/origin-share/trend` | 同上；国别字段经 `origin_field_map.yaml` 映射为英文键 |
@@ -178,6 +178,7 @@ OpenAPI：`http://localhost:8001/docs`。curl 需先取 `csrf_token` Cookie，�
 - **布局**：页面用 `page-content` 紧凑内边距；筛选外包 `FilterPanel`；图表/表格区块用 `SectionCard`；**不使用** Vben `Page` / PageShell（顶栏导航已有页名）
 - **主题**：`preferences.ts` 默认 `slate` + `radius: 0.75`；light/dark 经偏好抽屉切换；`theme.css` 定义 `--chart-*` 与 TDesign token 桥接
 - **图表**：统一走 `chart.ts`；配色运行时读 CSS 变量；禁止 `emphasis.focus: 'series'` 导致 hover 淡化其他系列
+- **读页缓存**：市场 / NEV / 车系进入页面走不带 `force` 的拉取（`createFetchOnceController` 会话缓存）；品牌按筛选 key 缓存。管理刷新 `emitDataRefresh` 递增 epoch，当前页强制重拉，未打开的页下次进入发现 epoch 变化后再拉。失败重试仍 `force`
 - **共享组件**：`ChartCard`、`DataLoadState`（骨架占位）、`FilterPanel`、`SectionCard`；市场/品牌周期切换在筛选条；NEV 与车系占比为同级顶层页（导航栏 Tab）
 
 ## 测试

@@ -2,6 +2,7 @@ import type { Ref } from 'vue';
 
 import { ref } from 'vue';
 
+import { getDataRefreshEpoch } from '#/utils/data-refresh';
 import { ensureArray } from '#/utils/format';
 
 export const LOAD_FAILED_I18N_KEY = 'pages.common.loadFailed';
@@ -24,6 +25,7 @@ export function createFetchOnceController() {
   const loading = ref(false);
   const error = ref<null | string>(null);
   let hasFetched = false;
+  let fetchedEpoch = -1;
   let pending: null | Promise<void> = null;
 
   function clearError() {
@@ -34,7 +36,8 @@ export function createFetchOnceController() {
     force: boolean,
     task: () => Promise<void>,
   ): Promise<void> {
-    if (!force && hasFetched) {
+    const epoch = getDataRefreshEpoch();
+    if (!force && hasFetched && fetchedEpoch === epoch) {
       return;
     }
     if (pending) {
@@ -47,6 +50,7 @@ export function createFetchOnceController() {
       try {
         await task();
         hasFetched = true;
+        fetchedEpoch = epoch;
       } catch (error_) {
         error.value = LOAD_FAILED_I18N_KEY;
         console.error('[createFetchOnceController] execute failed', error_);
@@ -78,6 +82,7 @@ export function createKeyedFetchController<T>(
   const error = ref<null | string>(null);
   const data: Ref<null | T> = ref(null);
   const cache = new Map<string, T>();
+  let cacheEpoch = getDataRefreshEpoch();
   let gen = 0;
 
   function clearError() {
@@ -93,6 +98,12 @@ export function createKeyedFetchController<T>(
       data.value = null;
       loading.value = false;
       return;
+    }
+
+    const epoch = getDataRefreshEpoch();
+    if (cacheEpoch !== epoch) {
+      cache.clear();
+      cacheEpoch = epoch;
     }
 
     if (!force) {

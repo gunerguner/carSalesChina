@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   emitDataRefresh,
+  getDataRefreshEpoch,
   offDataRefresh,
   onDataRefresh,
 } from '#/utils/data-refresh';
@@ -37,5 +38,11 @@ describe('data-refresh pub/sub', () => {
 
   it('退订未订阅的 handler 不抛错', () => {
     expect(() => offDataRefresh(() => {})).not.toThrow();
+  });
+
+  it('每次 emit 递增刷新代数', () => {
+    const before = getDataRefreshEpoch();
+    emitDataRefresh();
+    expect(getDataRefreshEpoch()).toBe(before + 1);
   });
 });

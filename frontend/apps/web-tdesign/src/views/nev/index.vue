@@ -17,7 +17,7 @@ import { useNevAnalysisData } from './useNevAnalysisData';
 const { error, loading, fetchAll, nevShareTrend, nevBreakdown } =
   useNevAnalysisData();
 
-usePageRefresh(() => fetchAll(true));
+usePageRefresh(() => fetchAll(true), { initialLoad: () => fetchAll() });
 
 const nevPenetrationChartOption = computed(() => {
   // 显式读取主题 mode 以建立响应式依赖；切换 light/dark 时 option 重建

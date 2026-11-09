@@ -5,6 +5,7 @@ import type {
   SeriesCache,
   YearlyTrendRecord,
 } from './marketDataUtils';
+import type { MarketPeriodGranularity } from './types';
 
 import type { RawSalesRecord } from '#/api/market';
 import type { DataType, LevelType } from '#/utils/types';
@@ -31,6 +32,9 @@ export type {
 };
 
 const rawData = ref<RawSalesRecord[]>([]);
+const levelType = ref<LevelType>('all');
+const dataType = ref<DataType>('retail');
+const period = ref<MarketPeriodGranularity>('monthly');
 const { error, execute, loading } = createFetchOnceController();
 
 export function useMarketData() {
@@ -93,8 +97,11 @@ export function useMarketData() {
   }
 
   return {
+    dataType,
     error,
+    levelType,
     loading,
+    period,
     fetchAll,
     getMonthlyDetail,
     getMonthlyTrend,

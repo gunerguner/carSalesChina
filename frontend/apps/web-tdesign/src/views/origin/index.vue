@@ -15,7 +15,7 @@ import { useOriginAnalysisData } from './useOriginAnalysisData';
 
 const { error, loading, fetchAll, originShareTrend } = useOriginAnalysisData();
 
-usePageRefresh(() => fetchAll(true));
+usePageRefresh(() => fetchAll(true), { initialLoad: () => fetchAll() });
 
 const originShareChartOption = computed(() => {
   // 显式读取主题 mode 以建立响应式依赖；切换 light/dark 时 option 重建

@@ -8,6 +8,7 @@ import {
   fetchArrayInto,
   LOAD_FAILED_I18N_KEY,
 } from '#/composables/useFetchOnce';
+import { emitDataRefresh } from '#/utils/data-refresh';
 
 describe('fetchArrayInto', () => {
   it('把数组写入 ref', async () => {
@@ -35,6 +36,15 @@ describe('createFetchOnceController', () => {
     await ctrl.execute(false, task);
     expect(task).toHaveBeenCalledTimes(1);
     await ctrl.execute(true, task);
+    expect(task).toHaveBeenCalledTimes(2);
+  });
+
+  it('管理刷新后即使不 force 也会重拉', async () => {
+    const task = vi.fn().mockResolvedValue(undefined);
+    const ctrl = createFetchOnceController();
+    await ctrl.execute(false, task);
+    emitDataRefresh();
+    await ctrl.execute(false, task);
     expect(task).toHaveBeenCalledTimes(2);
   });
 
@@ -107,6 +117,19 @@ describe('createKeyedFetchController', () => {
     await ctrl.execute();
     await ctrl.execute(true);
     expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('管理刷新后丢弃按 key 的缓存', async () => {
+    const fetch = vi.fn(async (key: string) => `data-${key}`);
+    const ctrl = createKeyedFetchController({
+      fetch,
+      getKey: () => 'a',
+    });
+    await ctrl.execute();
+    emitDataRefresh();
+    await ctrl.execute();
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(ctrl.data.value).toBe('data-a');
   });
 
   it('丢弃过期响应', async () => {

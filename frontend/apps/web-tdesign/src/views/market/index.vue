@@ -3,9 +3,7 @@ import type { MarketTableInput } from './components/marketSalesTable';
 import type { MarketTrendChartInput } from './components/marketTrendChart';
 import type { MarketPeriodGranularity } from './types';
 
-import type { DataType, LevelType } from '#/utils/types';
-
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 
 import { preferences } from '@vben/preferences';
 
@@ -28,13 +26,12 @@ interface MarketPeriodView {
   tableInput: MarketTableInput;
 }
 
-const levelType = ref<LevelType>('all');
-const dataType = ref<DataType>('retail');
-const period = ref<MarketPeriodGranularity>('monthly');
-
 const {
+  dataType,
   error,
+  levelType,
   loading,
+  period,
   fetchAll,
   getMonthlyTrend,
   getMonthlyDetail,
@@ -42,7 +39,7 @@ const {
   getYearlyTrend,
 } = useMarketData();
 
-usePageRefresh(() => fetchAll(true));
+usePageRefresh(() => fetchAll(true), { initialLoad: () => fetchAll() });
 
 const activeMarketView = computed((): MarketPeriodView => {
   const lt = levelType.value;
