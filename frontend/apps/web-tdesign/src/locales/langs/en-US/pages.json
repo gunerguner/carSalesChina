@@ -183,6 +183,7 @@
         "pending": "Pending",
         "running": "Running",
         "done": "Done",
+        "partial": "Partial",
         "failed": "Failed"
       }
     }

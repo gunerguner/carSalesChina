@@ -16,6 +16,14 @@ def format_sse(event: str, data: dict[str, Any]) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
+def _progress_status(status: str) -> str:
+    if status == "failed":
+        return "failed"
+    if status == "partial_failure":
+        return "partial_failure"
+    return "done"
+
+
 class SSEBridge:
     """收集 SSE 帧，供同步生成器在步骤间 drain。"""
 
@@ -81,7 +89,7 @@ class ProgressReporter:
             {
                 "phase": key,
                 "label": PHASE_LABELS.get(key, key),
-                "status": "failed" if status == "failed" else "done",
+                "status": _progress_status(status),
                 "current": result.get("total", 1),
                 "total": max(result.get("total", 1), 1),
                 "imported": result.get("imported", 0),

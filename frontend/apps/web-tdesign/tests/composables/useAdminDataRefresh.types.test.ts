@@ -96,6 +96,24 @@ describe('applyProgressEvent', () => {
     expect(state.completedCount).toBe(1);
   });
 
+  it('partial_failure 计入 completedCount 并保留 source_errors', () => {
+    let state = createInitialProgressState();
+    state = applyProgressEvent(
+      state,
+      progressEvent({
+        phase: 'sales',
+        status: 'partial_failure',
+        imported: 4,
+        source_errors: { brand: '易车品牌超时' },
+      }),
+    );
+    expect(state.phases.sales.status).toBe('partial_failure');
+    expect(state.completedCount).toBe(1);
+    expect(state.phases.sales.source_errors).toEqual({
+      brand: '易车品牌超时',
+    });
+  });
+
   it('failed 计入 completedCount 并保留 source_errors', () => {
     let state = createInitialProgressState();
     state = applyProgressEvent(
@@ -177,7 +195,23 @@ describe('applyStreamDone', () => {
     expect(state.phases.sales.status).toBe('done');
   });
 
-  it('failed 的阶段保持 failed（不被 done 覆盖）', () => {
+  it('仅部分失败时整体为 partial，阶段保持 partial_failure', () => {
+    let state = createInitialProgressState();
+    const result = doneResult({
+      source_errors: { brand: '易车品牌超时' },
+      status: 'partial_failure',
+    });
+    result.status = 'partial_failure';
+    state = applyStreamDone(state, result);
+    expect(state.overallStatus).toBe('partial');
+    expect(state.phases.sales.status).toBe('partial_failure');
+    expect(state.phases.brand_meta.status).toBe('done');
+    expect(state.phases.sales.source_errors).toEqual({
+      brand: '易车品牌超时',
+    });
+  });
+
+  it('同时有 failed 时整体为 error', () => {
     let state = createInitialProgressState();
     state = applyProgressEvent(
       state,
@@ -186,7 +220,8 @@ describe('applyStreamDone', () => {
     const result = doneResult({ status: 'partial_failure' });
     result.origin.status = 'failed';
     state = applyStreamDone(state, result);
+    expect(state.overallStatus).toBe('error');
     expect(state.phases.origin.status).toBe('failed');
-    expect(state.phases.sales.status).toBe('done');
+    expect(state.phases.sales.status).toBe('partial_failure');
   });
 });

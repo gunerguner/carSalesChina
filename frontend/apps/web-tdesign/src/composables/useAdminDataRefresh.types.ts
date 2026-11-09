@@ -2,12 +2,18 @@ import type {
   RefreshAllResult,
   RefreshPhaseKey,
   RefreshProgressEvent,
+  RefreshResultItem,
   RefreshStreamError,
 } from '#/api/admin';
 
 export type PhaseKey = RefreshPhaseKey;
 
-export type PhaseStatus = 'done' | 'failed' | 'pending' | 'running';
+export type PhaseStatus =
+  | 'done'
+  | 'failed'
+  | 'partial_failure'
+  | 'pending'
+  | 'running';
 
 export interface PhaseState {
   phase: PhaseKey;
@@ -21,7 +27,12 @@ export interface PhaseState {
   source_errors?: null | Record<string, null | string>;
 }
 
-export type RefreshOverallStatus = 'done' | 'error' | 'idle' | 'running';
+export type RefreshOverallStatus =
+  | 'done'
+  | 'error'
+  | 'idle'
+  | 'partial'
+  | 'running';
 
 export interface RefreshProgressState {
   phases: Record<PhaseKey, PhaseState>;
@@ -74,7 +85,14 @@ function mapProgressStatus(
   if (status === 'running') return 'running';
   if (status === 'done') return 'done';
   if (status === 'failed') return 'failed';
+  if (status === 'partial_failure') return 'partial_failure';
   return 'pending';
+}
+
+function mapResultStatus(status: RefreshResultItem['status']): PhaseStatus {
+  if (status === 'failed') return 'failed';
+  if (status === 'partial_failure') return 'partial_failure';
+  return 'done';
 }
 
 export function applyProgressEvent(
@@ -101,7 +119,11 @@ export function applyProgressEvent(
 
   const completedCount = PHASE_ORDER.filter((key) => {
     const item = nextPhases[key];
-    return item.status === 'done' || item.status === 'failed';
+    return (
+      item.status === 'done' ||
+      item.status === 'failed' ||
+      item.status === 'partial_failure'
+    );
   }).length;
 
   return {
@@ -143,7 +165,7 @@ export function applyStreamDone(
     if (!item) return;
     nextPhases[key] = {
       ...nextPhases[key],
-      status: item.status === 'failed' ? 'failed' : 'done',
+      status: mapResultStatus(item.status),
       imported: item.imported,
       total: item.total,
       elapsed: item.elapsed,
@@ -151,11 +173,19 @@ export function applyStreamDone(
     };
   });
 
+  const statuses = PHASE_ORDER.map((key) => nextPhases[key].status);
+  let overallStatus: RefreshProgressState['overallStatus'] = 'done';
+  if (statuses.some((item) => item === 'failed')) {
+    overallStatus = 'error';
+  } else if (statuses.some((item) => item === 'partial_failure')) {
+    overallStatus = 'partial';
+  }
+
   return {
     ...state,
     phases: nextPhases,
     completedCount: PHASE_ORDER.length,
-    overallStatus: 'done',
+    overallStatus,
     errorMessage: null,
   };
 }

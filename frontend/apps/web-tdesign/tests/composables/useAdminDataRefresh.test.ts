@@ -6,6 +6,7 @@ import type {
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAdminDataRefresh } from '#/composables/useAdminDataRefresh';
+import { emitDataRefresh } from '#/utils/data-refresh';
 
 const { refreshAllDataStream } = vi.hoisted(() => ({
   refreshAllDataStream: vi.fn(),
@@ -33,6 +34,7 @@ const doneResult: RefreshAllResult = {
 describe('refreshAdminData', () => {
   beforeEach(() => {
     refreshAllDataStream.mockReset();
+    vi.mocked(emitDataRefresh).mockClear();
   });
 
   it('401/503 不打开进度浮层，并把服务端文案交回确认框', async () => {
@@ -72,5 +74,41 @@ describe('refreshAdminData', () => {
 
     expect(result).toEqual({ accepted: true });
     expect(progressVisible.value).toBe(true);
+  });
+
+  it('关闭部分失败结果时刷新页面', async () => {
+    refreshAllDataStream.mockImplementation(
+      async (handlers: RefreshStreamHandlers) => {
+        handlers.onDone?.({
+          ...doneResult,
+          sales: { imported: 1, status: 'partial_failure', total: 1 },
+          status: 'partial_failure',
+        });
+      },
+    );
+    const { closeProgressModal, progressState, refreshAdminData } =
+      useAdminDataRefresh();
+
+    await refreshAdminData('secret');
+    expect(progressState.value.overallStatus).toBe('partial');
+    closeProgressModal();
+
+    expect(emitDataRefresh).toHaveBeenCalledOnce();
+  });
+
+  it('关闭失败结果时不刷新页面', async () => {
+    refreshAllDataStream.mockImplementation(
+      async (handlers: RefreshStreamHandlers) => {
+        handlers.onError?.({ message: '连接中断' });
+      },
+    );
+    const { closeProgressModal, progressState, refreshAdminData } =
+      useAdminDataRefresh();
+
+    await refreshAdminData('secret');
+    expect(progressState.value.overallStatus).toBe('error');
+    closeProgressModal();
+
+    expect(emitDataRefresh).not.toHaveBeenCalled();
   });
 });

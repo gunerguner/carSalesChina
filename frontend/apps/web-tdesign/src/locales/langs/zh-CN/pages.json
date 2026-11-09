@@ -183,6 +183,7 @@
         "pending": "等待",
         "running": "进行中",
         "done": "完成",
+        "partial": "部分失败",
         "failed": "失败"
       }
     }

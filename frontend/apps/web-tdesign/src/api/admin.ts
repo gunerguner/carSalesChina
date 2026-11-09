@@ -22,7 +22,7 @@ export type RefreshPhaseKey = 'brand_meta' | 'origin' | 'sales';
 export interface RefreshProgressEvent {
   phase: RefreshPhaseKey;
   label: string;
-  status: 'done' | 'failed' | 'running';
+  status: 'done' | 'failed' | 'partial_failure' | 'running';
   current: number;
   total: number;
   imported: number;

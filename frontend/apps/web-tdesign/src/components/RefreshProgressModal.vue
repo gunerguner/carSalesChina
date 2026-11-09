@@ -22,6 +22,7 @@ const canClose = computed(
   () =>
     !refreshing.value &&
     (progressState.value.overallStatus === 'done' ||
+      progressState.value.overallStatus === 'partial' ||
       progressState.value.overallStatus === 'error'),
 );
 
@@ -43,6 +44,7 @@ function phaseIcon(key: PhaseKey): string {
   const { status } = progressState.value.phases[key];
   if (status === 'done') return '✓';
   if (status === 'running') return '⟳';
+  if (status === 'partial_failure') return '!';
   if (status === 'failed') return '✗';
   return '·';
 }
@@ -53,7 +55,12 @@ function phaseMetric(key: PhaseKey): string {
   if (key === 'sales' && item.total > 0 && item.status === 'running') {
     return `${item.current}/${item.total.toLocaleString()}`;
   }
-  if (item.imported > 0 || item.status === 'done' || item.status === 'failed') {
+  if (
+    item.imported > 0 ||
+    item.status === 'done' ||
+    item.status === 'failed' ||
+    item.status === 'partial_failure'
+  ) {
     return `${item.imported.toLocaleString()} ${$t('pages.admin.progress.rows')}`;
   }
   return item.detail || '—';
@@ -70,6 +77,7 @@ function phaseStatusText(key: PhaseKey): string {
     pending: $t('pages.admin.progress.status.pending'),
     running: $t('pages.admin.progress.status.running'),
     done: $t('pages.admin.progress.status.done'),
+    partial_failure: $t('pages.admin.progress.status.partial'),
     failed: $t('pages.admin.progress.status.failed'),
   };
   return map[status];
@@ -187,6 +195,10 @@ function handleClose() {
 
 .phase-row--failed {
   background: var(--td-error-color-1);
+}
+
+.phase-row--partial_failure {
+  background: var(--td-warning-color-1);
 }
 
 .phase-row__icon {

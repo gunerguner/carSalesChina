@@ -91,6 +91,22 @@ class TestProgressReporter:
         assert data["status"] == "failed"
         assert data["source_errors"] == {"origin": "boom"}
 
+    def test_phase_done_partial_failure_keeps_status(self):
+        reporter, events = self._make()
+        reporter.phase_done(
+            "sales",
+            {
+                "status": "partial_failure",
+                "imported": 4,
+                "total": 4,
+                "source_errors": {"brand": "易车品牌超时"},
+            },
+        )
+        data = events[-1][1]
+        assert data["status"] == "partial_failure"
+        assert data["imported"] == 4
+        assert data["source_errors"] == {"brand": "易车品牌超时"}
+
     def test_phase_done_defaults_total_at_least_one(self):
         reporter, events = self._make()
         reporter.phase_done("brand_meta", {})
