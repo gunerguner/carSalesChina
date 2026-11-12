@@ -18,7 +18,6 @@ export interface MonthlyTrendRecord extends YearMonthRecord {
 
 export interface MonthlyDetailRecord {
   key: string;
-  month: number;
   monthNum: number;
   momGrowth: null | number;
   sales: number;
@@ -158,7 +157,6 @@ export function calcMonthlyDetail(cache: SeriesCache): MonthlyDetailRecord[] {
       return {
         key: `${r.year}-${r.month}-${i}`,
         year: r.year,
-        month: r.month,
         monthNum: r.month,
         sales: r.sales,
         momGrowth: calcGrowthPercent(r.sales, prevMonthSales),
@@ -178,8 +176,7 @@ export function calcQuarterlyTrend(cache: SeriesCache): QuarterlyTrendRecord[] {
   };
 
   return keys.map((k, i) => {
-    const year = Number(k.split('-')[0]);
-    const quarter = Number(k.split('-')[1]);
+    const { y: year, q: quarter } = parseQuarterKey(k);
     const sales = getQuarterSales(year, quarter) ?? 0;
     const prevQ = quarter === 1 ? 4 : quarter - 1;
     const prevQYear = quarter === 1 ? year - 1 : year;

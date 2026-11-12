@@ -1,3 +1,4 @@
+import { itemAt } from '#tests/testUtils';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -60,7 +61,7 @@ describe('sortByYearMonth', () => {
       '2024-1',
       '2024-2',
     ]);
-    expect(items[0]).toEqual({ year: 2024, month: 2 }); // 原数组顺序不变
+    expect(itemAt(items, 0)).toEqual({ year: 2024, month: 2 }); // 原数组顺序不变
   });
 });
 

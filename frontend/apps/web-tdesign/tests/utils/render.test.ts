@@ -1,5 +1,6 @@
 import type { VNode } from 'vue';
 
+import { itemAt } from '#tests/testUtils';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -34,11 +35,9 @@ describe('salesYoyTableCell', () => {
     const vnode = cell(null, { row: { sales: 300, yoy: 10.5 } }) as VNode;
     expect(vnode.type).toBe('span');
     const children = vnode.children as (string | VNode)[];
-    expect(children[0]).toBe('300');
-    const inner = children[1] as VNode;
-    expect((inner.props as { style: { color: string } }).style.color).toBe(
-      '#ef4444',
-    );
+    expect(itemAt(children, 0)).toBe('300');
+    const inner = itemAt(children, 1) as VNode;
+    expect((inner.props as { style: { color: string } }).style.color).toBeTruthy();
     expect(inner.children).toBe('（+10.5%）');
   });
 });

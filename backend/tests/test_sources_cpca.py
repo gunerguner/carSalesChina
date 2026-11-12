@@ -111,7 +111,7 @@ class TestTransformCountry:
 
 
 class TestCpcaClient:
-    def test_ok(self, monkeypatch):
+    def test_fetch_ok_returns_records(self, monkeypatch):
         rows = [{"year": 2024, "month": 1, "origin": "自主", "sales_volume": 60.0}]
         monkeypatch.setattr(
             cpca_client, "_fetch_country_records", lambda: SliceResult(data=rows)
@@ -121,7 +121,7 @@ class TestCpcaClient:
         assert result.records == rows
         assert result.errors == []
 
-    def test_error(self, monkeypatch):
+    def test_fetch_failure_propagates_errors_and_not_ok(self, monkeypatch):
         monkeypatch.setattr(
             cpca_client,
             "_fetch_country_records",

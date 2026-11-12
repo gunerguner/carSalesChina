@@ -2,11 +2,10 @@ import type {
   MonthlyTrendRecord,
   QuarterlyTrendRecord,
   YearlyTrendRecord,
-} from '../useMarketData';
+} from '#/views/market/marketDataUtils';
 
+import { expectEmptyChart, itemAt, seriesOf } from '#tests/testUtils';
 import { describe, expect, it } from 'vitest';
-
-import { itemAt } from '#tests/testUtils';
 
 import { buildMarketTrendChartOption } from '#/views/market/components/marketTrendChart';
 
@@ -30,29 +29,27 @@ describe('buildMarketTrendChartOption', () => {
     expect(xAxis.data).toHaveLength(12); // 每月标签
     const legend = option.legend as { data: string[] };
     expect(legend.data).toEqual(['2023', '2024']);
-    const series = option.series as { data: (null | number)[]; name: string }[];
+    const series = seriesOf<{ data: (null | number)[]; name: string }>(option);
     expect(series.map((s) => s.name)).toEqual(['2023', '2024']);
 
     // 2023 全年 12 月数据（前两位 null 表示 1、2 月缺失→0）
     const s2023 = itemAt(series, 0).data;
-    expect(s2023[0]).toBe(0);
-    expect(s2023[10]).toBe(100);
-    expect(s2023[11]).toBe(120);
+    expect(itemAt(s2023, 0)).toBe(0);
+    expect(itemAt(s2023, 10)).toBe(100);
+    expect(itemAt(s2023, 11)).toBe(120);
     // 2024 只有 1、2 月；3 月起置 null（不画线）
     const s2024 = itemAt(series, 1).data;
-    expect(s2024[0]).toBe(150);
-    expect(s2024[1]).toBe(90);
-    expect(s2024[2]).toBeNull();
-    expect(s2024[11]).toBeNull();
+    expect(itemAt(s2024, 0)).toBe(150);
+    expect(itemAt(s2024, 1)).toBe(90);
+    expect(itemAt(s2024, 2)).toBeNull();
+    expect(itemAt(s2024, 11)).toBeNull();
   });
 
   it('monthly 空数据 → 空图提示', () => {
-    const option = buildMarketTrendChartOption(
-      { data: [], kind: 'monthly' },
-      'zh-CN',
-      t,
+    expectEmptyChart(
+      buildMarketTrendChartOption({ data: [], kind: 'monthly' }, 'zh-CN', t),
+      'pages.common.noData',
     );
-    expect((option.title as { text: string }).text).toBe('pages.common.noData');
   });
 
   it('quarterly：单系列 + 周期标签（zh-CN 季度格式）', () => {
@@ -79,7 +76,7 @@ describe('buildMarketTrendChartOption', () => {
       'zh-CN',
       t,
     );
-    const series = option.series as { data: number[]; name: string }[];
+    const series = seriesOf<{ data: number[]; name: string }>(option);
     expect(itemAt(series, 0).data).toEqual([100, 150]);
     expect(itemAt(series, 0).name).toBe('pages.market.quarterly.sales');
     expect((option.xAxis as { data: string[] }).data).toEqual([
@@ -98,7 +95,7 @@ describe('buildMarketTrendChartOption', () => {
       'en-US',
       t,
     );
-    const series = option.series as { data: number[] }[];
+    const series = seriesOf<{ data: number[] }>(option);
     expect(itemAt(series, 0).data).toEqual([780, 900]);
     expect((option.xAxis as { data: string[] }).data).toEqual(['2022', '2023']);
   });

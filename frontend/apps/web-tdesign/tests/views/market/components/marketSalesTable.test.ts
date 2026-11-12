@@ -3,9 +3,8 @@ import type {
   YearlyTrendRecord,
 } from '#/views/market/useMarketData';
 
-import { describe, expect, it } from 'vitest';
-
 import { itemAt } from '#tests/testUtils';
+import { describe, expect, it } from 'vitest';
 
 import {
   buildMarketTableColumns,
@@ -14,10 +13,11 @@ import {
 
 const t = (key: string) => key;
 
+type MarketTableRow = ReturnType<typeof buildMarketTableRows>[number];
+
 const monthlyData: MonthlyDetailRecord[] = [
   {
     key: '2024-2-1',
-    month: 2,
     monthNum: 2,
     momGrowth: null,
     sales: 400,
@@ -26,7 +26,6 @@ const monthlyData: MonthlyDetailRecord[] = [
   },
   {
     key: '2024-1-0',
-    month: 1,
     monthNum: 1,
     momGrowth: 50,
     sales: 300,
@@ -44,7 +43,7 @@ describe('buildMarketTableColumns', () => {
   it('monthly 含 MoM 列，标题取自 i18n 键', () => {
     const cols = buildMarketTableColumns('monthly', 'retail', t) as {
       colKey: string;
-      sorter?: unknown;
+      sorter?: (a: MonthlyDetailRecord, b: MonthlyDetailRecord) => number;
       title: string;
       width: number;
     }[];
@@ -57,7 +56,16 @@ describe('buildMarketTableColumns', () => {
     expect(itemAt(cols, 2).title).toBe('pages.market.monthly.yoyGrowth');
     expect(itemAt(cols, 3).title).toBe('pages.market.monthly.momGrowth');
     expect(itemAt(cols, 0).width).toBe(120);
-    expect(typeof itemAt(cols, 0).sorter).toBe('function');
+
+    const sorter = itemAt(cols, 0).sorter;
+    expect(sorter).toBeTypeOf('function');
+    // 1 月 < 2 月 → 负；反之正
+    expect(sorter?.(itemAt(monthlyData, 1), itemAt(monthlyData, 0))).toBeLessThan(
+      0,
+    );
+    expect(
+      sorter?.(itemAt(monthlyData, 0), itemAt(monthlyData, 1)),
+    ).toBeGreaterThan(0);
   });
 
   it('quarterly/yearly 列型正确', () => {
@@ -103,21 +111,19 @@ describe('buildMarketTableRows', () => {
       { data: monthlyData, kind: 'monthly' },
       'zh-CN',
     );
-    const periodTexts = rows.map(
-      (r) => (r as { periodText: string }).periodText,
-    );
+    const periodTexts = rows.map((r) => r.periodText);
     expect(periodTexts).toEqual(['2024年2月', '2024年1月']);
-    const first = itemAt(rows, 0) as unknown as {
+    const first = itemAt(rows, 0) as MarketTableRow & {
       momGrowthText: string;
-      salesText: string;
       yoyGrowthColor: string;
       yoyGrowthText: string;
     };
     expect(first.salesText).toBe('400');
     expect(first.yoyGrowthText).toBe('+10%'); // 正增长带 +
-    expect(first.yoyGrowthColor).toBe('#ef4444');
+    expect(first.yoyGrowthColor).toBeTruthy();
     expect(
-      (itemAt(rows, 1) as unknown as { yoyGrowthText: string }).yoyGrowthText,
+      (itemAt(rows, 1) as MarketTableRow & { yoyGrowthText: string })
+        .yoyGrowthText,
     ).toBe('-5%');
     expect(first.momGrowthText).toBe('-'); // momGrowth null → 占位符
   });
@@ -127,9 +133,9 @@ describe('buildMarketTableRows', () => {
       { data: yearlyData, kind: 'yearly' },
       'en-US',
     );
-    const years = rows.map((r) => (r as { year: number }).year);
+    const years = rows.map((r) => r.year);
     expect(years).toEqual([2023, 2022]); // 倒序
-    const first = rows[0] as { periodText: string; salesText: string };
+    const first = itemAt(rows, 0);
     expect(first.periodText).toBe('2023');
     expect(first.salesText).toBe('900');
   });

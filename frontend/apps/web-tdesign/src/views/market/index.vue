@@ -12,6 +12,7 @@ import DataLoadState from '#/components/DataLoadState.vue';
 import FilterPanel from '#/components/FilterPanel.vue';
 import SectionCard from '#/components/SectionCard.vue';
 import { usePageRefresh } from '#/composables/usePageRefresh';
+import { trackThemeMode } from '#/composables/useThemeMode';
 import { $t } from '#/locales';
 
 import MarketFilterBar from './components/MarketFilterBar.vue';
@@ -69,13 +70,14 @@ const activeMarketView = computed((): MarketPeriodView => {
   return configs[period.value];
 });
 
-const chartOption = computed(() =>
-  buildMarketTrendChartOption(
+const chartOption = computed(() => {
+  trackThemeMode();
+  return buildMarketTrendChartOption(
     activeMarketView.value.input,
     preferences.app.locale,
     $t,
-  ),
-);
+  );
+});
 
 const chartTitle = computed(() => $t(activeMarketView.value.chartTitleKey));
 const tableTitle = computed(() => $t(activeMarketView.value.tableTitleKey));

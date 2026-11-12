@@ -58,14 +58,12 @@ export function buildNevPenetrationTableRows(
   shareTrend: NevShareTrendRecord[],
   breakdownTrend: NevBreakdownRecord[],
 ): NevPenetrationRow[] {
-  const bevMap = new Map<string, { bevRatio: number; bevSales: number }>();
-  for (const item of breakdownTrend) {
-    const key = toMonthKey(item.year, item.month);
-    bevMap.set(key, {
-      bevSales: item.bev_sales,
-      bevRatio: item.bev_ratio,
-    });
-  }
+  const bevMap = new Map(
+    breakdownTrend.map((item) => [
+      toMonthKey(item.year, item.month),
+      { bevSales: item.bev_sales, bevRatio: item.bev_ratio },
+    ]),
+  );
 
   return shareTrend
     .map((item, index) => {

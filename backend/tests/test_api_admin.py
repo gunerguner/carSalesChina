@@ -52,11 +52,9 @@ class TestAdminRefreshStreamCsrf:
 
     @pytest.fixture(autouse=True)
     def _reset_password_lock(self):
-        import_password_lock._failures.clear()
-        import_password_lock._locked_until.clear()
+        import_password_lock.reset()
         yield
-        import_password_lock._failures.clear()
-        import_password_lock._locked_until.clear()
+        import_password_lock.reset()
 
     def _csrf_headers(self, client, password: str | None = None) -> dict[str, str]:
         token = _get_token(client)

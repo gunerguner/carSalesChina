@@ -6,10 +6,6 @@ import { generateMenus, startProgress, stopProgress } from '@vben/utils';
 
 import { menuRoutes } from '#/router/routes';
 
-/**
- * 通用守卫配置
- * @param router
- */
 function setupCommonGuard(router: Router) {
   const loadedPaths = new Set<string>();
 
@@ -41,10 +37,6 @@ function setupMenus(router: Router) {
   accessStore.setIsAccessChecked(true);
 }
 
-/**
- * 项目守卫配置
- * @param router
- */
 function createRouterGuard(router: Router) {
   setupCommonGuard(router);
 }

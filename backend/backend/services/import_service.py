@@ -1,6 +1,7 @@
 import logging
 from collections.abc import Callable
 from importlib.resources import files
+from itertools import batched
 from typing import Any, cast
 
 import yaml
@@ -14,6 +15,7 @@ from backend.models.brand import BrandMeta, BrandSales
 from backend.models.origin import OriginShareData
 from backend.models.overall import SalesData
 from backend.sources.cpca_client import CpcaClient
+from backend.sources.fetch_result import SourceFetchResult
 from backend.sources.yiche_client import YicheBrandClient, YicheOverallClient
 
 logger = logging.getLogger(__name__)
@@ -57,8 +59,7 @@ def _batch_upsert(
     )
 
     total = 0
-    for i in range(0, len(records), _BATCH_SIZE):
-        batch = records[i : i + _BATCH_SIZE]
+    for batch in batched(records, _BATCH_SIZE):
         db.execute(sql, [{field: rec.get(field) for field in fields} for rec in batch])
         db.commit()
         total += len(batch)
@@ -153,6 +154,44 @@ def refresh_brand_meta(db: Session) -> dict:
         raise
 
 
+def _fetch_and_upsert_overall(
+    db: Session,
+    *,
+    reporter: ProgressReporter | None,
+) -> tuple[SourceFetchResult, int]:
+    if reporter:
+        reporter.phase_progress("sales", 0, 1, detail="拉取易车总体销量...")
+    overall_fr = yiche_overall_client.fetch_overall_sales()
+    overall_count = _batch_upsert(
+        db, SalesData, overall_fr.records, OVERALL_SALES_FIELDS
+    )
+    return overall_fr, overall_count
+
+
+def _fetch_and_upsert_brand(
+    db: Session,
+    rows: list[BrandMeta],
+    *,
+    reporter: ProgressReporter | None,
+    on_brand_progress: Callable[[int, int], None] | None,
+) -> tuple[SourceFetchResult | None, int]:
+    if not rows:
+        return None, 0
+    master_id_to_brand_id = {r.master_id: r.id for r in rows}
+    if reporter:
+        reporter.phase_progress("sales", 0, 1, detail="总体销量完成，拉取品牌销量...")
+    brand_fr = yiche_brand_client.fetch_brand_sales(
+        list(master_id_to_brand_id.keys()),
+        on_progress=on_brand_progress,
+    )
+    normalized = _normalize_brand_records(
+        cast(list[BrandSalesRecord], brand_fr.records),
+        master_id_to_brand_id,
+    )
+    brand_count = _batch_upsert(db, BrandSales, normalized, BRAND_SALES_FIELDS)
+    return brand_fr, brand_count
+
+
 def refresh_sales_data(
     db: Session,
     *,
@@ -160,57 +199,15 @@ def refresh_sales_data(
     on_brand_progress: Callable[[int, int], None] | None = None,
 ) -> dict:
     try:
-        if reporter:
-            reporter.phase_progress(
-                "sales",
-                0,
-                1,
-                detail="拉取易车总体销量...",
-            )
-
-        overall_fr = yiche_overall_client.fetch_overall_sales()
-        overall_count = _batch_upsert(
-            db,
-            SalesData,
-            overall_fr.records,
-            OVERALL_SALES_FIELDS,
+        overall_fr, overall_count = _fetch_and_upsert_overall(db, reporter=reporter)
+        rows = db.exec(select(BrandMeta).where(BrandMeta.master_id.isnot(None))).all()
+        brand_fr, brand_count = _fetch_and_upsert_brand(
+            db, rows, reporter=reporter, on_brand_progress=on_brand_progress
         )
 
-        rows = db.exec(select(BrandMeta).where(BrandMeta.master_id.isnot(None))).all()
-        brand_count = 0
-        brand_fr = None
-        if rows:
-            master_id_to_brand_id = {r.master_id: r.id for r in rows}
-            master_ids = list(master_id_to_brand_id.keys())
-            if reporter:
-                reporter.phase_progress(
-                    "sales",
-                    0,
-                    1,
-                    detail="总体销量完成，拉取品牌销量...",
-                )
-            brand_fr = yiche_brand_client.fetch_brand_sales(
-                master_ids,
-                on_progress=on_brand_progress,
-            )
-
-            normalized = _normalize_brand_records(
-                cast(list[BrandSalesRecord], brand_fr.records),
-                master_id_to_brand_id,
-            )
-
-            brand_count = _batch_upsert(
-                db,
-                BrandSales,
-                normalized,
-                BRAND_SALES_FIELDS,
-            )
-
-        has_brand_job = bool(rows)
         overall_ok = overall_fr.ok
-        brand_ok = True if not has_brand_job else (brand_fr is not None and brand_fr.ok)
+        brand_ok = True if not rows else (brand_fr is not None and brand_fr.ok)
         refresh_status = _refresh_status(overall_ok, brand_ok)
-
         source_errors = {
             **overall_fr.to_error_map("overall"),
             **(brand_fr.to_error_map("brand") if brand_fr else {"brand": None}),

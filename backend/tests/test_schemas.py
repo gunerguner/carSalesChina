@@ -48,7 +48,7 @@ class TestSplitBrandNames:
 
 
 class TestAnalysisTrendQuery:
-    def test_defaults(self):
+    def test_defaults_years3_monthly(self):
         q = AnalysisTrendQuery()
         assert q.years == 3
         assert q.granularity == "monthly"

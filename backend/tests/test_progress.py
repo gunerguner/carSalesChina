@@ -8,7 +8,10 @@ from backend.services.progress import PHASE_LABELS, ProgressReporter, SSEBridge,
 class TestFormatSse:
     def test_frame_layout(self):
         frame = format_sse("progress", {"phase": "sales"})
-        assert frame == 'event: progress\ndata: {"phase": "sales"}\n\n'
+        assert frame.startswith("event: progress\ndata: ")
+        assert frame.endswith("\n\n")
+        payload = frame.removeprefix("event: progress\ndata: ").removesuffix("\n\n")
+        assert json.loads(payload) == {"phase": "sales"}
 
     def test_chinese_not_escaped(self):
         frame = format_sse("error", {"message": "品牌元数据"})

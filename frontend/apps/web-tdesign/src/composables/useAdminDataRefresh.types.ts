@@ -173,11 +173,11 @@ export function applyStreamDone(
     };
   });
 
-  const statuses = PHASE_ORDER.map((key) => nextPhases[key].status);
+  const statuses = new Set(PHASE_ORDER.map((key) => nextPhases[key].status));
   let overallStatus: RefreshProgressState['overallStatus'] = 'done';
-  if (statuses.some((item) => item === 'failed')) {
+  if (statuses.has('failed')) {
     overallStatus = 'error';
-  } else if (statuses.some((item) => item === 'partial_failure')) {
+  } else if (statuses.has('partial_failure')) {
     overallStatus = 'partial';
   }
 

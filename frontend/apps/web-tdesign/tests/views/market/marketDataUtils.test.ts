@@ -1,10 +1,9 @@
 import type { RawSalesRecord } from '#/api/market';
 
+import { itemAt, mustGet } from '#tests/testUtils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getMarketRawApi } from '#/api/market';
-import { itemAt, mustGet } from '#tests/testUtils';
-
 import {
   buildMarketSeriesCache,
   calcMonthlyDetail,
@@ -136,7 +135,7 @@ describe('calcMonthlyDetail', () => {
     const rows = calcMonthlyDetail(cache);
 
     // 最新在前
-    expect(rows.map((r) => `${r.year}-${r.month}`)).toEqual([
+    expect(rows.map((r) => `${r.year}-${r.monthNum}`)).toEqual([
       '2024-2',
       '2024-1',
       '2023-12',
@@ -179,7 +178,7 @@ describe('calcQuarterlyTrend', () => {
     const rows = calcQuarterlyTrend(cache);
 
     expect(rows).toHaveLength(12); // 16 个季度只留最近 12
-    expect(rows[0]).toMatchObject({ year: 2022, quarter: 1 });
+    expect(itemAt(rows, 0)).toMatchObject({ year: 2022, quarter: 1 });
     expect(rows.at(-1)).toMatchObject({ year: 2024, quarter: 4 });
 
     // Q1 的 QoQ 基准为上年 Q4：2022Q1(6) vs 2021Q4(33)

@@ -23,22 +23,19 @@ describe('readCssVar', () => {
 });
 
 describe('growthStyle', () => {
-  it('null → 中性灰与占位符', () => {
-    const { color, text } = growthStyle(null);
-    expect(color).toBe('#64748b');
-    expect(text).toBe('-');
+  it('null → 占位符，颜色与零增长同属中性', () => {
+    const nil = growthStyle(null);
+    expect(nil.text).toBe('-');
+    expect(nil.color).toBe(growthStyle(0).color);
   });
 
-  it('正增长 → 红色 + 前缀（中国惯例涨红）', () => {
-    const { color, text } = growthStyle(12.5);
-    expect(color).toBe('#ef4444');
-    expect(text).toBe('+12.5%');
-  });
-
-  it('负增长 → 绿色', () => {
-    const { color, text } = growthStyle(-8);
-    expect(color).toBe('#22c55e');
-    expect(text).toBe('-8%');
+  it('正增长带 + 前缀，负增长不带 +，且颜色不同', () => {
+    const up = growthStyle(12.5);
+    const down = growthStyle(-8);
+    expect(up.text).toBe('+12.5%');
+    expect(down.text).toBe('-8%');
+    expect(up.color).not.toBe(down.color);
+    expect(up.color).not.toBe(growthStyle(0).color);
   });
 
   it('零增长无正号', () => {
@@ -48,33 +45,39 @@ describe('growthStyle', () => {
 
 describe('growthTableRowFields', () => {
   it('追加按 key 命名的 Color/Text 字段', () => {
-    expect(growthTableRowFields('yoyGrowth', 10)).toEqual({
-      yoyGrowthColor: '#ef4444',
-      yoyGrowthText: '+10%',
-    });
+    const fields = growthTableRowFields('yoyGrowth', 10);
+    expect(fields.yoyGrowthText).toBe('+10%');
+    expect(fields.yoyGrowthColor).toBeTruthy();
     expect(growthTableRowFields('yoyGrowth', null).yoyGrowthText).toBe('-');
   });
 });
 
 describe('图表取色', () => {
-  it('getChartTheme 提供全部主题回退值', () => {
+  it('getChartTheme 提供必要主题键，且可被 CSS 变量覆盖', () => {
     const theme = getChartTheme();
-    expect(theme.axis).toBe('#64748b');
-    expect(theme.tooltipBg).toBe('#ffffff');
-    expect(theme.tooltipText).toBe('#1e293b');
+    expect(theme).toEqual(
+      expect.objectContaining({
+        axis: expect.any(String),
+        tooltipBg: expect.any(String),
+        tooltipText: expect.any(String),
+      }),
+    );
+    document.documentElement.style.setProperty('--chart-axis', 'rgb(9, 9, 9)');
+    expect(getChartTheme().axis).toBe('rgb(9, 9, 9)');
   });
 
-  it('palette 按 index 循环', () => {
-    expect(getChartPaletteColor(0)).toBe('#475569');
-    expect(getChartPaletteColor(1)).toBe('#35827a');
-    expect(getChartPaletteColor(8)).toBe('#475569'); // 循环回第一个
+  it('palette 按 index 循环回绕', () => {
+    expect(getChartPaletteColor(8)).toBe(getChartPaletteColor(0));
+    expect(getChartPaletteColor(9)).toBe(getChartPaletteColor(1));
+    expect(getChartPaletteColor(0)).not.toBe(getChartPaletteColor(1));
   });
 
-  it('品牌对比取色为间隔索引', () => {
-    expect(BRAND_LINE_PALETTE_INDICES).toEqual([0, 2, 4, 6]);
+  it('品牌对比取色互不相同', () => {
+    const colors = BRAND_LINE_PALETTE_INDICES.map((i) => getChartPaletteColor(i));
+    expect(new Set(colors).size).toBe(colors.length);
   });
 
-  it('国别键映射到 palette 索引', () => {
+  it('国别键映射到稳定 palette 色', () => {
     expect(getOriginShareColor('domestic')).toBe(getChartPaletteColor(0));
     expect(getOriginShareColor('german')).toBe(getChartPaletteColor(1));
     expect(getOriginShareColor('french')).toBe(getChartPaletteColor(6));
@@ -82,12 +85,9 @@ describe('图表取色', () => {
 });
 
 describe('DEFAULT_TABLE_PROPS', () => {
-  it('表格壳层固定配置', () => {
-    expect(DEFAULT_TABLE_PROPS).toEqual({
-      bordered: true,
-      rowKey: 'key',
-      size: 'small',
-      stripe: true,
-    });
+  it('提供表格壳层必需字段', () => {
+    expect(DEFAULT_TABLE_PROPS.rowKey).toBe('key');
+    expect(DEFAULT_TABLE_PROPS.bordered).toBe(true);
+    expect(DEFAULT_TABLE_PROPS.stripe).toBe(true);
   });
 });

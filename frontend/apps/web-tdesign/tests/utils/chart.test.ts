@@ -1,36 +1,32 @@
 import type { ECOption } from '@vben/plugins/echarts';
 
+import {
+  expectEmptyChart,
+  itemAt,
+  seriesOf,
+  tooltipFormatterOf,
+} from '#tests/testUtils';
 import { describe, expect, it } from 'vitest';
 
 import {
-  buildLineChartOption,
-  buildStackedAreaChartOption,
   emptyChartIfNoData,
   getEmptyChartOption,
-} from '#/utils/chart';
-import { itemAt } from '#tests/testUtils';
-
-type TooltipFormatter = (params: unknown) => string;
-
-function tooltipFormatterOf(option: ECOption): TooltipFormatter {
-  const tooltip = option.tooltip as unknown as {
-    formatter?: (params: unknown) => string;
-  };
-  return tooltip.formatter as TooltipFormatter;
-}
+} from '#/utils/chartShared';
+import { buildLineChartOption } from '#/utils/lineChartOption';
+import { buildStackedAreaChartOption } from '#/utils/stackedAreaChartOption';
 
 describe('getEmptyChartOption / emptyChartIfNoData', () => {
   it('空图含标题文案与关闭动画', () => {
     const option = getEmptyChartOption('暂无数据');
     expect(option.animation).toBe(false);
-    expect((option.title as { text: string }).text).toBe('暂无数据');
+    expectEmptyChart(option, '暂无数据');
     expect(option.series).toEqual([]);
   });
 
   it('数据为空时返回空图，否则 undefined', () => {
     const empty = emptyChartIfNoData([], '暂无数据');
     expect(empty).toBeDefined();
-    expect(empty).toMatchObject({ title: { text: '暂无数据' } });
+    expectEmptyChart(empty as ECOption, '暂无数据');
     expect(emptyChartIfNoData([1], '暂无数据')).toBeUndefined();
   });
 });
@@ -48,16 +44,16 @@ describe('buildLineChartOption', () => {
     const option = buildLineChartOption(params);
     expect(option.animation).toBe(false);
     expect((option.xAxis as { data: string[] }).data).toEqual(params.xData);
-    const series = option.series as { data: (null | number)[]; name: string }[];
+    const series = seriesOf<{ data: (null | number)[]; name: string }>(option);
     expect(series.map((s) => s.name)).toEqual(['零售', '出口']);
     expect(itemAt(series, 0).data).toEqual([1, null, 3]);
   });
 
   it('series emphasis.focus 为 none（禁止 hover 淡化其它系列）', () => {
     const option = buildLineChartOption(params);
-    const series = option.series as {
+    const series = seriesOf<{
       emphasis: { disabled: boolean; focus: string };
-    }[];
+    }>(option);
     for (const item of series) {
       expect(item.emphasis.focus).toBe('none');
       expect(item.emphasis.disabled).toBe(true);
@@ -143,10 +139,10 @@ describe('buildStackedAreaChartOption', () => {
 
   it('series 全部 stack=total', () => {
     const option = buildStackedAreaChartOption(params);
-    const series = option.series as {
+    const series = seriesOf<{
       emphasis: { focus: string };
       stack: string;
-    }[];
+    }>(option);
     expect(series.every((s) => s.stack === 'total')).toBe(true);
     expect(series.every((s) => s.emphasis.focus === 'none')).toBe(true);
   });

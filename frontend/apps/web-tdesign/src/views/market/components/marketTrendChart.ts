@@ -9,7 +9,8 @@ import type {
 
 import type { Translate } from '#/utils/types';
 
-import { buildLineChartOption, emptyChartIfNoData } from '#/utils/chart';
+import { emptyChartIfNoData } from '#/utils/chartShared';
+import { buildLineChartOption } from '#/utils/lineChartOption';
 import {
   formatQuarterPeriod,
   formatYearPeriod,

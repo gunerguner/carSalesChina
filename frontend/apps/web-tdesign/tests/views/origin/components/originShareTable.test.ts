@@ -1,11 +1,9 @@
 import type { OriginShareTrendRecord } from '#/api/analysis';
 
+import { itemAt } from '#tests/testUtils';
 import { describe, expect, it } from 'vitest';
 
-import { itemAt } from '#tests/testUtils';
 import { ORIGIN_DIMENSIONS } from '#/utils/types';
-
-import { buildOriginShareChartOption } from '#/views/origin/components/originShareChart';
 import {
   buildOriginShareTableColumns,
   buildOriginShareTableRows,
@@ -37,39 +35,6 @@ const data: OriginShareTrendRecord[] = [
     french: 0,
   },
 ];
-
-describe('buildOriginShareChartOption', () => {
-  it('按 7 维生成堆叠面积系列，取两位小数', () => {
-    const option = buildOriginShareChartOption(data, t);
-    const series = option.series as {
-      data: number[];
-      name: string;
-      stack: string;
-    }[];
-    expect(series).toHaveLength(ORIGIN_DIMENSIONS.length);
-    expect(series.every((s) => s.stack === 'total')).toBe(true);
-    // ORIGIN_DIMENSIONS 顺序：domestic → german → ...
-    expect(itemAt(series, 0).name).toBe('pages.analysis.origin.domesticLabel');
-    expect(itemAt(series, 0).data).toEqual([60, 70.56]);
-    expect(itemAt(series, 1).data).toEqual([25, 20]);
-    expect(itemAt(series, 2).data).toEqual([15, 9.45]);
-  });
-
-  it('x 轴为 YYYY-MM，图例含全部系列名', () => {
-    const option = buildOriginShareChartOption(data, t);
-    expect((option.xAxis as { data: string[] }).data).toEqual([
-      '2024-01',
-      '2024-02',
-    ]);
-    const legend = option.legend as { data: string[] };
-    expect(legend.data).toHaveLength(ORIGIN_DIMENSIONS.length);
-  });
-
-  it('空数据 → 空图提示', () => {
-    const option = buildOriginShareChartOption([], t);
-    expect((option.title as { text: string }).text).toBe('pages.common.noData');
-  });
-});
 
 describe('buildOriginShareTableColumns', () => {
   it('时间列 + 7 维列', () => {

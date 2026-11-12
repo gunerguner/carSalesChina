@@ -1,13 +1,13 @@
 import type { NevBreakdownRecord, NevShareTrendRecord } from '#/api/analysis';
 
+import {
+  expectEmptyChart,
+  itemAt,
+  seriesOf,
+  tooltipFormatterOf,
+} from '#tests/testUtils';
 import { describe, expect, it } from 'vitest';
 
-import { itemAt } from '#tests/testUtils';
-
-import {
-  buildNevPenetrationTableColumns,
-  buildNevPenetrationTableRows,
-} from '#/views/nev/components/nevPenetrationTable';
 import { buildNevTrendChartOption } from '#/views/nev/components/nevTrendChart';
 
 const t = (key: string) => key;
@@ -47,7 +47,7 @@ describe('buildNevTrendChartOption', () => {
     const yAxis = option.yAxis as { max: number; type: string };
     expect(yAxis.type).toBe('value');
     expect(yAxis.max).toBe(100);
-    const series = option.series as { data: number[]; name: string }[];
+    const series = seriesOf<{ data: number[]; name: string }>(option);
     expect(itemAt(series, 0).data).toEqual([30, 40]);
     expect(itemAt(series, 0).name).toBe('渗透率');
     expect((option.xAxis as { data: string[] }).data).toEqual([
@@ -66,7 +66,7 @@ describe('buildNevTrendChartOption', () => {
       },
       t,
     );
-    const series = option.series as { data: number[] }[];
+    const series = seriesOf<{ data: number[] }>(option);
     expect(itemAt(series, 0).data).toEqual([33.33]);
   });
 
@@ -80,65 +80,24 @@ describe('buildNevTrendChartOption', () => {
       },
       t,
     );
-    const formatter = (
-      option.tooltip as unknown as { formatter: (params: unknown) => string }
-    ).formatter;
-    const html = formatter([{ axisValue: '2024-01', value: 30 }]);
+    const html = tooltipFormatterOf(option)([
+      { axisValue: '2024-01', value: 30 },
+    ]);
     expect(html).toBe('2024-01<br/>渗透率: 30%');
   });
 
   it('空数据 → 空图提示', () => {
-    const option = buildNevTrendChartOption(
-      {
-        color: '#111111',
-        data: [],
-        label: '渗透率',
-        valueKey: 'nev_penetration_rate',
-      },
-      t,
+    expectEmptyChart(
+      buildNevTrendChartOption(
+        {
+          color: '#111111',
+          data: [],
+          label: '渗透率',
+          valueKey: 'nev_penetration_rate',
+        },
+        t,
+      ),
+      'pages.common.noData',
     );
-    expect((option.title as { text: string }).text).toBe('pages.common.noData');
-  });
-});
-
-describe('buildNevPenetrationTableColumns', () => {
-  it('6 列且标题来自 i18n 键', () => {
-    const cols = buildNevPenetrationTableColumns(t) as { colKey: string }[];
-    expect(cols.map((c) => c.colKey)).toEqual([
-      'time',
-      'totalSales',
-      'nevSales',
-      'penetrationRate',
-      'bevSales',
-      'bevRatio',
-    ]);
-  });
-});
-
-describe('buildNevPenetrationTableRows', () => {
-  it('按月份 merge breakdown，缺失补 0，倒序输出', () => {
-    const rows = buildNevPenetrationTableRows(shareTrend, breakdown);
-    expect(rows.map((r) => r.time)).toEqual(['2024-02', '2024-01']);
-    const [feb, jan] = rows;
-    expect(feb).toMatchObject({
-      key: 1,
-      totalSales: 300,
-      nevSales: 120,
-      penetrationRate: 40,
-      bevSales: 0, // 2 月无 breakdown → 0
-      bevRatio: 0,
-    });
-    expect(jan).toMatchObject({
-      key: 0,
-      totalSales: 200,
-      nevSales: 60,
-      penetrationRate: 30,
-      bevSales: 20,
-      bevRatio: 33.3333,
-    });
-  });
-
-  it('空输入返回空数组', () => {
-    expect(buildNevPenetrationTableRows([], [])).toEqual([]);
   });
 });

@@ -53,47 +53,11 @@ export function useMarketData() {
     });
   }
 
-  /** 月度趋势（近 3 年），供折线图使用 */
-  function getMonthlyTrend(
-    levelType: LevelType,
-    dataType: DataType,
-  ): MonthlyTrendRecord[] {
-    return calcMonthlyTrend(
-      getSeriesCache(seriesCacheIndex, levelType, dataType),
-    );
-  }
-
-  /** 所有月份明细（含环比/同比），供月度明细表使用，倒序（最新在前）*/
-  function getMonthlyDetail(
-    levelType: LevelType,
-    dataType: DataType,
-  ): MonthlyDetailRecord[] {
-    return calcMonthlyDetail(
-      getSeriesCache(seriesCacheIndex, levelType, dataType),
-    );
-  }
-
-  /**
-   * 季度聚合（环比：上一季度，同比：去年同期季度）。
-   * 先用全量原始数据汇总，再取最近 12 个季度展示。
-   */
-  function getQuarterlyTrend(
-    levelType: LevelType,
-    dataType: DataType,
-  ): QuarterlyTrendRecord[] {
-    return calcQuarterlyTrend(
-      getSeriesCache(seriesCacheIndex, levelType, dataType),
-    );
-  }
-
-  /** 年度聚合（最新不完整年用同期累计比，完整年用全年同比），供年度图和表使用 */
-  function getYearlyTrend(
-    levelType: LevelType,
-    dataType: DataType,
-  ): YearlyTrendRecord[] {
-    return calcYearlyTrend(
-      getSeriesCache(seriesCacheIndex, levelType, dataType),
-    );
+  function withCache<T>(
+    calcFn: (cache: SeriesCache) => T,
+  ): (level: LevelType, type: DataType) => T {
+    return (level, type) =>
+      calcFn(getSeriesCache(seriesCacheIndex.value, level, type));
   }
 
   return {
@@ -103,20 +67,17 @@ export function useMarketData() {
     loading,
     period,
     fetchAll,
-    getMonthlyDetail,
-    getMonthlyTrend,
-    getQuarterlyTrend,
-    getYearlyTrend,
+    getMonthlyDetail: withCache(calcMonthlyDetail),
+    getMonthlyTrend: withCache(calcMonthlyTrend),
+    getQuarterlyTrend: withCache(calcQuarterlyTrend),
+    getYearlyTrend: withCache(calcYearlyTrend),
   };
 }
 
 function getSeriesCache(
-  seriesCacheIndex: Readonly<{ value: Map<string, SeriesCache> }>,
+  seriesCacheIndex: Map<string, SeriesCache>,
   levelType: LevelType,
   dataType: DataType,
 ): SeriesCache {
-  return (
-    seriesCacheIndex.value.get(`${levelType}::${dataType}`) ??
-    EMPTY_SERIES_CACHE
-  );
+  return seriesCacheIndex.get(`${levelType}::${dataType}`) ?? EMPTY_SERIES_CACHE;
 }

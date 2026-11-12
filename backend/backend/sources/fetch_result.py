@@ -1,9 +1,7 @@
 """外部数据源拉取结果：区分接口失败与成功但无数据。"""
 
 from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar
-
-T = TypeVar("T")
+from typing import Any
 
 
 @dataclass
@@ -38,7 +36,7 @@ class HttpJsonResult:
 
 
 @dataclass
-class SliceResult(Generic[T]):
+class SliceResult[T]:
     """单次切片拉取：data 为业务数据，error 非空即该切片失败。"""
 
     data: T
@@ -50,7 +48,7 @@ class SliceResult(Generic[T]):
 
 
 @dataclass
-class KeyedSliceResult(Generic[T]):
+class KeyedSliceResult[T]:
     """带聚合 key 的切片结果（并发按维度合并时使用）。"""
 
     key: str

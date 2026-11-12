@@ -1,121 +1,22 @@
-"""yiche_client：签名、错误判定、维度编码、行归一化与拉取编排。
+"""yiche_client：行归一化与拉取编排（含 HTTP 层错误路径）。
 
 重点守护的业务规则：
 - 出口口径销量 ÷10000 换算为万辆（零售/产量不换算）；
-- 总体与品牌的 saleType 编码相反（overall: 1/3/4=零售/产量/出口；brand: 1/3/4=零售/出口/产量）；
 - 任一维度失败 → ok=False 但仍合并成功维度数据。
 """
 
+import httpx
 import pytest
 
-from backend.sources import yiche_client
+from backend.sources import yiche_client, yiche_common
 from backend.sources.fetch_result import HttpJsonResult, SliceResult
 from backend.sources.yiche_client import (
     BRAND_FETCH_DIMS,
     OVERALL_FETCH_DIMS,
-    BrandFetchDim,
     YicheBrandClient,
     YicheOverallClient,
-    _api_error,
-    _md5_sign,
     _safe_get_json,
 )
-
-
-class TestMd5Sign:
-    def test_known_digest(self):
-        # 固定输入的签名快照：防止拼接格式被无意改动
-        assert _md5_sign('{"k":1}', 1717000000) == "38ae928455fc01ed5de44c2e127ac533"
-
-    def test_changes_with_ts(self):
-        assert _md5_sign('{"k":1}', 1717000000) != _md5_sign('{"k":1}', 1717000001)
-
-    def test_changes_with_param(self):
-        assert _md5_sign('{"k":1}', 1) != _md5_sign('{"k":2}', 1)
-
-
-class TestApiError:
-    def test_int_status_one_ok_when_expect_int(self):
-        assert _api_error({"status": 1}, "tag", expect_int=True) is None
-
-    def test_str_status_one_rejected_when_expect_int(self):
-        assert _api_error({"status": "1"}, "tag", expect_int=True) is not None
-
-    def test_str_status_one_ok_when_not_expect_int(self):
-        assert _api_error({"status": "1"}, "tag", expect_int=False) is None
-
-    def test_int_status_one_ok_when_not_expect_int(self):
-        assert _api_error({"status": 1}, "tag", expect_int=False) is None
-
-    @pytest.mark.parametrize("expect_int", [True, False])
-    def test_status_zero_returns_tagged_error(self, expect_int):
-        err = _api_error({"status": 0, "message": "失败"}, "tag", expect_int=expect_int)
-        assert err == "tag: 失败"
-
-    def test_missing_message_falls_back(self):
-        assert _api_error({"status": 0}, "tag", expect_int=True) == "tag: status!=1"
-
-
-class TestOverallDims:
-    def test_nine_dims(self):
-        assert len(OVERALL_FETCH_DIMS) == 9  # 3 data_type × 3 level
-
-    def test_first_dim_is_retail_all(self):
-        assert OVERALL_FETCH_DIMS[0].sale_type == 1
-        assert OVERALL_FETCH_DIMS[0].level_type == -1
-        assert OVERALL_FETCH_DIMS[0].data_type == "retail"
-        assert OVERALL_FETCH_DIMS[0].level_label == "all"
-
-    def test_export_coded_as_sale_type_4(self):
-        export_dims = [d for d in OVERALL_FETCH_DIMS if d.data_type == "export"]
-        assert len(export_dims) == 3
-        assert all(d.sale_type == 4 for d in export_dims)
-
-    def test_level_coding(self):
-        by_label = {d.level_label: d.level_type for d in OVERALL_FETCH_DIMS if d.data_type == "retail"}
-        assert by_label == {"all": -1, "nev": 4, "bev": 5}
-
-
-class TestBrandDims:
-    def test_five_dims(self):
-        assert len(BRAND_FETCH_DIMS) == 5  # retail×3 + production + export
-
-    def test_sale_type_coding_opposite_to_overall(self):
-        """品牌接口 3=出口、4=产量，与总体（3=产量、4=出口）相反。"""
-        by_type = {d.data_type: d.sale_type for d in BRAND_FETCH_DIMS}
-        assert by_type == {"retail": 1, "production": 4, "export": 3}
-
-    def test_only_retail_has_level_breakdown(self):
-        labels_by_type: dict[str, list[str]] = {}
-        for d in BRAND_FETCH_DIMS:
-            labels_by_type.setdefault(d.data_type, []).append(d.level_label)
-        assert labels_by_type == {
-            "retail": ["all", "nev", "bev"],
-            "production": ["all"],
-            "export": ["all"],
-        }
-
-    def test_dim_key_omits_energy_for_all(self):
-        assert BrandFetchDim(1, -1, "retail", "all").dim_key() == "sale=1"
-        assert BrandFetchDim(1, 1, "retail", "nev").dim_key() == "sale=1|energy=1"
-        assert BrandFetchDim(3, -1, "export", "all").dim_key() == "sale=3"
-        assert BrandFetchDim(4, 3, "retail", "bev").dim_key() == "sale=4|energy=3"
-
-    def test_log_tag_contains_key_and_batch(self):
-        tag = BrandFetchDim(1, -1, "retail", "all").log_tag([5, 6])
-        assert tag == "sale=1 batch=[5, 6]"
-
-    def test_to_api_param(self):
-        param = BrandFetchDim(1, 1, "retail", "nev").to_api_param([5, 6], "2024-06-01")
-        assert param == {
-            "masterIds": "5,6",
-            "cityId": 0,
-            "isNewEnergy": 1,
-            "manu": -1,
-            "saleType": 1,
-            "lastSaleTime": "2024-06-01",
-        }
-
 
 class TestNormalizeOverallRow:
     def test_retail_not_scaled(self):
@@ -215,7 +116,7 @@ class TestFetchOverallSales:
 
 
 class TestNormalizeBrandRow:
-    def test_full_row(self):
+    def test_normalizes_all_fields(self):
         row = YicheBrandClient._normalize_brand_row(
             {"year": 2024, "month": 5, "num": "31.5"}, master_id=100,
             data_type="retail", level_label="all",
@@ -297,7 +198,7 @@ class TestFetchBrandSales:
 
 
 class TestSafeGetJson:
-    def test_success(self, monkeypatch):
+    def test_http_ok_returns_body(self, monkeypatch):
         class FakeResp:
             def raise_for_status(self):
                 return None
@@ -305,16 +206,16 @@ class TestSafeGetJson:
             def json(self):
                 return {"status": 1, "data": []}
 
-        monkeypatch.setattr(yiche_client.httpx, "get", lambda *a, **k: FakeResp())
+        monkeypatch.setattr(yiche_common.httpx, "get", lambda *a, **k: FakeResp())
         result = _safe_get_json("http://example.test", timeout=1, tag="t")
         assert result.ok
         assert result.body == {"status": 1, "data": []}
 
     def test_exception_returns_error(self, monkeypatch):
         def boom(*a, **k):
-            raise yiche_client.httpx.ConnectError("timeout")
+            raise httpx.ConnectError("timeout")
 
-        monkeypatch.setattr(yiche_client.httpx, "get", boom)
+        monkeypatch.setattr(yiche_common.httpx, "get", boom)
         result = _safe_get_json("http://example.test", timeout=1, tag="overall")
         assert not result.ok
         assert result.error is not None

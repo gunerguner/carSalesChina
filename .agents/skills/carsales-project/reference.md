@@ -111,7 +111,7 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 | 用途 | 路径 |
 |------|------|
 | 双模式视觉 token | `apps/web-tdesign/src/styles/theme.css` |
-| 图表主题与交互 | `apps/web-tdesign/src/utils/chart.ts` |
+| 图表主题与交互 | `apps/web-tdesign/src/utils/chartShared.ts`、`lineChartOption.ts`、`stackedAreaChartOption.ts` |
 | 同比着色 | `apps/web-tdesign/src/utils/format.ts` |
 | 筛选面板 | `apps/web-tdesign/src/components/FilterPanel.vue` |
 | 图表/表格区块 | `apps/web-tdesign/src/components/SectionCard.vue` |
@@ -134,7 +134,7 @@ SKILL.md 的扩展材料；改表结构、外部源、部署时按需阅读。
 - 禁止 `emphasis: { focus: 'series' }`（堆叠柱 hover 时会淡化其他系列）
 - 折线/柱系列使用 `emphasis: { disabled: true, focus: 'none' }`；靠 tooltip + axisPointer 反馈
 - tooltip 设 `confine: true`，背景/边框读 `--chart-tooltip-*`，保证 light/dark 对比度
-- 改配色或交互优先改 `chart.ts`，各页 builder 只负责数据与 legend/grid
+- 改配色或交互优先改 `chartShared.ts` / `lineChartOption.ts` / `stackedAreaChartOption.ts`，各页 builder 只负责数据与 legend/grid
 
 ### UI 手动验证清单（自动化未覆盖的补充项，AI coding 后按需抽检）
 

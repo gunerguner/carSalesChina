@@ -62,8 +62,8 @@ class TestPureHelpers:
         assert row["phev_sales"] == 60.0
         assert row["bev_ratio"] == 25.0
         assert row["phev_ratio"] == 75.0
-        assert row["hybrid_sales"] == 0
-        assert row["hybrid_ratio"] == 0
+        assert "hybrid_sales" not in row
+        assert "hybrid_ratio" not in row
 
     def test_nev_breakdown_row_clamps_negative_phev(self):
         """bev > nev（脏数据）时插混钳制为 0 而非负数。"""

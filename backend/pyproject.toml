@@ -1,3 +1,9 @@
+[tool.pyright]
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+extraPaths = ["."]
+
 [tool.pytest.ini_options]
 # 从 backend/ 目录运行 pytest，使 `backend.` 包可直接导入
 pythonpath = ["."]

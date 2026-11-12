@@ -99,8 +99,6 @@ def _nev_breakdown_row(key: PeriodKey, levels: dict[str, float]) -> NevBreakdown
         "bev_ratio": _percent(bev, nev),
         "phev_sales": phev,
         "phev_ratio": _percent(phev, nev),
-        "hybrid_sales": 0,
-        "hybrid_ratio": 0,
     }
 
 

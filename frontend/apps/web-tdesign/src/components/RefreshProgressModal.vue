@@ -11,12 +11,12 @@ import { Button, Collapse, CollapsePanel, Dialog } from 'tdesign-vue-next';
 import { useAdminDataRefresh } from '#/composables/useAdminDataRefresh';
 import { PHASE_ORDER } from '#/composables/useAdminDataRefresh.types';
 import { $t } from '#/locales';
+import { isNil } from '#/utils/format';
 
 const { closeProgressModal, progressState, progressVisible, refreshing } =
   useAdminDataRefresh();
 
 const visible = computed(() => progressVisible.value);
-const phaseOrder = PHASE_ORDER;
 
 const canClose = computed(
   () =>
@@ -26,19 +26,15 @@ const canClose = computed(
       progressState.value.overallStatus === 'error'),
 );
 
-const errorDetails = computed(() => {
-  const lines: string[] = [];
-  phaseOrder.forEach((key) => {
+const errorDetails = computed(() =>
+  PHASE_ORDER.flatMap((key) => {
     const item = progressState.value.phases[key];
-    if (!item.source_errors) return;
-    Object.entries(item.source_errors).forEach(([source, message]) => {
-      if (message) {
-        lines.push(`${item.label}(${source}): ${message}`);
-      }
-    });
-  });
-  return lines;
-});
+    if (!item.source_errors) return [];
+    return Object.entries(item.source_errors)
+      .filter(([, message]) => Boolean(message))
+      .map(([source, message]) => `${item.label}(${source}): ${message}`);
+  }),
+);
 
 function phaseIcon(key: PhaseKey): string {
   const { status } = progressState.value.phases[key];
@@ -67,7 +63,7 @@ function phaseMetric(key: PhaseKey): string {
 }
 
 function formatElapsed(elapsed?: number): string {
-  if (elapsed === undefined || elapsed === null) return '—';
+  if (isNil(elapsed)) return '—';
   return `${elapsed.toFixed(1)}s`;
 }
 
@@ -109,7 +105,7 @@ function handleClose() {
 
     <div class="phase-list">
       <div
-        v-for="phaseKey in phaseOrder"
+        v-for="phaseKey in PHASE_ORDER"
         :key="phaseKey"
         class="phase-row"
         :class="`phase-row--${progressState.phases[phaseKey].status}`"

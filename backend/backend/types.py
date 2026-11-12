@@ -83,8 +83,6 @@ class NevBreakdownRow(AnalysisPeriodRow):
     bev_ratio: float
     phev_sales: float
     phev_ratio: float
-    hybrid_sales: float
-    hybrid_ratio: float
 
 
 class OriginShareTrendRow(AnalysisPeriodRow):

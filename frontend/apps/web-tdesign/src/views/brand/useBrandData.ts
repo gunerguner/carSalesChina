@@ -69,11 +69,12 @@ export function useBrandData() {
       ? []
       : getLastNMonthKeysEndingAt(latest.year, latest.month, nMonths);
     return rawData.value.map((brand) => {
-      const pointMap = new Map<string, number>();
-      for (const point of brand.monthly_data ?? []) {
-        const key = toMonthKey(point.year, point.month);
-        pointMap.set(key, point.sales ?? 0);
-      }
+      const pointMap = new Map(
+        (brand.monthly_data ?? []).map((point) => [
+          toMonthKey(point.year, point.month),
+          point.sales ?? 0,
+        ]),
+      );
       return {
         brand_name: brand.brand_name,
         points: recentKeys.map((time) => {
@@ -92,10 +93,14 @@ export function useBrandData() {
     return rawData.value.map((brand) => {
       const monthlyData = brand.monthly_data ?? [];
       const yearMap = sumByYear(monthlyData, (point) => point.sales ?? 0);
-      const monthlyMap = new Map<string, number>();
+      const monthlyMap = new Map(
+        monthlyData.map((point) => [
+          toMonthKey(point.year, point.month),
+          point.sales ?? 0,
+        ]),
+      );
       const maxMonthByYear = new Map<number, number>();
       for (const point of monthlyData) {
-        monthlyMap.set(toMonthKey(point.year, point.month), point.sales ?? 0);
         maxMonthByYear.set(
           point.year,
           Math.max(maxMonthByYear.get(point.year) ?? 0, point.month),
@@ -137,12 +142,9 @@ export function useBrandData() {
   });
 
   const timeLabels = computed<string[]>(() => {
-    const all = new Set<string>();
-    for (const brand of activeSeries.value) {
-      for (const point of brand.points) {
-        all.add(point.time);
-      }
-    }
+    const all = new Set(
+      activeSeries.value.flatMap((brand) => brand.points.map((p) => p.time)),
+    );
     return [...all].toSorted((a, b) => a.localeCompare(b));
   });
 

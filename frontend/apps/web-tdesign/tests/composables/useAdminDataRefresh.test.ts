@@ -31,7 +31,7 @@ const doneResult: RefreshAllResult = {
   status: 'success',
 };
 
-describe('refreshAdminData', () => {
+describe('useAdminDataRefresh', () => {
   beforeEach(() => {
     refreshAllDataStream.mockReset();
     vi.mocked(emitDataRefresh).mockClear();

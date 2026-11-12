@@ -18,7 +18,7 @@ const props = defineProps<{
   shareTrend: NevShareTrendRecord[];
 }>();
 
-const columns = buildNevPenetrationTableColumns($t);
+const columns = computed(() => buildNevPenetrationTableColumns($t));
 const tableData = computed(() =>
   buildNevPenetrationTableRows(props.shareTrend, props.breakdownTrend),
 );

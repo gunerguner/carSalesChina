@@ -5,10 +5,10 @@ import type { BrandSeriesRecord } from '../types';
 import type { Translate } from '#/utils/types';
 
 import {
-  buildLineChartOption,
   emptyChartIfNoData,
   getEmptyChartOption,
-} from '#/utils/chart';
+} from '#/utils/chartShared';
+import { buildLineChartOption } from '#/utils/lineChartOption';
 import {
   BRAND_LINE_PALETTE_INDICES,
   getChartPaletteColor,
@@ -33,10 +33,9 @@ export function buildBrandTrendChartOption(
   if (empty) return empty;
 
   const series = data.map((brand, index) => {
-    const map = new Map<string, number>();
-    for (const point of brand.points ?? []) {
-      map.set(point.time, point.sales ?? 0);
-    }
+    const map = new Map(
+      (brand.points ?? []).map((point) => [point.time, point.sales ?? 0]),
+    );
     const paletteIndex =
       BRAND_LINE_PALETTE_INDICES[index % BRAND_LINE_PALETTE_INDICES.length] ??
       0;

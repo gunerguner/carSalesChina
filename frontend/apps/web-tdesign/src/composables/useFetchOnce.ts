@@ -8,13 +8,11 @@ import { ensureArray } from '#/utils/format';
 export const LOAD_FAILED_I18N_KEY = 'pages.common.loadFailed';
 
 /** Assign API array response into a ref; coerces non-arrays to []. */
-export function fetchArrayInto<T>(
+export async function fetchArrayInto<T>(
   target: Ref<T[]>,
   fetcher: () => Promise<unknown>,
 ): Promise<void> {
-  return fetcher().then((value) => {
-    target.value = ensureArray<T>(value);
-  });
+  target.value = ensureArray<T>(await fetcher());
 }
 
 /**

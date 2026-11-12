@@ -1,8 +1,7 @@
 import type { BrandSeriesRecord } from '#/views/brand/types';
 
+import { expectEmptyChart, itemAt, seriesOf } from '#tests/testUtils';
 import { describe, expect, it } from 'vitest';
-
-import { itemAt } from '#tests/testUtils';
 
 import { buildBrandTrendChartOption } from '#/views/brand/components/brandTrendChart';
 
@@ -29,11 +28,11 @@ describe('buildBrandTrendChartOption', () => {
       'zh-CN',
       t,
     );
-    const series = option.series as {
+    const series = seriesOf<{
       data: number[];
       itemStyle: { color: string };
       name: string;
-    }[];
+    }>(option);
     expect(series.map((s) => s.name)).toEqual(['比亚迪', '理想']);
     expect(itemAt(series, 0).data).toEqual([100, 120, 0]); // 2024-03 缺失 → 0
     expect(itemAt(series, 1).data).toEqual([50, 0, 0]);
@@ -48,23 +47,19 @@ describe('buildBrandTrendChartOption', () => {
   });
 
   it('timeLabels 为空 → 空图（不依赖数据空判定）', () => {
-    const option = buildBrandTrendChartOption(
-      { data, timeLabels: [] },
-      'zh-CN',
-      t,
-    );
-    expect((option.title as { text: string }).text).toBe(
+    expectEmptyChart(
+      buildBrandTrendChartOption({ data, timeLabels: [] }, 'zh-CN', t),
       'pages.brand.trend.noData',
     );
   });
 
   it('有标签但无数据 → 空图提示', () => {
-    const option = buildBrandTrendChartOption(
-      { data: [], timeLabels: ['2024-01'] },
-      'zh-CN',
-      t,
-    );
-    expect((option.title as { text: string }).text).toBe(
+    expectEmptyChart(
+      buildBrandTrendChartOption(
+        { data: [], timeLabels: ['2024-01'] },
+        'zh-CN',
+        t,
+      ),
       'pages.brand.trend.noData',
     );
   });

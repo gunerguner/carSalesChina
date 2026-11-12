@@ -57,5 +57,11 @@ class FailureLockout:
             self._failures.pop(key, None)
             self._locked_until.pop(key, None)
 
+    def reset(self) -> None:
+        """清空全部失败计数与锁定状态（测试夹具用）。"""
+        with self._mu:
+            self._failures.clear()
+            self._locked_until.clear()
+
 
 import_password_lock = FailureLockout(max_failures=5, lock_seconds=15 * 60)

@@ -16,14 +16,14 @@ class TestMarketRaw:
             {"year": 2024, "month": 1, "data_type": "retail", "level_type": "all", "sales": 100.0}
         ]
 
-    def test_empty_data(self, client):
+    def test_empty_db_returns_empty_list(self, client):
         resp = client.get("/api/v1/market/raw")
         assert resp.status_code == 200
         assert resp.json()["data"] == []
 
 
 class TestBrandMetaAll:
-    def test_envelope(self, client, db_session):
+    def test_envelope_with_seeded_brand(self, client, db_session):
         add_brand_meta(db_session, brand_name="比亚迪", brand_name_en="byd", master_id=100)
         db_session.commit()
         resp = client.get("/api/v1/brands/meta/all")
@@ -35,7 +35,7 @@ class TestBrandMetaAll:
         assert meta[0]["brand_name"] == "比亚迪"
         assert isinstance(meta[0]["brand_id"], int)
 
-    def test_empty_data(self, client):
+    def test_empty_db_returns_empty_list(self, client):
         assert client.get("/api/v1/brands/meta/all").json()["data"] == []
 
 

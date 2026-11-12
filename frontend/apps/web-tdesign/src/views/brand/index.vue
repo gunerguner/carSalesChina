@@ -8,6 +8,7 @@ import DataLoadState from '#/components/DataLoadState.vue';
 import FilterPanel from '#/components/FilterPanel.vue';
 import SectionCard from '#/components/SectionCard.vue';
 import { usePageRefresh } from '#/composables/usePageRefresh';
+import { trackThemeMode } from '#/composables/useThemeMode';
 import { $t } from '#/locales';
 
 import BrandSelectBar from './components/BrandSelectBar.vue';
@@ -30,8 +31,7 @@ const {
 usePageRefresh(() => fetchRawData(true), { initialLoad: () => {} });
 
 const chartOption = computed(() => {
-  // 显式读取主题 mode 以建立响应式依赖；切换 light/dark 时 option 重建
-  void preferences.theme.mode;
+  trackThemeMode();
   return buildBrandTrendChartOption(
     { data: activeSeries.value, timeLabels: timeLabels.value },
     preferences.app.locale,

@@ -2,6 +2,8 @@
 
 from types import SimpleNamespace
 
+import pytest
+
 from backend.models.overall import SalesData
 from backend.services.analysis_periods import (
     PeriodKey,
@@ -20,12 +22,8 @@ class TestPeriodKey:
 
     def test_frozen(self):
         key = PeriodKey(2024, 5)
-        try:
+        with pytest.raises(AttributeError):
             key.year = 2025
-        except AttributeError:
-            pass
-        else:
-            raise AssertionError("PeriodKey 应为 frozen，不允许修改")
 
     def test_month_defaults_none(self):
         assert PeriodKey(2024).month is None

@@ -1,3 +1,4 @@
+import { itemAt } from '#tests/testUtils';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -50,14 +51,14 @@ describe('getLocalizedMonthLabels', () => {
 
   it('英文为缩写标签', () => {
     const labels = getLocalizedMonthLabels('en-US');
-    expect(labels[0]).toBe('Jan');
-    expect(labels[11]).toBe('Dec');
+    expect(itemAt(labels, 0)).toBe('Jan');
+    expect(itemAt(labels, 11)).toBe('Dec');
   });
 
   it('中文含“月”', () => {
     const labels = getLocalizedMonthLabels('zh-CN');
-    expect(labels[0]).toContain('月');
-    expect(labels[11]).toContain('月');
+    expect(itemAt(labels, 0)).toContain('月');
+    expect(itemAt(labels, 11)).toContain('月');
   });
 });
 

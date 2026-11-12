@@ -51,7 +51,7 @@ carSales/                     # Git 根
 
 | 层 | 技术 |
 |----|------|
-| 后端 | Python ≥3.10，FastAPI，SQLModel/SQLAlchemy，Uvicorn/Gunicorn |
+| 后端 | Python ≥3.12（本地 venv 3.14 / Docker 3.13），FastAPI，SQLModel/SQLAlchemy，Uvicorn/Gunicorn |
 | 数据库 | **MySQL**（PyMySQL；Docker 镜像 `mysql:9.0`）；**无 Redis** |
 | 外部源 | 易车 HTTP API（`yiche_client.py`）；乘联会 via AkShare（`cpca_client.py`） |
 | 前端 | Vue 3 + Vite，TDesign Vue Next，Vben Admin Monorepo，Pinia，ECharts |
@@ -119,7 +119,7 @@ flowchart LR
 | 新表/字段 | `models/` + **`init_db.sql` 唯一索引**（upsert 依赖） |
 | 新前端页 | `router/routes/modules/app.ts` + `views/` + `locales/langs/*/pages.json` |
 | 市场本地聚合 | `views/market/marketDataUtils.ts`（优先复用，勿为每个筛选项打 API） |
-| 图表工具 | `src/utils/chart.ts`、`src/utils/format.ts`、`src/utils/period.ts` |
+| 图表工具 | `src/utils/chartShared.ts`、`lineChartOption.ts`、`stackedAreaChartOption.ts`、`format.ts`、`period.ts` |
 | 前端 UI / 主题 | `src/styles/theme.css`（light/dark token）、`preferences.ts`；**无 PageShell**，导航标题即页名 |
 | 管理刷新 UI | `layouts/basic.vue` 工具栏按钮 → SSE 进度浮层 → `api/admin.ts`；超时 300s |
 | 部署/静态/API 404 | 改前端后须 **重建 frontend 镜像**；`docker/nginx.conf` 反代 `/api` → backend:8001 |
@@ -177,7 +177,7 @@ OpenAPI：`http://localhost:8001/docs`。curl 需先取 `csrf_token` Cookie，�
 
 - **布局**：页面用 `page-content` 紧凑内边距；筛选外包 `FilterPanel`；图表/表格区块用 `SectionCard`；**不使用** Vben `Page` / PageShell（顶栏导航已有页名）
 - **主题**：`preferences.ts` 默认 `slate` + `radius: 0.75`；light/dark 经偏好抽屉切换；`theme.css` 定义 `--chart-*` 与 TDesign token 桥接
-- **图表**：统一走 `chart.ts`；配色运行时读 CSS 变量；禁止 `emphasis.focus: 'series'` 导致 hover 淡化其他系列
+- **图表**：统一走 `chartShared.ts` / `lineChartOption.ts` / `stackedAreaChartOption.ts`；配色运行时读 CSS 变量；禁止 `emphasis.focus: 'series'` 导致 hover 淡化其他系列
 - **读页缓存**：市场 / NEV / 车系进入页面走不带 `force` 的拉取（`createFetchOnceController` 会话缓存）；品牌按筛选 key 缓存。管理刷新 `emitDataRefresh` 递增 epoch，当前页强制重拉，未打开的页下次进入发现 epoch 变化后再拉。失败重试仍 `force`
 - **共享组件**：`ChartCard`、`DataLoadState`（骨架占位）、`FilterPanel`、`SectionCard`；市场/品牌周期切换在筛选条；NEV 与车系占比为同级顶层页（导航栏 Tab）
 

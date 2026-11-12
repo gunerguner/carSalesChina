@@ -3,11 +3,10 @@
 import pytest
 
 from backend.core.exceptions import AppError
+from backend.core.rate_limit import FailureLockout
 
 
 def test_import_password_lockout():
-    from backend.core.rate_limit import FailureLockout
-
     lock = FailureLockout(max_failures=5, lock_seconds=900)
     for _ in range(5):
         lock.fail("10.0.0.1")
@@ -17,8 +16,6 @@ def test_import_password_lockout():
 
 
 def test_import_password_success_clears_failures():
-    from backend.core.rate_limit import FailureLockout
-
     lock = FailureLockout(max_failures=5, lock_seconds=900)
     for _ in range(4):
         lock.fail("10.0.0.2")
@@ -27,3 +24,11 @@ def test_import_password_success_clears_failures():
     for _ in range(4):
         lock.fail("10.0.0.2")
     lock.check("10.0.0.2")
+
+
+def test_reset_clears_lock_state():
+    lock = FailureLockout(max_failures=5, lock_seconds=900)
+    for _ in range(5):
+        lock.fail("10.0.0.3")
+    lock.reset()
+    lock.check("10.0.0.3")

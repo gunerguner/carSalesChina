@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-import { preferences } from '@vben/preferences';
-
 import ChartCard from '#/components/ChartCard.vue';
 import DataLoadState from '#/components/DataLoadState.vue';
 import SectionCard from '#/components/SectionCard.vue';
 import { usePageRefresh } from '#/composables/usePageRefresh';
+import { trackThemeMode } from '#/composables/useThemeMode';
 import { $t } from '#/locales';
 import { getChartPaletteColor } from '#/utils/style';
 
@@ -20,8 +19,7 @@ const { error, loading, fetchAll, nevShareTrend, nevBreakdown } =
 usePageRefresh(() => fetchAll(true), { initialLoad: () => fetchAll() });
 
 const nevPenetrationChartOption = computed(() => {
-  // 显式读取主题 mode 以建立响应式依赖；切换 light/dark 时 option 重建
-  void preferences.theme.mode;
+  trackThemeMode();
   return buildNevTrendChartOption(
     {
       color: getChartPaletteColor(0),
@@ -34,7 +32,7 @@ const nevPenetrationChartOption = computed(() => {
 });
 
 const bevBreakdownChartOption = computed(() => {
-  void preferences.theme.mode;
+  trackThemeMode();
   return buildNevTrendChartOption(
     {
       color: getChartPaletteColor(1),

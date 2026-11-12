@@ -69,3 +69,13 @@ class TestInfrastructureExceptions:
         body = resp.json()
         assert body["code"] == EXTERNAL_SOURCE_ERROR
         assert body["message"] == ExternalSourceAppError().message
+
+
+class TestUnhandledException:
+    def test_500_envelope(self, client, monkeypatch):
+        """未捕获异常 → 统一 500 信封（code=9000）。"""
+        resp = _boom(client, monkeypatch, RuntimeError("意外错误"))
+        assert resp.status_code == 500
+        body = resp.json()
+        assert body["code"] == INTERNAL_ERROR
+        assert body["message"] == "服务内部错误"

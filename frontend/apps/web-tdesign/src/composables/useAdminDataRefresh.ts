@@ -54,10 +54,15 @@ function getPhaseLabels(): Record<PhaseKey, string> {
 function initProgressState(): RefreshProgressState {
   const labels = getPhaseLabels();
   const state = createInitialProgressState();
-  PHASE_ORDER.forEach((key) => {
+  for (const key of PHASE_ORDER) {
     state.phases[key].label = labels[key];
-  });
+  }
   return state;
+}
+
+function finishRefresh() {
+  refreshing.value = false;
+  abortController = null;
 }
 
 export function useAdminDataRefresh() {
@@ -83,21 +88,19 @@ export function useAdminDataRefresh() {
       abortController?.abort();
       resetProgressState();
       refreshing.value = true;
-
       abortController = new AbortController();
-      refreshAllDataStream(
+
+      void refreshAllDataStream(
         {
           onDone: (result: RefreshAllResult) => {
             accept();
             progressState.value = applyStreamDone(progressState.value, result);
-            refreshing.value = false;
-            abortController = null;
+            finishRefresh();
           },
           onError: (error: RefreshStreamError) => {
             accept();
             progressState.value = applyStreamError(progressState.value, error);
-            refreshing.value = false;
-            abortController = null;
+            finishRefresh();
           },
           onProgress: (event: RefreshProgressEvent) => {
             accept();
@@ -124,8 +127,7 @@ export function useAdminDataRefresh() {
         progressState.value = applyStreamError(progressState.value, {
           message,
         });
-        refreshing.value = false;
-        abortController = null;
+        finishRefresh();
       });
     });
   }

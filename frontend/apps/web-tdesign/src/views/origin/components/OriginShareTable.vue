@@ -17,7 +17,7 @@ const props = defineProps<{
   data: OriginShareTrendRecord[];
 }>();
 
-const columns = buildOriginShareTableColumns($t);
+const columns = computed(() => buildOriginShareTableColumns($t));
 const tableData = computed(() => buildOriginShareTableRows(props.data));
 </script>
 

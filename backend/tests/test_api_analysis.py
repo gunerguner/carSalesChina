@@ -34,7 +34,7 @@ class TestNevShareTrend:
             client.get("/api/v1/analysis/nev-share/trend", params={"granularity": "quarterly"})
         )
 
-    def test_defaults(self, client, analysis_dataset):
+    def test_defaults_years3_monthly(self, client, analysis_dataset):
         resp = client.get("/api/v1/analysis/nev-share/trend")
         assert resp.status_code == 200
         assert len(resp.json()["data"]) == 3  # 默认 years=3 覆盖数据集全部
@@ -47,7 +47,7 @@ class TestNevBreakdown:
         assert (first["nev_sales"], first["bev_sales"], first["phev_sales"]) == (30.0, 10.0, 20.0)
         assert (first["bev_ratio"], first["phev_ratio"]) == (33.33, 66.67)
 
-    def test_empty_data(self, client):
+    def test_empty_db_returns_empty_list(self, client):
         assert client.get("/api/v1/analysis/nev-breakdown").json()["data"] == []
 
 
@@ -59,21 +59,5 @@ class TestOriginShareTrend:
         first = data[0]
         assert (first["domestic"], first["german"], first["japanese"]) == (60.0, 25.0, 15.0)
 
-    def test_empty_data(self, client):
+    def test_empty_db_returns_empty_list(self, client):
         assert client.get("/api/v1/analysis/origin-share/trend").json()["data"] == []
-
-
-class TestUnhandledException:
-    def test_500_envelope(self, client, monkeypatch):
-        """未捕获异常 → 统一 500 信封（code=9000）。"""
-        from backend.routers import market
-
-        def boom(db):
-            raise RuntimeError("意外错误")
-
-        monkeypatch.setattr(market, "get_raw_market_data", boom)
-        resp = client.get("/api/v1/market/raw")
-        assert resp.status_code == 500
-        body = resp.json()
-        assert body["code"] == 9000
-        assert body["message"] == "服务内部错误"

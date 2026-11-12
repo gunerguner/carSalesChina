@@ -66,23 +66,20 @@ const columns = computed<PrimaryTableCol[]>(() => {
 });
 
 const tableData = computed(() => {
-  const brandMap = new Map<
-    string,
-    Map<string, { sales: number; yoyGrowth: null | number }>
-  >();
-  for (const brand of props.data) {
-    const pointMap = new Map<
-      string,
-      { sales: number; yoyGrowth: null | number }
-    >();
-    for (const point of brand.points ?? []) {
-      pointMap.set(point.time, {
-        sales: point.sales ?? 0,
-        yoyGrowth: point.yoyGrowth ?? null,
-      });
-    }
-    brandMap.set(brand.brand_name, pointMap);
-  }
+  const brandMap = new Map(
+    props.data.map((brand) => [
+      brand.brand_name,
+      new Map(
+        (brand.points ?? []).map((point) => [
+          point.time,
+          {
+            sales: point.sales ?? 0,
+            yoyGrowth: point.yoyGrowth ?? null,
+          },
+        ]),
+      ),
+    ]),
+  );
 
   return tableTimeLabels.value.map((time) => {
     const row: Record<string, null | number | string> = { key: time, time };

@@ -3,8 +3,9 @@ import type { ECOption } from '@vben/plugins/echarts';
 import type { OriginShareTrendRecord } from '#/api/analysis';
 import type { Translate } from '#/utils/types';
 
-import { buildStackedAreaChartOption, emptyChartIfNoData } from '#/utils/chart';
+import { emptyChartIfNoData } from '#/utils/chartShared';
 import { toMonthKey } from '#/utils/period';
+import { buildStackedAreaChartOption } from '#/utils/stackedAreaChartOption';
 import { getOriginShareColor } from '#/utils/style';
 import { ORIGIN_DIMENSIONS } from '#/utils/types';
 
@@ -12,7 +13,7 @@ export function buildOriginShareChartOption(
   data: OriginShareTrendRecord[],
   t: Translate,
 ): ECOption {
-  const empty = emptyChartIfNoData(data ?? [], t('pages.common.noData'));
+  const empty = emptyChartIfNoData(data, t('pages.common.noData'));
   if (empty) return empty;
 
   const timeLabels = data.map((item) => toMonthKey(item.year, item.month));

@@ -1,161 +1,49 @@
 """易车销量采集。overall salesType: 1=零售,3=产量,4=出口；brand saleType: 1=零售,3=出口,4=产量（3/4 与总体相反）。"""
 
-import hashlib
 import json
 import logging
 import time
-import uuid
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections.abc import Callable
-from dataclasses import dataclass
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date
-
-import httpx
+from itertools import batched
 
 from backend.types import BrandSalesRecord, OverallSalesRecord
 from backend.sources.fetch_result import (
-    HttpJsonResult,
     KeyedSliceResult,
     SliceResult,
     SourceFetchResult,
 )
+from backend.sources.yiche_common import (
+    BRAND_FETCH_DIMS,
+    OVERALL_FETCH_DIMS,
+    BrandFetchDim,
+    OverallFetchDim,
+    _BRAND_API_URL,
+    _BRAND_BATCH_SIZE,
+    _BRAND_WORKERS,
+    _CID,
+    _OVERALL_API_URL,
+    _api_error,
+    _brand_headers,
+    _md5_sign,
+    _safe_get_json,
+)
 
 logger = logging.getLogger(__name__)
 
-_CID = "602"
-_SECRET = "DB2560A6EBC65F37A0484295CD4EDD25"
-_OVERALL_API_URL = (
-    "https://carwebapi.yiche.com/carrankingapi/api/carserialsalestrend/search"
-)
-_BRAND_API_URL = (
-    "https://mhapi.yiche.com/hcar/h_car/h5/api/v1/ranking/get_master_sales_history"
-)
-_BRAND_BATCH_SIZE = 5
-_BRAND_WORKERS = 8
-
-_OVERALL_SALE_RETAIL = 1
-_OVERALL_SALE_PRODUCTION = 3
-_OVERALL_SALE_EXPORT = 4
-_OVERALL_LEVEL = {"all": -1, "nev": 4, "bev": 5}
-
-_BRAND_SALE_RETAIL = 1
-_BRAND_SALE_EXPORT = 3
-_BRAND_SALE_PRODUCTION = 4
-_BRAND_ENERGY = {"all": -1, "nev": 1, "bev": 3}
-
-
-def _md5_sign(param_json: str, ts: int) -> str:
-    raw = f"cid={_CID}&param={param_json}{_SECRET}{ts}"
-    return hashlib.md5(raw.encode()).hexdigest()
-
-
-def _safe_get_json(
-    url: str,
-    *,
-    params: dict | None = None,
-    headers: dict | None = None,
-    timeout: float,
-    tag: str,
-) -> HttpJsonResult:
-    try:
-        resp = httpx.get(url, params=params, headers=headers, timeout=timeout)
-        resp.raise_for_status()
-        return HttpJsonResult(body=resp.json())
-    except Exception as e:
-        logger.error("易车 API 请求失败 (%s): %s", tag, e)
-        return HttpJsonResult(error=f"{tag}: {e}")
-
-
-def _api_error(body: dict, tag: str, *, expect_int: bool) -> str | None:
-    if expect_int:
-        ok = body.get("status") == 1
-    else:
-        ok = str(body.get("status")) == "1"
-    if ok:
-        return None
-    msg = str(body.get("message") or "status!=1")
-    return f"{tag}: {msg}"
-
-
-def _brand_headers(param_json: str, ts: int, city_id: int) -> dict[str, str]:
-    return {
-        "x-timestamp": str(ts),
-        "x-sign": _md5_sign(param_json, ts),
-        "x-platform": "phone",
-        "x-longitude": "",
-        "x-latitude": "",
-        "x-user-guid": str(uuid.uuid4()),
-        "x-ip-address": "",
-        "x-city-id": str(city_id),
-        "User-Agent": (
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
-            "AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
-        ),
-        "Referer": "https://h5mp.yiche.com/",
-    }
-
-
-@dataclass(frozen=True)
-class OverallFetchDim:
-    sale_type: int
-    level_type: int
-    data_type: str
-    level_label: str
-
-
-def _overall_dims(sale_type: int, data_type: str) -> list[OverallFetchDim]:
-    return [
-        OverallFetchDim(sale_type, _OVERALL_LEVEL[label], data_type, label)
-        for label in ("all", "nev", "bev")
-    ]
-
-
-OVERALL_FETCH_DIMS = (
-    _overall_dims(_OVERALL_SALE_RETAIL, "retail")
-    + _overall_dims(_OVERALL_SALE_PRODUCTION, "production")
-    + _overall_dims(_OVERALL_SALE_EXPORT, "export")
-)
-
-
-@dataclass(frozen=True)
-class BrandFetchDim:
-    sale_type: int
-    energy_type: int
-    data_type: str
-    level_label: str
-
-    def dim_key(self) -> str:
-        parts = [f"sale={self.sale_type}"]
-        if self.energy_type != _BRAND_ENERGY["all"]:
-            parts.append(f"energy={self.energy_type}")
-        return "|".join(parts)
-
-    def log_tag(self, master_ids: list[int]) -> str:
-        return f"{self.dim_key()} batch={master_ids!r}"
-
-    def to_api_param(self, master_ids: list[int], last_sale_time: str) -> dict:
-        return {
-            "masterIds": ",".join(str(i) for i in master_ids),
-            "cityId": 0,
-            "isNewEnergy": self.energy_type,
-            "manu": -1,
-            "saleType": self.sale_type,
-            "lastSaleTime": last_sale_time,
-        }
-
-
-def _brand_dims(sale_type: int, data_type: str) -> list[BrandFetchDim]:
-    return [
-        BrandFetchDim(sale_type, _BRAND_ENERGY[label], data_type, label)
-        for label in ("all", "nev", "bev")
-    ]
-
-
-BRAND_FETCH_DIMS = [
-    *_brand_dims(_BRAND_SALE_RETAIL, "retail"),
-    BrandFetchDim(_BRAND_SALE_PRODUCTION, _BRAND_ENERGY["all"], "production", "all"),
-    BrandFetchDim(_BRAND_SALE_EXPORT, _BRAND_ENERGY["all"], "export", "all"),
+# 测试与外部兼容：继续从本模块导入纯函数/维度常量
+__all__ = [
+    "BRAND_FETCH_DIMS",
+    "OVERALL_FETCH_DIMS",
+    "BrandFetchDim",
+    "OverallFetchDim",
+    "YicheBrandClient",
+    "YicheOverallClient",
+    "_api_error",
+    "_md5_sign",
+    "_safe_get_json",
 ]
 
 
@@ -204,12 +92,11 @@ class YicheOverallClient:
     def _collect_overall_rows(
         raw_rows: list[dict], dim: OverallFetchDim
     ) -> list[OverallSalesRecord]:
-        records: list[OverallSalesRecord] = []
-        for raw in raw_rows:
-            row = YicheOverallClient._normalize_overall_row(raw, dim)
-            if row is not None:
-                records.append(row)
-        return records
+        return [
+            row
+            for raw in raw_rows
+            if (row := YicheOverallClient._normalize_overall_row(raw, dim)) is not None
+        ]
 
     def fetch_overall_sales(self) -> SourceFetchResult:
         """拉取总体销量；任一维度接口失败则 ok=False（仍合并已成功维度的数据）。"""
@@ -283,18 +170,20 @@ class YicheBrandClient:
         brand_map: dict[int, list[dict]],
         dim: BrandFetchDim,
     ) -> list[BrandSalesRecord]:
-        records: list[BrandSalesRecord] = []
-        for master_id, series in brand_map.items():
-            for row in series:
-                normalized = YicheBrandClient._normalize_brand_row(
+        return [
+            normalized
+            for master_id, series in brand_map.items()
+            for row in series
+            if (
+                normalized := YicheBrandClient._normalize_brand_row(
                     row=row,
                     master_id=master_id,
                     data_type=dim.data_type,
                     level_label=dim.level_label,
                 )
-                if normalized is not None:
-                    records.append(normalized)
-        return records
+            )
+            is not None
+        ]
 
     def fetch_brand_sales(
         self,
@@ -306,19 +195,16 @@ class YicheBrandClient:
             return SourceFetchResult()
 
         last_sale_time = date.today().isoformat()
-        batches = [
-            master_ids[i: i + _BRAND_BATCH_SIZE]
-            for i in range(0, len(master_ids), _BRAND_BATCH_SIZE)
-        ]
+        batches = list(batched(master_ids, _BRAND_BATCH_SIZE))
         aggregated: dict[str, dict[int, list[dict]]] = defaultdict(dict)
         errors: list[str] = []
         total_tasks = len(BRAND_FETCH_DIMS) * len(batches)
         completed_tasks = 0
 
         def _run(
-            dim: BrandFetchDim, batch: list[int]
+            dim: BrandFetchDim, batch: tuple[int, ...]
         ) -> KeyedSliceResult[dict[int, list[dict]]]:
-            result = self._fetch_brand_batch(batch, dim, last_sale_time)
+            result = self._fetch_brand_batch(list(batch), dim, last_sale_time)
             return KeyedSliceResult(key=dim.dim_key(), data=result.data, error=result.error)
 
         with ThreadPoolExecutor(max_workers=_BRAND_WORKERS) as executor:

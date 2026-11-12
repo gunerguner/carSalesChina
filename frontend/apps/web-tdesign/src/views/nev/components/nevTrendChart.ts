@@ -1,10 +1,11 @@
 import type { ECOption } from '@vben/plugins/echarts';
 
 import type { NevBreakdownRecord, NevShareTrendRecord } from '#/api/analysis';
-import type { LineTooltipParams } from '#/utils/chart';
+import type { LineTooltipParams } from '#/utils/chartShared';
 import type { Translate } from '#/utils/types';
 
-import { buildLineChartOption, emptyChartIfNoData } from '#/utils/chart';
+import { emptyChartIfNoData } from '#/utils/chartShared';
+import { buildLineChartOption } from '#/utils/lineChartOption';
 import { toMonthKey } from '#/utils/period';
 
 export type NevTrendChartInput =
@@ -27,7 +28,7 @@ export function buildNevTrendChartOption(
 ): ECOption {
   const { color, data, label, valueKey } = input;
 
-  const empty = emptyChartIfNoData(data ?? [], t('pages.common.noData'));
+  const empty = emptyChartIfNoData(data, t('pages.common.noData'));
   if (empty) return empty;
 
   const timeLabels = data.map((item) => toMonthKey(item.year, item.month));
